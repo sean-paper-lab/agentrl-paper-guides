@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="OPD rollout 早停与计算效率：Less is More: Early Stopping Rollout for On-Policy Distillation">
+  <title>4.4 OPD rollout 早停与计算效率 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>4.4</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>OPD rollout 早停与计算效率</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A049"><span>A049</span>Less is More: Early Stopping Rollout for On-Policy Distillation</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A049" data-paper-id="A049">
+      <header class="paper-header">
+        <p class="paper-kicker">A049 · 约 4 分钟</p>
+        <h2>Less is More: Early Stopping Rollout for On-Policy Distillation</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">OPD</span><span class="paper-tag">early-stopping</span><span class="paper-tag">rollout-efficiency</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.27028" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>标准 OPD 让教师在学生完整前缀上逐 token 评分，但前缀越长，教师所处的上下文越偏离自己的自然生成分布。论文在 MATH-500 上量化这种 teacher decay：教师独立作答的 avg@4 为百分之六十五点三，接上学生一百 token 后降至六十二点七，三百 token 后只有五十一点七五，已接近学生。后半段看似拥有更多密集标签，实际混合了退化教师、学生执行噪声和冗长计算，既消耗显存与时间，又可能把错误条件化行为蒸馏回学生。</p>
+      <p>ESR 的做法极简：学生 rollout 到固定前缀长度便停止，只在这一段计算在线蒸馏损失，默认一百 token，跨模型家族时有时取五十。它不是事后从完整轨迹挑 top-k token，而是从生成源头截断，因此同时减少采样、教师前向和反向传播。作者仍使用 sampled-token 反向 KL；若师生词表不同，则按贪心文本跨度对齐 token。核心假设是早期 token 决定解题策略和子模式，后期主要执行已选程序，可由前缀更新产生的级联对齐间接改善。</p>
+      <p>实验规模从 1.5B 到 32B 参数，涵盖 Qwen2.5、Qwen3、Gemma2、Gemma3 的同家族、跨代和跨家族配对。数学用 NuminaMath 训练、MATH-500 的 avg@4 与 pass@4 评测；代码用 CodeUltraFeedback 与 HumanEval，函数调用用 glaive-function-calling-v2 与 BFCL。统一采用 LoRA、二百步、每题一条 rollout，并把 ESR 与完整 OPD、教师、学生及固定教师数据微调比较，因而能同时观察能力、跨词表适配和计算代价。</p>
+      <p>优势在教师与学生失配较大时最明显。Qwen2.5-Math-1.5B 向 Qwen3-1.7B 蒸馏时，ESR 的 MATH-500 avg@4 为六十五点八五、pass@4 为七十九点八，高于完整 OPD 的六十二点三五和七十五点二，也略超教师。Qwen2.5-14B 到 Qwen3.5-35B 的完整 OPD 仅五点四，而 ESR 达七十五点一五。HumanEval 上 ESR 为四十二点一，超过 OPD 四十点二和教师三十九点六；BFCL 为六十一点三，对应 OPD 五十八点二、教师五十四。少数同族情形增益较小，固定教师微调中也存在 Qwen 的反例：完整 OPD 为五十八点二而 ESR 为五十六点二；Gemma 配对则由十三点九升至二十六点六五。这限定了结论边界。</p>
+      <p>效率测量在单张 A6000 上进行：Qwen3-1.7B 每步由完整 OPD 的一百九十四秒降至八秒，约二十四倍加速；训练峰值显存由三十九点五 GB 降至九点六 GB，总占用由六十三点三降至二十四点一。机制实验发现，截断位置之后未直接训练的 token KL 仍下降百分之三十至四十。ESR 输出中位长度约三百八十 token，远短于教师一千一百五十、OPD 一千五百三十和原学生八百六十；它更多选择教师排名第二至第五但仍受支持的模式，这类选择占百分之四十七点四，而完整 OPD 为四十四点六；匹配教师第一选择反而由四十五点七降至四十一点九。该现象体现反向 KL 的子模式承诺，而非机械复制教师首选。</p>
+      <p>选择消融也否定了“只因前一百 token 的 KL 最大”：虽然它们占总损失约百分之九十三，按教师熵、学生熵或单 token 反向 KL 选一百个位置都只有六十二点七至六十三点三，甚至五十三点三五，均不及连续前缀的六十五点八五。长度在五十至二百间通常稳健，但跨家族更敏感，且不同任务仍需重新确认截断点。作者限定结论适用于已有指令与推理能力、千亿参数以下和任务特定小数据，尚未检验基础模型的全程学习、工业级数据、真正多轮 agent、超长上下文或多模态；因此 ESR 是强有力的工程默认项，而非“后缀永远无用”的普遍定律。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="04-03.html"><span>上一方向</span>单教师/多教师的长程 Agentic distillation</a>
+      <a class="next" href="05-01.html"><span>下一方向</span>子目标、里程碑、锚点与策略抽象</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

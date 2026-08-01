@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="任意规模工具集的通用推理 Agent：DeepAgent: A General Reasoning Agent with Scalable Toolsets">
+  <title>7.5 任意规模工具集的通用推理 Agent · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>7.5</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>任意规模工具集的通用推理 Agent</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A084"><span>A084</span>DeepAgent: A General Reasoning Agent with Scalable Toolsets</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A084" data-paper-id="A084">
+      <header class="paper-header">
+        <p class="paper-kicker">A084 · 约 4 分钟</p>
+        <h2>DeepAgent: A General Reasoning Agent with Scalable Toolsets</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">general-agent</span><span class="paper-tag">scalable-toolset</span><span class="paper-tag">tool-routing</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2510.21618" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>DeepAgent试图解决固定ReAct或Plan-and-Solve流程在大规模工具库中的失灵：把所有工具说明塞进提示会迅速挤占上下文，预先选错工具又无法在执行中纠正，而长任务还会让历史观察淹没关键状态。论文让一个主推理模型在同一动作流中自主决定继续思考、检索工具、调用工具或折叠记忆。这样，规划不再是运行前一次完成的静态清单，而会随工具结果和中间失败重写，目标是兼顾任意规模工具发现、长程状态保持与端到端任务成功。</p>
+      <p>主模型使用QwQ-32B。工具说明先由bge-large-en-v1.5编码成稠密索引，模型提出查询后只取最相关的一小组工具，后续还可再次检索，因此无需暴露完整目录。历史过长时，模型发出fold_thought动作，辅助Qwen2.5-32B把全部上下文压成结构化摘要，分别记录已经完成的情节、近期工作状态、重要工具交互和推导规则，再用摘要替换旧历史。该设计省上下文但不是无损存储：主模型必须学会在信息尚可压缩时触发，且辅助模型的遗漏会成为后续规划的隐含状态误差。</p>
+      <p>训练算法ToolPO混合任务最终成功奖励、正确工具调用和记忆效率信号。全局的组相对优势分配给整段生成，动作级优势只作用于工具调用与记忆折叠位置，使模型能区分“最终失败但局部工具选择正确”和“偶然成功却过程低效”。训练数据来自ToolBench、ALFWorld、WebShop、WebDancer、WebShaperQA和DeepMath；对于大量RapidAPI，语言模型工具模拟器返回近似结果，以免训练依赖不稳定外部服务。训练100步、批量64、每组8条轨迹，最长32768词元和50个动作，在64张H20 141GB GPU上完成。</p>
+      <p>通用工具评测包括含约一万六千个API的ToolBench、API-Bank、TMDB、Spotify和3912题ToolHop，并分别考察给定正确工具和开放检索；迁移评测用ALFWorld、WebShop、GAIA及HLE。DeepAgent在TMDB和Spotify达到89.0、75.4，而此前最佳32B结果约55.0、52.6；开放ToolBench为64.0，对比基线54.0，ToolHop为40.6，对比29.0。下游ALFWorld、WebShop、GAIA分别91.8、34.4、53.3，原始底座为88.1、32.0、46.7，说明联合策略不仅记住训练API。</p>
+      <p>消融的五项平均分从完整模型48.1降到不训练的44.3、不使用记忆的44.2、不使用模拟器的44.8、不加工具动作优势的46.1，其中GAIA去掉记忆由53.3降至44.7，长程任务最敏感。动态检索平均52.6，优于最佳固定工作流28.5和预先检索工具的DeepAgent 43.9。换到Qwen3-30B与235B时，DeepAgent分别46.9和55.7，对应ReAct仅35.7和45.1，且ToolPO学习曲线比普通GRPO稳定。这些对照共同支持检索、记忆和训练目标的互补作用。</p>
+      <p>论文未设独立局限性章节，仍有清楚边界。工具模拟器可能无法复现鉴权、延迟、状态副作用和真实API错误；记忆折叠依赖第二个32B模型，增加成本并可能不可逆地删掉细节，动态检索也假定工具文档完整且向量索引及时更新。训练把最终成功、工具步骤和记忆效率同时纳入，虽有去除项对照，却未系统扫描三者权重，复杂奖励在新领域的平衡仍需验证。最多五十动作与八组基准不能代表无限长生产流程，WebShop 34.4和HLE 20.2也显示开放推理尚未解决。因而论文证明的是在受控工具接口和可评奖励下，学习何时搜工具、何时压记忆优于固定编排，而非已经获得无需目录治理或安全隔离的通用自主代理。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="07-04.html"><span>上一方向</span>工业级小模型工具调用与双数据飞轮</a>
+      <a class="next" href="07-06.html"><span>下一方向</span>代码驱动图像生成 Agent</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

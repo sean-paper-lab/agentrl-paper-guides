@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="On-Policy Distillation 专题综述：A Survey of On-Policy Distillation for Large Language Models">
+  <title>1.2 On-Policy Distillation 专题综述 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>1.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>On-Policy Distillation 专题综述</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A003"><span>A003</span>A Survey of On-Policy Distillation for Large Language Models</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A003" data-paper-id="A003">
+      <header class="paper-header">
+        <p class="paper-kicker">A003 · 约 5 分钟</p>
+        <h2>A Survey of On-Policy Distillation for Large Language Models</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">OPD</span><span class="paper-tag">survey</span><span class="paper-tag">distillation</span><span class="paper-tag">self-generated-data</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.00626" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>传统知识蒸馏让学生模仿教师生成的标准答案，但训练时学生总在“正确前缀”后预测下一词，推理时却必须接着自己的错误继续走，状态分布因此逐步偏离。长推理链和多轮智能体会把这种暴露偏差放大：早期一个小错不仅影响当前词，还会把后续带到教师数据从未覆盖的状态。在线策略蒸馏的核心改变，是先让当前学生按自己的策略展开轨迹，再请教师在这些真实访问到的状态上给出分布、评分或偏好，并反复更新学生。论文用交互式模仿学习说明，在理想教师假设下，离线误差随长度可能呈平方累积，在线收集状态可降为线性累积；但教师面对学生的畸形前缀也可能失去校准，因此“在线”不是天然正确的保证。</p>
+      <p>综述用统一的分布差异目标整理纷繁方法，并从三个互相独立的轴观察设计空间。目标可以是固定的前向或反向差异，也可以根据词元可信度局部切换，或与强化学习的结果奖励联合；信号可以来自教师完整概率、黑盒分数与偏好，也可以来自学生在不同上下文或权限下的自蒸馏；监督粒度可以落在词元、整段序列或二者混合。前向差异更倾向覆盖教师多种模式，反向差异更偏向选择一个高概率模式，有界的对称目标在稳定性与多样性间折中。更重要的是，蒸馏提供低方差的密集方向，强化学习提供允许探索并超越教师的稀疏方向，较成熟的方案通常让二者分工，而非把一个机械替换成另一个。</p>
+      <p>教师接口决定了工程形态。白盒教师能给出每个位置的完整概率分布，信息丰富却需要与学生共同部署，并产生巨大的显存、通信和缓存负担；黑盒教师只返回答案、分数或偏好，适合闭源模型，却会丢失低概率候选中的细微信息；教师自由的自蒸馏利用更长上下文、检索结果或特殊提示制造“有特权的自己”，成本低但容易很快饱和。训练时还要处理教师与学生推理风格不兼容、学生错误前缀把教师拖进陌生区域、策略每轮改变造成目标非平稳等问题。实用系统会监控教师和学生的高概率候选重叠、通过率、回答长度、教师在失败前缀上的校准，并用监督预热、教师指数滑动、概率截断或选择性查询来稳住过程。</p>
+      <p>跨论文结果说明这种方法在合适条件下很有潜力。视觉推理中的 REOPOLD 报告六点七到十二倍样本效率，并让七十亿学生接近三百二十亿教师而推理约快三点三倍；CoDistill 在一点五十亿数学模型的 Minerva 上达到百分之三十二，相对基础模型增加十一点六个百分点，并在组相对强化后再增六点。另一个先稀疏再密集的方案把十七亿模型在 MATH 上从直接组相对训练的百分之七十五点九提高到七十九点三，在 AIME 二〇二四上从十九点八提高到二十五点二。不过这些数字来自不同模型、教师、数据和预算，真正可靠的结论是在线状态覆盖经常提高小模型的学习效率，而不是某个固定损失在所有场景都占优。</p>
+      <p>全文对失败的讨论尤其重要。学生可能进入教师也无法修复的错误前缀陷阱，结构化任务在格式稍有偏差时出现外推断崖；训练还会出现高概率模式越来越窄、梯度信噪比坍塌、知识不确定性被教师压平、回答无意义变长以及自博弈循环饱和。有实验记录硬复制教师后策略差异先从二点六三七降到零点三四三，随后又重新漂移；另一个设置中回答膨胀使准确率从五十四点五降至四十九点零，多轮蒸馏的有效轮次也从七点八二降到六点二三。这些现象说明仅看训练损失会掩盖能力退化，必须同时评估准确率、校准、多样性、长度、每轮保持率和对陌生错误状态的恢复。</p>
+      <p>论文建议工业流程先用大量离线样本做能力预热，再让在线蒸馏覆盖学生自己的状态，最后用奖励强化突破教师边界。瓶颈是学生展开与教师逐词打分要同时发生，长序列全词表概率可占据惊人的缓存和带宽，因此稀疏概率、按不确定性调用教师、异步流水线和更小的评价器会直接决定方法能否扩展。作为综述，它没有统一复现实验或消融，结论来自快速变化且协议不一的文献；教师优于学生、二者行为兼容、学生已有基本能力的“可教区间”仍主要是经验规律。开放问题包括在线蒸馏扩展律、教师不确定性、持续与多轮智能体学习、跨架构和跨模态迁移、隐私，以及如何证明学生学到的是可迁移能力而非新的模仿偏差。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="01-01.html"><span>上一方向</span>领域综述与路线图</a>
+      <a class="next" href="01-03.html"><span>下一方向</span>训练机理、能力干扰与失效诊断</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

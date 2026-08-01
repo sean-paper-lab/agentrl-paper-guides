@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="单教师/多教师的长程 Agentic distillation：The Physics of Multi-Turn Long-Horizon Planning: From Pre-Training to Post-Training via Single- and Multi-Teacher On-Policy Agentic Distillation">
+  <title>4.3 单教师/多教师的长程 Agentic distillation · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>4.3</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>单教师/多教师的长程 Agentic distillation</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A048"><span>A048</span>The Physics of Multi-Turn Long-Horizon Planning: From Pre-Training to Post-Training via Single- and Multi-Teacher On-Policy Agentic Distillation</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A048" data-paper-id="A048">
+      <header class="paper-header">
+        <p class="paper-kicker">A048 · 约 4 分钟</p>
+        <h2>The Physics of Multi-Turn Long-Horizon Planning: From Pre-Training to Post-Training via Single- and Multi-Teacher On-Policy Agentic Distillation</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">multi-teacher</span><span class="paper-tag">agentic-distillation</span><span class="paper-tag">long-horizon-planning</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2607.24720" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>论文没有直接在网页环境追逐单一分数，而是构造可控的长程规划“物理实验室”，把能力拆成世界知识、规划模式和跨环境整合。Fantasy Alchemy、Livestock Farming、Electronic Assembly 三个反事实领域共享五层层级技能图，每域二百个类别、每类二十个名称，并含 AND 或 OR 配方、干扰项和保留映射。短任务需一至五步，中等六至八步，长任务至少九步；随机初始化的一亿参数模型和人工可控语料使作者能隔离数据结构因果，而非被大模型未知预训练史混淆。</p>
+      <p>预训练实验首先表明，显式思维链是长程泛化的必要表征。相比直接动作，思维链模型的 avg@8 在短、中、长任务分别为百分之九十八点九、八十五点九、六十八点五，而直接动作只有八十九点五、四十六点六、二十二点七。只见短轨迹的模型在中长任务几乎失效；加入百分之五中程轨迹可把中程 pass@8 提到五十一点八八，再加百分之五长轨迹才让长程达到十一点四六。所有预训练对照都采用九千步、统一批量和学习率，避免训练时长差异混入课程效应。少量长例子因此承担“组合规则示范”，不是可由海量原子技能自然替代的冗余数据。</p>
+      <p>数据质量比表面多样性更关键。多种同样最优的规划模式可共存，但当四份最优轨迹配八份次优轨迹时，中长程能力明显被破坏，因为每一步的小偏差会连乘放大。该配比下指令模型 avg@8 均值仅十五点一九，OPD 的中程结果为三十四点零九，而 GRPO 只有十四点八五。后训练只在 Fantasy Alchemy 上用三千项任务，对 GRPO 与 OPD 进行控制比较：当预训练已解决任务时二者都不必要；在模型已有可用模式但尚不稳的区域，GRPO 有效；当长程模式根本未形成时，稀疏奖励的 GRPO 梯度噪声大或消失，OPD 的密集 token 信号则有更广的有效区和更稳定方向。</p>
+      <p>OPD 也不是万能解。它会快速收缩熵、偏向少数教师模式，有时 avg@1 提升却压低 pass@k 上限；实验以教师 top-k 一百条轨迹实施蒸馏来控制监督质量。更严重的是程序知识不匹配：学生按配方 A 预训练，完美教师按另一套有效配方 B 行动，蒸馏后总体 pass@8 只有三十六点六，低于原学生四十四点零三和对齐教师的四十六点七四；Fantasy Alchemy 中程相对对齐教师低四十三点七五。早期共享规划格式先带来改善，随后错误世界知识覆盖原知识而崩塌，说明“正确完整轨迹”并不等于对学生当前状态的逐步纠错监督。</p>
+      <p>多教师实验按三个领域依次 OPD。若领域共享兼容规划结构，先学到的模式会迁移，最终三域 avg@8 约为九十一点八八、八十八点九八、八十九点七七；若完全没有共享或存在不可调和的结构，后学教师会造成灾难性遗忘，某设置中 Fantasy Alchemy 在最后阶段跌至十五点六二。令人意外的是，三阶段累计参数位移都很小，第一阶段与初始模型的距离约零点四八二，而不同教师彼此约七十一至七十三，且各阶段更新方向余弦很低，显示教师并非把学生拉向自身参数，而是在学生邻域激活可兼容模式。</p>
+      <p>这些结论的优势也是边界：一亿参数、合成反事实世界、完美教师和受控轨迹让机制清楚，却不能直接外推到真实网页、机器人或超大模型。规划模式与知识的互信息均由实验代理量衡量，多教师只考察顺序训练，尚未覆盖混合路由、噪声教师和在线环境变化。三个领域虽换了表面语义，底层图生成器和动作接口仍高度同构，共享模式迁移可能因此比真实跨域更容易；相反，真实大模型已有大量潜在模式，所谓“未被预训练支持”的区域也更难准确识别。附录给出九千步预训练、词表、优化器、课程和完整表格，也进一步证明低质量长轨迹会放大误差。论文最终提供的是长程训练的相图：先用少量优质长例形成模式，再在学生有支持的区域蒸馏，并在多教师之间检查知识与模式兼容性。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="04-02.html"><span>上一方向</span>面向 Agent 轨迹的 step/trajectory-aware OPD</a>
+      <a class="next" href="04-04.html"><span>下一方向</span>OPD rollout 早停与计算效率</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="OPD 基础范式与作用机理：On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes、Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe">
+  <title>4.1 OPD 基础范式与作用机理 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>4.1</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 2 篇</p>
+      <h1>OPD 基础范式与作用机理</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A043"><span>A043</span>On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes</a>
+<a href="#paper-A044"><span>A044</span>Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A043" data-paper-id="A043">
+      <header class="paper-header">
+        <p class="paper-kicker">A043 · 约 4 分钟</p>
+        <h2>On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">OPD</span><span class="paper-tag">teacher-student</span><span class="paper-tag">self-generated-mistakes</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2306.13649" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>传统语言模型蒸馏通常在固定真值序列或教师生成序列上训练学生，但自回归推理时，学生必须以自己先前生成的 token 为条件。一旦早期出错，后续状态便偏离训练分布，形成类似模仿学习的 exposure bias。GKD 将知识蒸馏重新表述为有可查询专家的交互式模仿：学生先在真实输入上生成自己的序列，教师再对这些学生实际访问的前缀给出完整 token 概率。这样，模型能直接在自身常犯错误附近获得监督，而不是只学习教师从理想轨迹出发会怎么写。</p>
+      <p>GKD 用两个轴统一多种方法。第一个轴是学生数据比例 λ：零对应纯监督 KD，一对应完全 on-policy，中间值混合固定数据与学生生成数据；第二个轴是教师与学生分布间的散度，可选前向 KL、反向 KL或广义 Jensen–Shannon 散度。采样过程不反向传播，训练因此仍接近稳定的监督学习。前向 KL 倾向覆盖教师所有模式，容量不足时可能给低质量 token 留下概率；反向 KL 更偏向教师支持的单一模式，质量可能更高但多样性更低。JSD 在二者之间连续插值，最佳选择取决于任务和解码温度。</p>
+      <p>框架还可直接与强化学习合并：学生的同一批 on-policy 序列既接受序列级奖励，又接受教师 token 级散度，权重 α 控制蒸馏与奖励优化的平衡。与常见 RLHF 把策略约束回原始学生不同，这里正则目标是能力更强的教师，可在提升事实一致性等外部奖励时减少通用任务质量损失。实验均从已监督微调的学生开始，而不是从随机或完全无任务能力的模型开始，这一点相当于 RLHF 中先 SFT 再在线优化，也是 GKD 能利用自生成轨迹的前提。算法每轮先从当前学生采样，再用冻结教师对整段学生前缀做并行评分，更新后重新采样，因而训练分布会随策略同步移动。</p>
+      <p>任务特定实验用监督微调 T5-XL 约 3B 作为教师，向 T5-small、base、large 蒸馏，覆盖 XSum 摘要、WMT14 英德翻译和 GSM8K 四样例思维链推理；任务无关实验把 FLAN-T5-XL 在五百三十六万条 FLAN2021 指令上蒸馏到 FLAN-T5-Base，再以未见的 MMLU 与 BBH 检验。基线包括 SFT、SeqKD、监督 KD、ImitKD 和 f-distill。摘要与 GSM8K 通常训练四万步，WMT 十万步，指令蒸馏五万步；附录给出学习率、温度、序列长度与三随机种子设置。作者还在固定总步数下改变学生生成数据比例，从纯真值到完全在线，确保收益不是单纯增加训练样本。</p>
+      <p>完全 on-policy 的 GKD 在不同学生规模上稳定优于固定数据方法，平均相对增益约为摘要二点一倍、翻译一点七倍、算术推理一点九倍。XSum 仅用百分之五输入且没有真值摘要时，on-policy GKD 已超过使用全量真值的监督 KD 与 ImitKD。WMT 上纯学生数据和 JSD 最优；GSM8K 中学生数据比例超过四分之一后总体随比例增加而提升。任务无关指令蒸馏里反向 KL 比前向 KL 更强，MMLU、BBH 分别带来约两个和一个绝对百分点增益。摘要中把 RLAIF 与 JSD 蒸馏结合，还能在提高事实蕴含的同时保住较高 ROUGE。</p>
+      <p>消融揭示不存在统一最佳散度：温度采样时，反向 KL 或偏反向的 JSD 常以较少多样性换更高质量；贪心解码下散度差异变小。附录的同构自蒸馏甚至可让学生超过教师，但结果仍局限于 T5 家族、共享预训练语料和几个有标准指标的生成任务。GKD 需要在线查询教师完整 logits，学生采样也增加训练成本；学生必须先能生成足够合理的序列，教师在强分布外前缀上的判断可靠性并未被专门验证。实验也未覆盖跨词表教师、工具调用或环境观察交错的轨迹。因而这篇工作奠定了 OPD 的基础范式，却没有解决后来长程 agent 中教师信号随轨迹深度衰减的问题。</p>
+    </article>
+    <article class="paper" id="paper-A044" data-paper-id="A044">
+      <header class="paper-header">
+        <p class="paper-kicker">A044 · 约 4 分钟</p>
+        <h2>Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">OPD</span><span class="paper-tag">mechanism</span><span class="paper-tag">training-recipe</span><span class="paper-tag">analysis</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.13016" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>论文从一个反常现象出发：更强、分数更高的教师并不保证 OPD 成功，弱一些的教师反而可能带来明显提升。作者系统区分出两个必要条件。其一是教师与学生的“思维模式”兼容，可由学生访问状态上双方 top-k token 的重叠衡量；初始重叠太低时，后期即使数值追上，早期丢失的蒸馏收益也难恢复。其二是教师必须提供学生训练中未见的新能力；同家族模型即使扩大规模、基准分更高，若数据与训练流程相同，其局部条件分布可能几乎等价，没有足以推动学生的新信号。</p>
+      <p>研究统一比较 sampled-token、全词表和 top-k 反向 KL，并定义重叠率、重叠 token 优势、师生熵差三项动态指标。成功 OPD 的共同轨迹是：重叠率持续从约百分之七十二升至九十一，重叠优势向零改善，熵差收窄；失败运行从一开始就停滞。更重要的是，共享 top-k token 承担双方百分之九十七至九十九的总概率质量。只在交集 token 上优化，效果几乎等同完整 student top-k；只优化非重叠部分明显更弱，说明共享高概率区既是成功表征，也是实际承载梯度的因果位置。</p>
+      <p>现象实验覆盖 Qwen3 与 DeepSeek-R1-Distill 家族，在 DAPO-Math-17K 上训练，评测 AIME 2024、AIME 2025 和 AMC 2023 的 avg@16。Qwen3-1.7B-Base 从经 GRPO 的 4B 教师蒸馏，比从分数相近但非思考式 4B 教师更好。DeepSeek 家族中，直接放大的 7B 教师仅恢复百分之五点三差距，而 RL 后训练的 Skywork-OR1-Math-7B 恢复十六点九；Qwen 的对应差距是十五点六对五十八点六。反向蒸馏还显示，把 JustRL-1.5B 拉回其 RL 前的 1.5B 或同家族 7B，都会沿几乎相同轨迹退化，证明 OPD 学到的是局部思维分布，而非教师榜单分数。</p>
+      <p>针对不兼容教师，论文给出两种可操作补救。第一是先用教师生成的二十万条 OpenThoughts 数学轨迹做一次离线 SFT 冷启动，再在去重的约三万提示上 OPD；更高的初始重叠和更小熵差提高了后续上限。第二是对齐教师后训练时使用的提示模板或提示内容，即使题目不变，仅改模板也能提高三项竞赛结果。直接采用教师见过的 DAPO 提示会让共享 token 数量减少，却让其概率质量更集中、性能更好；代价是学生熵显著下降，因此作者建议混入教师未见提示维持探索。</p>
+      <p>长程分析揭示密集监督的可靠性上限。最大响应为 0.5k 或 1k 时信号太少，3k 与 7k 最好，10k 和 15k 后期会出现重叠骤降、梯度与熵尖峰。15k 轨迹中，失稳先在后缀出现，再向前传播；教师从学生前缀继续作答的优势也由 1k 处约正零点三七降至 16k 处正零点零二。即便失败的 7B 教师，序列平均奖励区分正确与错误 rollout 的 AUROC 仍为零点七五，说明信号全局有信息却可能在学生邻域不可利用。作者提出优势方向各异、聚合时相互抵消的假说，但尚未直接验证。</p>
+      <p>支持大小消融显示 sampled-token 与 top-4、16、64 性能相近，只有始终选 argmax 的 top-1 不稳定；随机按学生分布采一个 token 虽稀疏，却是无偏覆盖。结论受限于数学、少数 Qwen/DeepSeek 配对和人为可控的教师来源；“新知识”与预训练数据差异难以拆开，思维兼容也主要以 token 重叠作代理。长轨迹局部几何假说仍缺梯度方向验证，自蒸馏和代码、开放任务尚未覆盖。失败教师的序列奖励仍能以零点七五 AUROC 区分正确与错误轨迹，进一步说明问题是局部梯度不可用，而非教师完全没有判别信息。该判别力也没有自动转化为稳定更新。论文因此将 OPD 从“强教师必有效”改写为一个条件性机制：共享模式决定可学性，新信息决定学习价值，轨迹深度决定奖励可信度。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="03-06.html"><span>上一方向</span>简洁 RL recipe 与小模型扩展</a>
+      <a class="next" href="04-02.html"><span>下一方向</span>面向 Agent 轨迹的 step/trajectory-aware OPD</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

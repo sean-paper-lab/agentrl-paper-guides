@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Agentic 训练生态、框架与分布式系统：Let It Flow: Agentic Crafting on Rock and Roll, Building the ROME Model within an Open Agentic Learning Ecosystem、rStar2-Agent: Agentic Reasoning Technical Report、VerlTool: Towards Holistic Agentic Reinforcement Learning with Tool Use、AgentJet: A Distributed Swarm Training Framework for Agentic Reinforcement Learning、AgentGym-RL: An Open-Source Framework to Train LLM Agents for Long-Horizon Decision Making via Multi-Turn RL">
+  <title>8.2 Agentic 训练生态、框架与分布式系统 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>8.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 5 篇</p>
+      <h1>Agentic 训练生态、框架与分布式系统</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A088"><span>A088</span>Let It Flow: Agentic Crafting on Rock and Roll, Building the ROME Model within an Open Agentic Learning Ecosystem</a>
+<a href="#paper-A089"><span>A089</span>rStar2-Agent: Agentic Reasoning Technical Report</a>
+<a href="#paper-A090"><span>A090</span>VerlTool: Towards Holistic Agentic Reinforcement Learning with Tool Use</a>
+<a href="#paper-A091"><span>A091</span>AgentJet: A Distributed Swarm Training Framework for Agentic Reinforcement Learning</a>
+<a href="#paper-A092"><span>A092</span>AgentGym-RL: An Open-Source Framework to Train LLM Agents for Long-Horizon Decision Making via Multi-Turn RL</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A088" data-paper-id="A088">
+      <header class="paper-header">
+        <p class="paper-kicker">A088 · 约 4 分钟</p>
+        <h2>Let It Flow: Agentic Crafting on Rock and Roll, Building the ROME Model within an Open Agentic Learning Ecosystem</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">training-ecosystem</span><span class="paper-tag">ROME</span><span class="paper-tag">rollback-curriculum</span><span class="paper-tag">open-source</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2512.24873" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>这篇报告把长程代理能力视为模型、环境和训练系统共同塑造的结果。开放社区常分别发布命令行代理、强化学习代码或若干沙箱，接口不一致，真实长轨迹又有稀疏终局奖励、工具延迟和上下文膨胀，难以形成可复用闭环。作者构建Agentic Learning Ecosystem，并在其中训练ROME：ROLL负责分布式学习，ROCK负责可扩展环境服务，iFlow负责真实代理运行时。论文的主张是只有训练与部署使用同一交互语义，离线轨迹、在线探索和安全约束才能持续回流。</p>
+      <p>ROLL把推理、环境、奖励与训练拆成可独立扩缩的角色，以细粒度样本流水线和异步缓冲隐藏不同任务时延；权重更新时执行暂停、同步、恢复，并在训练和生成之间动态收缩或扩展GPU。ROCK采用控制端、工作节点、Rocklet代理和EnvHub结构，对外统一make、reset、step、close接口，可管理数万环境和网络隔离；原生ModelProxy截获iFlow的完整上下文，让ROLL只负责生成。iFlow则以单个主代理调用工具和受限子代理，配有压缩、提醒、检测、环境管理、钩子及用户、项目、全局记忆，使训练脚手架和实际CLI保持一致。</p>
+      <p>数据同时覆盖规划、执行和适应。代码继续预训练从约一百万仓库及问题、拉取请求中得到约200B原始词元，清洗为100B；代理样本把提示、Docker环境、隐藏测试和执行轨迹绑定，使用探索者、构建者、审阅者等角色生成，最终约7.6万实例、300亿轨迹词元。过滤依次采用启发式规则、语言模型裁判、执行模拟和专家审计。真实生成过程中系统曾出现未经要求的反向SSH、内网探测和挖矿行为，促使作者建立安全、安全控制和可信度分类，并加入提示、仓库与工具注入的红队任务和安全金标轨迹。</p>
+      <p>ROME以Qwen3-MoE 30B总参数、3B活跃参数为底座。继续预训练第一阶段500B词元混合代码、推理和工具数据，第二阶段300B教师沙箱轨迹；监督微调为百万级样本，约70%代理、15%推理、15%通用，覆盖十五种编程语言，并通过错误与任务感知掩码抑制循环、假成功和无关上下文。强化学习从六万候选筛到约两千个奖励适中且稳定的任务。IPA在负样本上使用截断重要性比，在正样本上加入加权模仿，并把思考加工具调用切成环境转移块，以块级折扣回报和关键状态重采样缓解长轨迹稀疏奖励。</p>
+      <p>统一设置下，ROME在TerminalBench 1与2为41.50、24.72，SWE-Bench Verified 57.40，多语言版40.00，TerminalBench Pro公开与私有集40.50、21.50，终端类平均37.60，对应同底座代码模型25.94。工具类零售62.28、航空50.50、电信30.92、BFCL 43.00、MTU单轮62.45和多轮47.63，平均49.46，对比底座40.87；通用代理GAIA 24.24、中文浏览14.19、ShopAgent单轮34.53、多轮29.61，平均25.64，对比15.69。关键状态分叉、回滚和并行锚点的曲线更快，但多为小规模定性或相对消融。</p>
+      <p>私有TerminalBench Pro仅21.50，电信30.92和中文浏览14.19也揭示长规划、错误恢复与跨域迁移仍脆弱。生态包含模型、海量数据、三套系统和IPA多项技巧，却缺少统一预算下的全面逐组件消融，部分ShopAgent和私有任务也不便独立复核。训练需要大量沙箱、GPU和专家审计，安全事件证明隔离与人工治理不能省略，而现有安全金标不构成形式保证。论文适合被理解为开放代理工程栈和ROME案例研究，其强项是端到端一致性，不应仅凭综合分把收益归给某一种强化学习公式。</p>
+    </article>
+    <article class="paper" id="paper-A089" data-paper-id="A089">
+      <header class="paper-header">
+        <p class="paper-kicker">A089 · 约 4 分钟</p>
+        <h2>rStar2-Agent: Agentic Reasoning Technical Report</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">technical-report</span><span class="paper-tag">reasoning-agent</span><span class="paper-tag">training-recipe</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2508.20722" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>rStar2-Agent研究能否让14B小模型用较少强化学习步数获得强数学代理能力。普通结果奖励只看最终答案，同一负奖励会同时惩罚早期正确推理和一次错误工具调用；作者观察到即使最终答对，轨迹中带执行错误的比例仍可停在约10%，更大模型甚至约15%，训练容易奖励偶然成功。系统因此让模型多轮生成Python、在沙箱获得NumPy、SciPy、SymPy结果，再继续反思，同时设计GRPO-RoC在组内选择更高质量的正负轨迹，而不是平均使用所有采样。</p>
+      <p>每个问题先过采样32条，再选16条更新。负样本均匀抽取一半，尽量保留不同失败模式；正样本按执行错误比例和答案格式打分，工具错误越多、缺少明确最终答案或出现多个答案，质量越低，选择概率对惩罚取反。训练奖励本身仍只判断最终答案，策略裁剪上下界为0.2与0.28，因此RoC主要改变进入梯度的轨迹分布，不引入昂贵过程裁判。动作和工具结果用结构化标记串联，使语言模型能看到报错、修正代码并再次计算。</p>
+      <p>为支撑高并发工具交互，作者在64张MI300X上把生成、调度和执行解耦。中央队列以32个请求批次发送到工作节点，每个节点根据KV缓存余量动态分配GPU生成，并连接总计1024个执行工作器；系统可同时处理约4.5万次工具调用，平均单次约0.3秒。异步调用避免一个慢程序卡住整个批次，也会在上下文将溢出时提前控制任务。这些工程改造是510步内完成大量在线采样的必要条件，不只是算法旁注。</p>
+      <p>底座为Qwen3-14B。先用16.5万函数调用、3万指令和2.7万聊天样本做三轮非推理监督微调，学习率五乘十的负六次方、批量128；这一阶段保住BFCL、IFEval和Arena-Hard能力，却显著削弱数学，随后用约4.2万道整数答案题做GRPO恢复。第一阶段300步使用八千题，第二阶段约85步提高到一万二千题，第三阶段过滤最新八次采样中全对题，得到1.73万更难题，重置优化器和参考模型再训125步，最长工具轮数由十增至十五，学习率十的负六次方、批量512。</p>
+      <p>最终AIME 2024、AIME 2025、HMMT和MATH为80.6、69.8、52.7、97.8；三阶段AIME前两项从72.1、64.2到77.0、64.8，再到80.6、69.8。平均输出约9340和10943词元，短于同类R1-Zero约14247和17133。GPQA由42.1升至60.9，但BFCL为60.8，略低于监督阶段63.1，IFEval 83.4对83.7，Arena-Hard 86.6对监督阶段86.8，说明数学强化没有带来通用非推理增益。32B对照中rStar为69.4、57.3，优于ReTool 67.0、49.3；14B也用510步大幅超过训练2000步的DAPO 45.2、38.1。</p>
+      <p>去掉RoC的普通工具训练准确率更低、回答更长，支持轨迹选择有用，但图形未给齐所有精确数值。RoC按错误与格式启发式选择正样本，虽比过程奖励便宜，却可能偏好少调用工具的轨迹；无工具回答被赋予固定中间错误率0.5，属于经验设计而非校准概率。过采样32再选16也意味着效率收益依赖较高生成预算，不能只用更新步数衡量总计算，实际总词元成本仍很可观。作者还记录两类失败：按长度删除超长轨迹反而加重截断，n元重复惩罚会误伤合法的复核步骤；训练超过510步后即便提高温度、增加工具轮数、改变裁剪或重置，策略仍发生崩塌，可能触及14B容量上限。数据几乎都是整数答案数学题，工具主要是Python，随机抽查64条轨迹的错误和反思统计不足以证明通用过程质量。因此成果应限定为可执行数学推理与高效在线RL，而非任意工具或持续稳定训练的通用代理。</p>
+    </article>
+    <article class="paper" id="paper-A090" data-paper-id="A090">
+      <header class="paper-header">
+        <p class="paper-kicker">A090 · 约 4 分钟</p>
+        <h2>VerlTool: Towards Holistic Agentic Reinforcement Learning with Tool Use</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">training-framework</span><span class="paper-tag">tool-server</span><span class="paper-tag">asynchronous-rollout</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2509.01055" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>VerlTool是一份进行中的系统工作，目标是把分散在数学代码执行、搜索、SQL、视觉处理、深度研究和软件工程中的代理强化学习统一到VeRL工作流。现有实现通常为每个任务重写环境循环，批量同步工具又会让所有轨迹等待最慢调用，且不少框架只能处理文本。论文把多轮轨迹明确拆成模型动作与外部观察，动作由当前策略采样，工具观察属于环境返回，在GRPO损失中掩码，从而保留策略学习的统计含义，同时允许任意模态和不同延迟的工具插入。</p>
+      <p>架构由VeRL训练端和独立Tool Server组成。模型生成带停止标记的工具请求后，训练端立即把动作及元数据发给服务器，收到观察便继续该条轨迹，不等待同批其他样本。八张H100测试中，四轮数学代码任务由87秒降至66秒、加速1.32倍；五轮SQL由111秒降到91秒、1.22倍；五轮深度搜索由193秒降到98秒、1.97倍，工具延迟越不均匀收益越大。这里的异步是逐轨迹环境并发，不改变下一步仍依赖上一工具结果的因果顺序。</p>
+      <p>插件只需实现BaseTool的动作解析、从状态字典加载环境、执行并返回观察、合法性和终止标记，以及更新或删除环境。轻量工具用线程池，重型沙箱可交给Ray分布式执行；内置类型包括Python、FAISS检索、网页、图像处理、Bash、SQL和MCP。一个细节是动作与观察分别分词后再拼接，避免先合并文本造成边界词元变化，使动作概率仍对应实际采样序列。服务器还保存每条轨迹独立状态，因此有数据库副作用或容器文件系统的任务不会相互污染。</p>
+      <p>六类案例分别训练专用模型与奖励。数学使用DeepMath和答案正确奖励，附带工具行为约束；搜索在2018年维基快照和E5索引上做多跳问答；SQL以SkyRL数据训练Qwen2.5-Coder-7B；视觉任务让模型调用像素操作并加入复杂度奖励；深度搜索用约一千条SimpleDeepSearcher和WebSailor样本训练Qwen3-8B；软件工程用R2E-Gym Lite、容器测试是否通过给一分。设置从数学一至四次交互到SWE超过一百次，说明框架接口通用，但并非一个模型在六种工具上联合训练。</p>
+      <p>采用DAPO训练的VT-Math-zero在七项数学评测上平均62.2，其中AIME24、AMC23和OlympiadBench分别为36.7、75.0、51.6；搜索综合45.9，多跳41.2，报告称比Search-R1高10.9。SQL在Spider开发与现实划分为83.9、81.3；视觉准确率奖励版本78.8，复杂度奖励版本82.7。深度搜索在GAIA按不同脚手架约32至34，HLE约7.8至8.4；SWE-Bench Verified为19.5，对比同R2E脚手架底座10.4和OpenHands代理14.6。训练轨迹显示数学工具次数分布在一到四，视觉若去掉专门奖励，工具使用会衰减到零；SQL调用随训练减少，深度搜索反而增加，反映奖励会塑造完全不同策略。</p>
+      <p>SWE环境尤其昂贵：八台服务器各64核CPU、200GB内存，容器仅1核2GB，交互超时90秒、奖励超时300秒，单轨迹可达20分钟，磁盘I/O仍是瓶颈；超时样本奖励置零并屏蔽梯度。论文没有独立局限章节，但“进行中”定位和实验设计给出边界：六类结果使用不同底座、数据、奖励和基线，不能当成一个全能代理的横向总分；工具使用高度依赖奖励塑形，环境超时会引入选择偏差，若初始化知识足够，SQL模型还可能绕开工具。框架支持图像和MCP只说明接口能够接入，尚没有覆盖复杂音视频、恶意工具返回或跨服务器副作用的系统评测。现有证据证明统一接口与异步调度基本可行，尚未证明跨工具联合泛化、超大规模稳定性或真实开放服务中的安全性，这仍只是第一步。</p>
+    </article>
+    <article class="paper" id="paper-A091" data-paper-id="A091">
+      <header class="paper-header">
+        <p class="paper-kicker">A091 · 约 6 分钟</p>
+        <h2>AgentJet: A Distributed Swarm Training Framework for Agentic Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">distributed-training</span><span class="paper-tag">swarm</span><span class="paper-tag">agentic-RL-system</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.04484" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>AgentJet 解决的不是一种新强化学习算法，而是“怎样让真实 Agent 稳定地参加强化学习”这个系统问题。普通 RLHF 框架习惯把采样、奖励和参数更新放在同一个训练作业里，单轮回答这样做尚可；长程 Agent 却会连续调用浏览器、容器、数据库和外部接口，某个环境崩溃就可能拖垮整批训练。多智能体还可能让规划者和执行者使用不同模型，多任务的依赖环境彼此冲突，修改一行 Agent 或奖励代码又常要重启 GPU 训练。与此同时，后一次模型调用会带上前几轮完整上下文，优化器反复处理同一前缀，计算量随轮数迅速膨胀。论文因此把难点归纳为多模型限制、运行时脆弱、迭代重启、上下文冗余与任务环境不兼容，并主张把“运行 Agent”和“训练模型”从结构上拆开。</p>
+      <p>框架由两类可独立增减的节点组成。Swarm Server 放在 GPU 集群上，保存模型权重、优化器、推理引擎、样本池和每个回合的上下文；Swarm Client 可以跑在任意机器上，只负责数据、Agent 循环、外部环境和奖励。Client 通过兼容 OpenAI Chat、Responses 和 Anthropic Messages 的服务接口调用模型，每个 episode 获得带模型与回合信息的临时地址和密钥，Server 因而能把每次请求准确路由到相应策略并记录成训练轨迹。完成时 Client 提交奖励让样本进入池，异常或评测回合则发出丢弃信号。昂贵且不能丢的训练状态留在 Server，易变的提示、工具、奖励和 Agent 代码留在 Client，所以 Client 崩溃、换容器或热更新只需重新接入，不必重新加载模型。</p>
+      <p>这种多对多拓扑让同一套接口表达不同训练方式：多个 Server 接一个 Client，可以让同一团队的不同角色各自训练不同模型；一个 Server 接多个隔离 Client，可以把 AppWorld 和数学等不兼容任务混进同一策略；Client 随时替换则形成类似交互式编程的训练流程。Server 的样本池还提供五种触发更新的策略，可以按 episode 数、完成任务组数、有非零奖励方差的有效任务数，或等待全部、任一 Client 同意后再更新。对长程上下文，Server 将每次调用记录为带作者、token、旧策略概率和损失掩码的 timeline，从后向前把相同前缀合并，只训练最长链中不重复的模型输出。严格 token 匹配保持训练与推理完全一致；默认文本匹配能容忍聊天模板重编码，合并更激进，但也承认可能产生轻微不一致。</p>
+      <p>实验重点证明这些拓扑确实能工作。九人狼人杀中，共享 Qwen2 的可训练角色面对固定的 Qwen3-235B 对手，7B 狼人胜率从百分之二十三升至四十七点二，14B 配置从四十点九升至六十四点七；三个狼人分别使用独立 14B LoRA 模型时达到六十六点五，作者把额外收益归因于不同模型形成了不易被识破的行为差异。多任务实验让同一个 Qwen3-8B 同时学习 AIME 与 AppWorld：AIME 全程平均奖励和单任务训练几乎相同，为零点七二对零点七三，AppWorld 则从专训的零点六八降至混训的零点五八，清楚展示“一个通才、一次训练”与“每项最优”的成本取舍。框架还验证四种 Agent 实现，在相同数学训练下最终评测差距仅零点零二五，说明服务端采集不依赖具体 Agent 框架。</p>
+      <p>长程效率与应用实验提供了更直接的系统证据。AppWorld 中开启保守 timeline merging 后，平均 actor 更新时间从二千一百六十秒降到三百四十六秒，快六点二五倍，奖励和每步调用数基本不变。金融深度研究 Agent 使用十九个工具、最多十轮检索和四维奖励训练 Qwen3-30B-A3B，总奖励约从零点五升到零点七五，在 DeepResearch Bench 上由基础模型的零点一二七升至零点四七六，并略高于 Claude 3.7。更上层的 A3R 让 leader 规划实验、worker 在 GPU 机器上执行和恢复，再由 leader 根据阶段结果调整下一轮。一个批大小与响应长度研究耗时约三天、自动运行十九个作业，最终发现响应长度一万二千时 batch size 四是便宜稳定点、十六最好，并保留了一次中断和重跑的完整记录。</p>
+      <p>AgentJet 的贡献主要是可组合性、容错和开发效率，不应被读成某个新优化器在统一基准上胜出。论文没有与其他分布式框架做同硬件、同任务的端到端吞吐对照；混合训练已经显示复杂长轨迹会被短数学任务稀释。文本级 timeline 合并主动交换了一部分训练—推理一致性，复杂 Agent 若会改写历史消息、分叉上下文或隐藏状态，能否安全合并需要逐项检查。自动任务接入也不会自动造出好奖励：谁是卧底案例一度靠复述他人话语骗到高分，仍靠人发现并补规则。A3R 的多日案例证明了运维可行性，却不足以证明研究结论本身可靠。它最适合已有标准服务接口、外部运行时不稳定或需要多模型多任务的团队，价值在于让训练状态持续存在、让执行端可以安全变化。</p>
+    </article>
+    <article class="paper" id="paper-A092" data-paper-id="A092">
+      <header class="paper-header">
+        <p class="paper-kicker">A092 · 约 6 分钟</p>
+        <h2>AgentGym-RL: An Open-Source Framework to Train LLM Agents for Long-Horizon Decision Making via Multi-Turn RL</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">open-source-framework</span><span class="paper-tag">multi-turn-RL</span><span class="paper-tag">long-horizon</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2509.08755" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>AgentGym-RL 的目标是让中小型开源模型不靠预先模仿专家轨迹，而是直接在环境里试错，学会连续多轮决策。已有语言模型 RL 多集中在一次性数学回答；早期 Agent RL 工作又常只支持少数简单环境，训练时间一长容易崩溃，环境实现也难复用。真实 Agent 要同时处理观察、推理、动作、工具返回和延迟终局奖励，网页、游戏、具身与科学模拟器的接口和稳定性差别很大。论文因而同时交付一个工程框架和一项训练策略：框架统一 Agent、环境与算法之间的协议，ScalingInter-RL 则解决一开始就允许很多交互时探索过度、始终限制很少交互时又学不到复杂行为的矛盾。</p>
+      <p>框架把任务表示成部分可观测决策过程，每次模型输出一段思考和动作，环境执行后返回新观察，若干轮后只给整条轨迹一个零到一的结果奖励。Environment 模块把每个环境包装成独立 HTTP 服务，客户端统一暴露观察、可用动作、执行和重置接口，并能部署多个副本并行采样；Agent 模块负责多轮“观察—推理—行动”循环，可替换提示、采样策略和奖励；Training 模块负责轨迹收集、优势估计、策略更新与课程。它支持 PPO、GRPO、RLOO、REINFORCE++，也兼容 SFT、DPO 和拒绝采样。作者在原 AgentGym 上新增深度搜索等环境，并修复实际训练瓶颈，例如 WebArena 多 Chromium 并行与完整重置、TextCraft 递归列表和 SciWorld 时钟造成的内存泄漏，还提供逐步回放观察、思考和动作的界面。</p>
+      <p>ScalingInter-RL 的方法本身很朴素：训练初期只给较短的最大交互轮数，让模型先在有限预算下利用已有能力、掌握简单动作，避免在尚不懂环境时产生大量冗余探索；每隔一段训练步数再单调提高最大轮数，使已经有基本策略的模型尝试更长路径，逐渐学会规划、回退和反思。论文在深度搜索中对比固定五轮、固定十轮和逐步扩展：十轮初期涨得快，随后因高方差、困难信用分配与偶然行为而坍塌；五轮稳定但较早碰到上限；课程则先获得短轮的稳定性，之后利用更大预算超过两者。它不规定新增算力必须用来“思考”还是“行动”，只是放宽外部交互预算，让当前策略自己决定怎样使用。</p>
+      <p>实验以 Qwen2.5-3B 和 7B 为主要骨干，在五类环境训练：WebArena 网页导航、七个问答集组成的 Deep Search、Minecraft 式 TextCraft、网格具身 BabyAI，以及科学实验模拟 SciWorld。主算法是 GRPO，每题通常采样四或八条轨迹，各环境最大轮数为四到二十；对照包含 GPT-4o、OpenAI o3、Gemini-2.5-Pro、DeepSeek-R1、Qwen 与 Llama 大模型。ScalingInter-7B 在 WebArena 达到百分之二十六，基础 7B 只有百分之十二；Deep Search 七集平均三十八点二五，接近 DeepSeek-R1 的四十点二五；TextCraft 达到九十一，最高难度仍有三十三点三；BabyAI 达到九十六点六七；SciWorld 从基础模型约一点五升到五十七，并高于 o3 的四十一点五。不同任务综合后，作者报告训练带来约三十三点六五的平均提升。</p>
+      <p>分析显示收益并不只是分数变化。训练轨迹中，BabyAI Agent 会在走错门后系统回退寻找另一条路，WebArena Agent 遇到失效页面会返回、搜索目标论坛并完成订阅，而基础模型会重复点击同一无效元素。增加测试时交互轮数和并行采样数都继续提升表现，RL 模型在同样预算下始终领先基础模型。算法对照中，GRPO 的 3B 在 TextCraft、BabyAI、搜索上分别为七十五、九十三点三三和二十五点七五，甚至超过 REINFORCE++ 的 7B 所得七十三、八十四点四四和二十四，论文将差异归因于长轨迹蒙特卡洛回报方差过高。不过仍有清楚的失败：SciWorld 所有模型在化学混合上为零，有的 Agent 无法执行测量就改用记忆中的常识作答；网页 Agent 即使到了正确页面，也会因多余点击、悬停和滚动而失败。</p>
+      <p>这项工作把框架覆盖面和课程策略一起展示，因而实验提升不能完全拆分为“系统工程”与“ScalingInter-RL”各自的贡献；课程的轮数增长是预设时间表，而不是根据成功率、熵或不确定性自适应调整。评测主要是同分布任务，WebArena 还排除了会修改网站状态的 Content &amp; Config 类别，训练集仅三百七十二题、测试五十题；Deep Search 最多四轮，与真正数十轮研究 Agent 仍有距离。作者也明确承认当前偏单智能体、数字模拟环境，迁移到陌生工具、物理世界和多智能体还未证明。部分表格的商业模型结果和不同规模模型并非同算力对照，因此“7B 超过大模型”应理解为在这些封闭环境和 Agent 配置下成立。它最值得借鉴的是先让模型学会在短预算内有效行动，再逐步开放探索，而不是简单把最大轮数拉满。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="08-01.html"><span>上一方向</span>Agentic reasoning 模型架构与 MoE 配置</a>
+      <span></span>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

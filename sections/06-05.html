@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Multi-Agent 协同学习与共演化：Multi-Agent Evolve: LLM Self-Improve through Co-evolution、STRONGER-MAS: Multi-Agent Reinforcement Learning for Collaborative LLMs">
+  <title>6.5 Multi-Agent 协同学习与共演化 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>6.5</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 2 篇</p>
+      <h1>Multi-Agent 协同学习与共演化</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A074"><span>A074</span>Multi-Agent Evolve: LLM Self-Improve through Co-evolution</a>
+<a href="#paper-A075"><span>A075</span>STRONGER-MAS: Multi-Agent Reinforcement Learning for Collaborative LLMs</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A074" data-paper-id="A074">
+      <header class="paper-header">
+        <p class="paper-kicker">A074 · 约 4 分钟</p>
+        <h2>Multi-Agent Evolve: LLM Self-Improve through Co-evolution</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">multi-agent</span><span class="paper-tag">co-evolution</span><span class="paper-tag">self-improvement</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2510.23595" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>MAE 试图把自博弈从代码解释器或棋局等有客观裁判的领域推广到常识、阅读与开放推理。单一 Qwen2.5-3B-Instruct 同时实例化 Proposer、Solver、Judge：出题者制造新挑战，解题者回答，裁判在没有真值时评价题目质量和答案正确性；三者共享底座并同步更新。系统既可从极小空白种子自由出题，也可从九百六十七个无答案参考题做受控变形，题库随训练扩张，问答对又成为 Judge 的新训练上下文。</p>
+      <p>Proposer 的奖励平均混合题目质量、难度和格式。难度来自 Solver 多次答案的平均 Judge 分数取反，因此题越难奖励越高；为防不可解或含糊问题钻空子，Judge 以清晰、逻辑一致和可解性打分，低于零点七的题不进有效池。答案或问题有事实、逻辑、计算错误时 Judge 只给一至三分，轻微遗漏给四至七，完整无误才给八至十。Solver 奖励一半来自 Judge 的答案分、一半来自答案标签格式。Judge 先在思考标签中分析，再输出一到十的分数，自身只由可解析分数标签获得格式奖励；这使裁判会稳定输出，却没有外部信号直接校准其判断真伪。</p>
+      <p>每轮先由 Proposer 基于参考题或从零生成题并计算难度，合格题加入池；Solver 从池中另采问题作答，问答对加入 Judge 池；Judge 再采样评价。Task-Relative REINFORCE++ 分别按角色和任务计算优势，最后把三路梯度同步到同一模型，防止某角色的奖励尺度吞没其他角色。训练使用 LoRA rank 一百二十八，Proposer、Solver 和 Judge 各自采 rollout，但共享同一参数快照后同步更新。实验考察从零、全参考、无参考和一半参考混合；参考种子来自数学、代码、常识、问答和阅读等十四个公开集，训练超过二百五十步、批量一百二十八。</p>
+      <p>从零 MAE 的二十二项总平均由基础模型五十五点三三升至五十八点五一，并超过 AZR 的五十七点七二；MATH 由六十点四升至六十八点二，AMC 由三十九点七六升至四十四点五八，SQuAD 由七十八点二升至九十二点二八。带参考时，直接 SFT 即使用真值也降到五十三点八七；全参考 MAE 为五十七点一一，无参考为五十八点一八，一半参考以 ID 六十八点九五、OOD 四十三点九六和总平均五十九点八七最佳。半参考在 LiveBench Reasoning、Olympiad、MMLU-Pro 等未见集仍有三十三点六一、三十二点四六、四十七点四三，说明锚定已知分布与探索新题要平衡。</p>
+      <p>去掉 Solver、Proposer 或 Judge 的训练，总平均分别从五十九点八七降到五十七点七九、五十七点九和五十七点二四；Judge 更新贡献最大。移除质量过滤降至五十六点一五，OOD 从四十三点九六跌到三十三点一四，远大于去格式奖励后的五十九点四四，说明裁判过滤同时承担格式与内容闸门。训练中有效题持续增至约一万七千五百，难度上升后总体准确率出现同步转折；若提示不当让出题者只生成开放写作题，角色多样性和 benchmark 表现都会坍缩。</p>
+      <p>关键限制是所有奖励都来自同一模型体系，Judge 只学输出格式而非由外部真值更新，三方可能共同确信错误并放大偏差；所谓无人工标注仍有人写 rubric、格式和九百余参考题。实验仅一个 3B 骨干，未验证规模、跨代或真正异构 agent；许多非代码评测输出又由强 LLM 对照真值作 TRUE/FALSE 判定，训练内外均存在裁判依赖。难度奖励天然鼓励不可解题，当前质量过滤是经验防线而非保证。参考题也不带答案，虽降低泄漏，却无法检验新题是否忠实保留原推理类型。论文未来工作承认需要更大骨干、更多角色和可验证环境，才能把一般领域共演化与可信学习连接起来。训练曲线的共同拐点只是相关性，尚不足以证明题目难度增长直接导致策略能力提升。</p>
+    </article>
+    <article class="paper" id="paper-A075" data-paper-id="A075">
+      <header class="paper-header">
+        <p class="paper-kicker">A075 · 约 4 分钟</p>
+        <h2>STRONGER-MAS: Multi-Agent Reinforcement Learning for Collaborative LLMs</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">multi-agent-RL</span><span class="paper-tag">collaboration</span><span class="paper-tag">relative-optimization</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2510.11062" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>普通 GRPO 假定同组回答来自完全相同提示，但多智能体第二区别不仅是角色提示，前一轮其他 agent 的输出也会改变当前上下文；并行采完整轨迹后，第二轮几乎找不到同提示样本，组大小退化为一。AT-GRPO 因而把信用单元定义为同一环境实例、同一角色、同一轮次的动作。它不是把团队终局分广播给所有话语，而是在每个协调节点建立可比较分支，保留组相对优化的有效基线。</p>
+      <p>每个角色每轮从同一状态采四个候选动作，执行并计算奖励，以环境、角色、轮次的哈希作组键求优势；随后选奖励最高的分支继续真实轨迹，下一角色在其结果上再分叉，形成树式 rollout。信用混合团队奖励与角色局部奖励：代码中团队看黄金单测通过率，Coder 看自身代码，Tester 看其测试能否通过黄金实现；规划、游戏和数学也有对应局部信号。训练系统为每个策略分配独立 GPU rollout 与更新池，CPU 沙箱执行环境，路由器按角色把轨迹送回正确模型。</p>
+      <p>系统既支持所有角色共享一个策略，也支持每角色独立策略。代码采用 Coder 与 Tester 循环，数学由工具使用者和推理者对齐，Sudoku、Sokoban、Plan-Path 由工具执行者与计划者协作；均最多四轮。Qwen3-1.7B 和 8B 在八张 H100 上训练，每节点分支四，奖励混合系数直接取一，意味着主实验使用团队与任务定义的局部信号而未额外调权。训练集包括 APPS、CodeContests、Polaris-53K 和生成的棋盘、路径问题，评测 LiveCodeBench、APPS、CodeContests、AIME24/25、OlympiadBench 及三类游戏规划，并统一环境观察与奖励。</p>
+      <p>长程任务收益最大。Qwen3-8B 的单 agent 加 GRPO 在 Sokoban 与 Plan-Path 为十四和四十七，AT-GRPO 共享策略达到九十六和九十三，独立策略达九十八和九十六；Sudoku 约九十九。1.7B 的 Plan-Path 由单 agent 五、单 agent GRPO 十一升至共享策略九十六、独立策略九十七。8B 独立策略在 LiveCodeBench、APPS、AIME24、AIME25 分别达到三十三点一、四十六点五、五十七、四十，较原模型提高十点三、十六点三、三十八点七和二十。</p>
+      <p>是否共享策略取决于角色相似度：Coder 与 Tester 区别大，1.7B 独立策略代码平均多三点零五；数学两角色共享推理知识，1.7B Olympiad 共享三十九点六而独立三十五点二。Plan-Path 中分别单训角色、再组合仅十六，联合 MAS 训练为九十六；交换已专门化策略立即跌到六，证明学到不可互换的协同。增加 Reasoner、Tool-User 并由 Judge 聚合时，AIME24 随 agent 数由约十八点二升至四十七点七，而 MAS-GRPO 七 agent 只到三十四点一。去掉中间启发式、仅用终局奖励时，Sokoban、Sudoku、Plan-Path 仍有九十三、九十九点五、八十九，说明主增益不只是奖励工程。</p>
+      <p>代价是树式采样随角色数、轮数和分支数增长，系统需同时托管多策略，近满分的合成规划任务也可能夸大可扩展性。直接 MAS-GRPO 会因异质状态偏置而在 8B CodeContests 从十七点六跌到十点三、Olympiad 从五十六点五跌到五十三点二，说明算法不能随意替换分组方式；贪心保留最高奖励分支可能损失长期看似差但最终更优的协作路径。单 agent 自我多轮修订在代码和数学上反而普遍退化，表明额外轮次必须包含互补反馈。实验角色固定为两个或简单 ensemble、环境奖励可验证，尚未处理开放沟通、非平稳队友和冲突目标。Python 沙箱虽隔离网络和文件，但真实多 agent 工具权限与安全风险仍未验证。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="06-04.html"><span>上一方向</span>合成任务、rubric tree 与全训练链路</a>
+      <a class="next" href="07-01.html"><span>下一方向</span>搜索、工具探索与工具调用决策</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

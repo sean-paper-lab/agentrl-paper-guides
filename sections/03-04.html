@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="鲁棒恢复与专用推理优化：DenoiseRL: Bootstrapping Reasoning Models to Recover from Noisy Prefixes、GeometryZero: Improving Geometry Solving for LLM with Group Contrastive Policy Optimization">
+  <title>3.4 鲁棒恢复与专用推理优化 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>3.4</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 2 篇</p>
+      <h1>鲁棒恢复与专用推理优化</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A039"><span>A039</span>DenoiseRL: Bootstrapping Reasoning Models to Recover from Noisy Prefixes</a>
+<a href="#paper-A040"><span>A040</span>GeometryZero: Improving Geometry Solving for LLM with Group Contrastive Policy Optimization</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A039" data-paper-id="A039">
+      <header class="paper-header">
+        <p class="paper-kicker">A039 · 约 4 分钟</p>
+        <h2>DenoiseRL: Bootstrapping Reasoning Models to Recover from Noisy Prefixes</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">noisy-prefix</span><span class="paper-tag">recovery</span><span class="paper-tag">reasoning</span><span class="paper-tag">robustness</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.28421" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>把更强教师的正确解或人工难题喂给策略，是提升推理模型的常见路线，但能力边界一旦逼近现有教师，可用监督就变得昂贵而稀缺。DenoiseRL 反过来利用弱模型：弱模型不是提供答案，而是提供会把推理引向死路的错误前缀。问题和标准答案保持不变，策略必须从这段已发生偏航的中间状态继续，并仍由原规则验证器判断最终答案。若带前缀的成功率低于干净生成，这段前缀就构成可度量的推理噪声。它把标准 RL 中偶然出现的自我纠错改造成直接训练目标，也在不合成新题的情况下把同一道题变成一系列可调难度的恢复任务。</p>
+      <p>离线阶段用 Qwen2.5-1.5B-Instruct 为 MATH-7.5K 每题采样八个响应，只保留具有有效错误盒装答案的轨迹。训练时从错误轨迹开头截取一段，作为固定上下文交给更强的 Qwen3-4B 或 8B 续写；前缀并非当前策略采样，所有前缀词元都用零损失掩码，只优化其后的在策略 continuation。截断优先对齐完整推理行，避免把语法残片当噪声，单行响应才退回词元位置。终局正确给一、错误给零，方法只改变 rollout 构造和损失掩码，因此可以分别接在 GRPO 或 DAPO 上，无需训练新奖励模型，也不会在 RL 循环中调用弱模型。</p>
+      <p>噪声强度由每题独立课程控制。每个活跃问题维护一个错误前缀比例，初始与下界为零、上限为一半；一批十六个问题各生成十六条恢复响应后，用该题成功率与百分之七十五目标的差调整比例：恢复太容易就暴露更多错误轨迹，太难则缩短。最近五次比例变化的趋势足够平缓时，问题被视为已稳定并换入未见样本，新题继承活跃批次更新后的平均比例，从当前能力边界开始。训练最长响应四千零九十六词元，学习率一百万分之一、无 KL、裁剪零点二，在四张 H100 上完成；这种细粒度闭环旨在长期维持既非全对也非全错的有效组内信号。</p>
+      <p>五项数学与一般推理评测显示，四十亿模型的 GRPO 平均四十点五，DenoiseRL-GRPO 为四十二点二；DAPO 从三十九点八升到四十二点三。八十亿模型上，GRPO 与 DAPO 为四十三点零和四十二点八，对应 DenoiseRL 为四十四点九和四十五点二。作者按配对基线计算，四十亿提升二点六和二点五，八十亿提升一点九和二点四；两种 DenoiseRL 也都超过 Critique-GRPO，最佳模型在两个尺度都高一点八。反而把弱模型的正确前缀接入 GRPO 会低于标准 GRPO，说明收益不是前缀提示，而是从结构化错误状态恢复。代表案例中，模型会保留前缀的有效条件，同时主动重算错误枚举并改正答案。</p>
+      <p>噪声来源和课程消融解释了为什么外部弱模型有效。数学四项平均、BBEH 与总平均上，随机词元为四十八点二、九点八、四十点五，预强化学习策略自身错误为四十七点九、十二点二、四十点七，外部小模型为五十点一、十点七、四十二点二。自身错误初始干扰最强，平均强度十四点九却快速衰减；小模型平均六点九，但在一千至一千二百步仍有三点九，高于自身的二点二和随机词元的零点六。五百步后，逐题控制在目标成功区间内保持百分之九十六点九的窗口，共享比例与固定零点二仅十二点四和十四点六；逐题方案相对基础平均增益十五点六，也高于十三点九和十三点五。</p>
+      <p>在 ALFWorld 中，课程单位从推理行换成环境步骤，并按六类任务分别维护前缀长度；Qwen2.5-7B 的 DenoiseRL-GRPO 在已见和未见环境达百分之九十六点三、八十八点一，比 GRPO 高十五点六和八点二，证明恢复目标可迁移到多步行动。代价是模型生成更长：一千四百步内每响应平均一千八百四十三词元，对照九百七十四，单步时间六十七秒对四十八点八秒，增幅一点三七倍。论文明确承认效果取决于弱模型错误是否真实、多样且不太琐碎；当前只把失败轨迹前缀作为噪声，尚不知错误结论、计划、工具历史或潜状态是否同样有效。离线前缀还局限于可验证答案和预收集错误，课程参数与最长半轨迹假设也需按领域调整。</p>
+    </article>
+    <article class="paper" id="paper-A040" data-paper-id="A040">
+      <header class="paper-header">
+        <p class="paper-kicker">A040 · 约 5 分钟</p>
+        <h2>GeometryZero: Improving Geometry Solving for LLM with Group Contrastive Policy Optimization</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">geometry</span><span class="paper-tag">group-contrastive</span><span class="paper-tag">RLVR</span><span class="paper-tag">domain-reasoning</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2506.07160" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>几何题既要求从图形或形式化描述中推理，也常需要补画辅助线。以往方法要么依赖大规模标注和超大模型，要么像 ToRL 一样给任何工具调用统一正奖励；后者只教会“怎么画”，没有教会“什么时候画”。有些题确实因辅助线而简化，另一些可以直接推出，强行构造反而引入错误对象和关系。普通 GRPO 的可验证答案奖励只能判断最后是否正确，若再无条件奖励辅助构造，就会把偶然成功与真正有益的使用混在一起。GeometryZero 的核心问题因此不是最大化工具率，而是让中小模型从对照结果中学习按情境选择构造或克制。</p>
+      <p>GCPO 对每个问题除常规的八条自由响应外，再采两组对照：一组明确要求在思考中构造辅助线，另一组明确禁止构造，然后比较两组的平均答案正确率。若构造组高出无构造组超过阈值，常规响应中的辅助构造得到正奖励；若反向差距超过阈值，则同一行为受惩罚；差距不明确时辅助奖励归零。阈值默认零点零五，避免把采样噪声解释为因果收益。文本模型在思考中输出 TikZ 或逻辑形式，前者必须可执行并成功渲染，后者以专用标签识别；视觉语言版本则执行代码、把新增线条渲染回图像，再让模型继续观察。</p>
+      <p>总奖励保留答案正确和输出格式两项，再加入经对照掩码处理的辅助奖励与长度奖励，后两者权重均为零点五。长度项随完成词元增加而上升并在最长一千零二十四词元处封顶，意在给多维几何分析留出空间。训练数据从 Geometry3K 随机取一千四百四十三题、从 Geomverse 取两千题；前者图形转为逻辑形式，后者使用可执行 TikZ。SFT 响应由 Qwen2.5-72B 生成，GRPO 和 GCPO 只用题目及最终答案监督。Qwen2.5 的 1.5B、3B 和 7B 模型全参数训练，批量三十二、rollout 批量六十四、学习率三乘十的负七次方、KL 系数为零，在四张 H100 上完成。</p>
+      <p>四项 Best-of-3 评测包含域内 Geomverse、Geometry3K，以及分布外 MathVista、OlympiadBench。GeometryZero-1.5B 平均三十六点零八，GRPO 为三十二点八五、ToRL 为三十二点八四；三十亿版本为五十二点一五，GRPO 五十点六五、ToRL 五十点二九；七十亿版本为五十七点四七，GRPO 五十五点六三、ToRL 五十四点七二。统一奖励的 ToRL 在三十亿只比 GRPO 高零点六四，却在七十亿低零点九一，印证盲目构造不能稳定扩展。视觉语言 Qwen2.5-VL-7B 上，GeometryZero-VL 平均五十二点八四，高于 GRPO 的五十点零二和 ToRL 的四十八点七零，但仍落后形式语言文本版的五十七点四七。</p>
+      <p>三十亿模型三次运行的消融中，GRPO 平均五十点三一；只留长度奖励、去掉辅助奖励与对照掩码为五十点八一；保留无条件辅助奖励但去长度和对照为五十点六一；保留对照辅助奖励但去长度为五十一点一二；完整 GeometryZero 达五十二点六二。四项的提升并不完全均匀，例如去长度版本在 OlympiadBench 略低，但综合结果表明条件掩码和长度激励各有贡献。阈值从零升高时性能先升后降，零点零五到零点一五最好；太小会把不确定差距强行判正负，太大则多数辅助奖励归零。训练长度呈先升、后降、再回升，最小的一点五十亿 GRPO 后期没有恢复，而 GCPO 有恢复，作者据此推测条件信号帮助小模型形成更复杂推理。</p>
+      <p>扩展实验在一百零八道 UniGeo 证明题上训练 14B 版本，GeometryZero-14B 为百分之七十二点二，比基础 Qwen2.5-14B 的六十四点八高七点四，但仍低于专用 AlphaGeometry 的九十四点四。论文的明确限制是依赖可验证答案，许多开放证明或多解几何题无法提供同样稳定信号；主实验受算力限制在 7B 以下，14B 证明结果只是补充。每题额外两组对照显著增加 rollout，组均值差也不能完全消除随机性，更长奖励可能鼓励冗余。形式语言转换和人工核验会引入数据处理成本，现实模型仍可能给出貌似可信的错解并对新题型、噪声图形脆弱，因而需要人工验证与领域安全措施。GCPO 学到的是条件化辅助构造偏好，并不等同于可靠的符号几何证明器。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="03-03.html"><span>上一方向</span>经验回放、rollout 利用与梯度信号效率</a>
+      <a class="next" href="03-05.html"><span>下一方向</span>长周期自博弈稳定性</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

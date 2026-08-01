@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="上下文压缩、并行轨迹与长程路由：Agentic Aggregation for Parallel Scaling of Long-Horizon Agentic Tasks、AgentSwing: Adaptive Parallel Context Management Routing for Long-Horizon Web Agents、CompactionRL: Reinforcement Learning with Context Compaction for Long-Horizon Agents">
+  <title>5.2 上下文压缩、并行轨迹与长程路由 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>5.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 3 篇</p>
+      <h1>上下文压缩、并行轨迹与长程路由</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A055"><span>A055</span>Agentic Aggregation for Parallel Scaling of Long-Horizon Agentic Tasks</a>
+<a href="#paper-A056"><span>A056</span>AgentSwing: Adaptive Parallel Context Management Routing for Long-Horizon Web Agents</a>
+<a href="#paper-A057"><span>A057</span>CompactionRL: Reinforcement Learning with Context Compaction for Long-Horizon Agents</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A055" data-paper-id="A055">
+      <header class="paper-header">
+        <p class="paper-kicker">A055 · 约 5 分钟</p>
+        <h2>Agentic Aggregation for Parallel Scaling of Long-Horizon Agentic Tasks</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">test-time-scaling</span><span class="paper-tag">parallel-trajectories</span><span class="paper-tag">deep-research</span><span class="paper-tag">aggregation</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.11753" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>并行测试时扩展在数学题上可以投票，但长程智能体的答案往往是多实体集合或长报告，真正证据散落在数百轮工具观察中。只投最终答案会丢掉证据，按自报置信度或工具调用数挑一条又依赖脆弱启发；把全部轨迹拼进上下文会超过窗口，先逐条摘要则既需要额外调用又不可逆地损失细节。论文展示了扩展潜力：GLM-4.7-Flash 在 BrowseComp 从 Pass@1 的约百分之二十七升到 Pass@8 的五十九，在 HLE 从二十五升到五十一，说明正确证据经常已存在于八条轨迹，只是缺少一种能核验分歧、拼接局部成果的聚合方式。</p>
+      <p>AggAgent 把已经完成的并行轨迹本身视为一个只读环境，而不预先塞给聚合模型。初始上下文只有原问题和每条轨迹的步数、词元数、工具统计等元数据；聚合器可调用 get_solution 一次浏览各轨迹终答，用 search_trajectory 在指定轨迹中按关键词和角色检索匹配步骤，再用 get_segment 精读连续区间的原始思考与工具观察，最后以 finish 提交综合答案。典型流程由粗到细：先看共识和冲突，定位值得深挖的轨迹，再回到原始证据核实主张。工具只访问内存数组，不重新搜索网页或执行代码，因此保留全文真值又没有外部 API 延迟。</p>
+      <p>这种设计的上下文最多是一条聚合轨迹的窗口，理论上不随并行轨迹数线性增长。它既可以从少数正确轨迹中识别被多数票压过的答案，也能追查分歧根源；对开放报告则不必全盘选中某个全局赢家，而可把不同轨迹的优质段落和证据局部合成。论文比较多数投票、加权投票、自报置信度 Best-of-N、最少工具调用、只看终答的 Solution Aggregation，以及逐轨迹摘要后再聚合的 Summary Aggregation。AggAgent 无需训练，聚合器默认与 rollout 智能体使用同一个现成模型，也可把较强模型专门用于汇总较弱模型的轨迹。</p>
+      <p>实验含六个长程任务：BrowseComp、带本地知识库的 BrowseComp-Plus、HLE、要求完整答案集合的 DeepSearchQA，以及 Healthbench-Hard、ResearchRubrics 两个长报告任务。GLM-4.7-Flash、Qwen3.5-122B 和 MiniMax-M2.5 各生成八条轨迹，使用 Tongyi DeepResearch 框架、十二万八千词元窗口和最多一百次工具调用。八轨迹时，AggAgent 的六任务平均分分别为四十七点九、五十五点八三、五十七点三一，比各自 Pass@1 高十三点三到十七点九，也比最强基线 Solution Aggregation 高二点四到五点三。GLM 上 Healthbench-Hard 从基线最佳十五点七二升到二十七点九九，ResearchRubrics 从三十六点八四升到四十五点三一。</p>
+      <p>效率与消融说明收益不是简单多烧一次上下文。八轨迹下 AggAgent 的额外成本约为 rollout 总成本的百分之五点七，Solution Aggregation 为三点七，逐条摘要却为四十一；在不同模型和并行数上，它处于成本、延迟与效果的帕累托前沿。改用 MiniMax 汇总 GLM 轨迹通常进一步提升，甚至在 BrowseComp-Plus 超过 Pass@8，表明综合可产生任何单轨迹都没有的正确答案。若强制只选择一条现有轨迹，检索题尚可竞争，深度研究明显落后，因为报告质量分布在多条轨迹。工具统计中关键词搜索占多数，整段读取较少，符合按需深入而非通读全部的设计。</p>
+      <p>边界同样明显：方法的前提是先支付多条完整长程 rollout，聚合开销虽小，并行搜索本身仍昂贵，延迟也受最慢轨迹约束。它依赖关键词和 ROUGE-L 找到证据，别名、隐含关系或模型不知道该搜什么时会漏检；聚合器仍可能错误裁决冲突或把不一致片段拼成流畅假结论。评测大量依赖 LLM-as-a-Judge，医疗和开放研究分数会受裁判偏差影响，且每个昂贵基准只抽取一百到一百五十题。论文没有系统做工具级删除消融，也没有训练聚合器，选择与合成的更细比较留待未来；结论适用于轨迹可保存、可检索的离线并行扩展，不等同于单代理实时上下文管理。</p>
+    </article>
+    <article class="paper" id="paper-A056" data-paper-id="A056">
+      <header class="paper-header">
+        <p class="paper-kicker">A056 · 约 4 分钟</p>
+        <h2>AgentSwing: Adaptive Parallel Context Management Routing for Long-Horizon Web Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">context-routing</span><span class="paper-tag">parallel-context</span><span class="paper-tag">web-agent</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2603.27490" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程网页搜索面对的不只是“上下文装不下”，而是压缩方式应随当前状态改变。完全保留历史容易在长上下文中发生信息腐烂，删光历史能让代理重新搜索却丢失已发现线索，保留最近若干轮或滚动摘要则处于两者之间；固定采用一种策略，无法同时处理“最近线索很关键”和“当前轨迹已被噪声拖偏”两种状态。论文把终局成功拆成搜索效率与终止精度：前者是资源耗尽前能否给出答案，后者是在确实给出答案时答对的概率，两者乘积才是 Pass@1。无管理通常效率高、精度低，Discard-All 单次尝试效率低却精度高，多次重启才补回完成机会。</p>
+      <p>AgentSwing 在历史长度达到模型窗口某个比例时触发，不立即选定压缩法，而是从同一原始状态并行建立三种分支。Keep-Last-N 只保留最近五轮工具交互，适合延续刚形成的线索链；Summary 用摘要加原问题保存较长结构；Discard-All 仅留原问题，适合从严重漂移中彻底重启。每个分支先与真实环境继续交互若干轮，代理模型再同时看到原始上下文和这些短期后果，选择最有希望的分支作为主轨迹，其余丢弃。路由判断因此依据“压缩后实际会发生什么”，而不是只看一段可能同样流畅的摘要或静态上下文。</p>
+      <p>实验在 BrowseComp、BrowseComp-ZH 和五百道纯文本 HLE 上运行 GPT-OSS-120B、DeepSeek-v3.2、Tongyi-DeepResearch-30B-A3B，统一十二万八千词元窗口，默认最多四百轮。工具为 Search、Visit，HLE 另有 Google Scholar 和沙箱 Python；摘要固定由 GPT-OSS-120B 生成。不同骨干使用窗口的百分之二十或四十作为触发预算。AgentSwing 默认把同一个代理模型兼作路由器，所以是无需训练的测试时控制层；评价使用各基准官方的 LLM-as-a-Judge，并把用完资源却未输出答案的任务直接计为失败。</p>
+      <p>整体结果在所有模型和基准上都优于无管理与三种静态策略。GPT-OSS 在 BrowseComp 从无管理百分之三十九点五升到六十，静态最佳仅五十二点五；BrowseComp-ZH 从二十八点四升到三十八，HLE 从三十三点二升到三十五点一。DeepSeek 在三项上达到六十二点五、七十一点三和四十四点四；Tongyi-DR 达到六十点五、五十六点七和三十三点一。对所有方法都触发管理的难例，GPT-OSS 的 Pass@1 为四十一点八，且平均一百九十点三轮，比 Discard-All 的二十八点七和二百九十七点二轮更准更快，说明提升不是单靠使用更多交互预算。</p>
+      <p>路由消融最能说明并行分支为何必要。GPT-OSS 上随机选分支只有百分之五十一，不做前瞻、仅凭压缩后上下文选择为五十；看一步升到五十二点五，看三步达到六十，看五步反而降至五十五。Tongyi-DR 对应为五十六点五、五十七、五十八、六十点五、五十九，三步同样最好：一步信息不足，五步可能挤压剩余窗口。候选组合实验中 Discard-All、Summary、Keep-Last-N 各有优势，组合通常优于单一策略，路由转移矩阵也明显非均匀。虽然前瞻会额外生成词元，但总成本只温和增加，保留长历史的分支在相同轮数下反而可能消耗更多累计词元。</p>
+      <p>这仍是外部测试时编排，而非模型真正学会记忆管理。每次触发都要并行执行多个分支，若工具昂贵、环境有不可逆副作用或不能复制状态，就难以安全使用；被丢弃分支的搜索成本也无法回收。路由器由代理自己担任，错误预判会把正确线索剪掉，论文也提出专门路由器或验证器可能更好。实验证据集中在网页信息检索，两个大基准还使用抽样子集；最高四百轮和特定触发比例把效果与预算绑定。三种候选策略并不穷尽压缩空间，Summary 又固定依赖大模型。方法尚未训练成内生能力，真实长期对话、代码执行和不可回滚环境中的精度—效率权衡仍待验证。</p>
+    </article>
+    <article class="paper" id="paper-A057" data-paper-id="A057">
+      <header class="paper-header">
+        <p class="paper-kicker">A057 · 约 4 分钟</p>
+        <h2>CompactionRL: Reinforcement Learning with Context Compaction for Long-Horizon Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">context-compaction</span><span class="paper-tag">summarization</span><span class="paper-tag">long-horizon</span><span class="paper-tag">joint-optimization</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2607.05378" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>软件工程和终端任务的思考、工具输出、错误信息与补丁会持续增长，单纯扩大窗口既昂贵，也会因长序列利用不佳而退化。推理时摘要可在快装满时把旧历史压成较短状态，再接上最近交互继续，但摘要若漏掉文件路径、失败命令或未完成修改，后面再强的执行策略也无从恢复。更重要的是，传统强化学习把整条 rollout 当固定样本；压缩会把一条轨迹切成数量和长度不一的执行段、摘要段，组相对归一化会让压缩次数多的轨迹被重复计权，若把各段独立训练，又会把遥远终局奖励错误地放到每段末尾，夸大早期动作的信用。</p>
+      <p>CompactionRL 把摘要从外部启发变成同一策略的可训练动作。当前历史剩余预算低于阈值时，模型读完整历史和固定摘要指令，生成应保留原目标、已做动作、关键观察、未解错误、当前状态和下一步的摘要；新上下文由系统提示、原始任务、摘要模板和最近两轮原始交互构成，必要时减少保留轮数。工具调用和观察成对作为原子步骤，不会在中间被切开。整条 rollout 因而交替包含执行段与摘要段，所有段共享最终任务奖励，摘要词元也进入策略目标，不另设可能与真实任务价值错位的人工摘要分。</p>
+      <p>优化改用带价值模型的 PPO，以支持每个问题只有一条 rollout 和可变段数。首先按所有生成词元统一归一化损失，而不是对每段等权平均，防止段短、压缩频繁的轨迹权重过大。其次，每段先计算局部广义优势，再按该段之后还有多少可训练词元施加位置折扣，把它校正回原始串联轨迹中到终局奖励的真实距离，这就是跨轨迹 GAE。训练前价值模型预热五十步，之后每批做两次价值更新和一次策略更新，让评论家跟上策略；执行与摘要由同一奖励联合塑形，目标是学会既保留有用状态，又在压缩后继续有效行动。</p>
+      <p>训练使用 SWE-Dev，两种骨干为 GLM-4.7-Flash 三百亿激活三十亿和经 GLM-4.7 轨迹监督微调的 GLM-4.5-Air 一千零六十亿激活三百亿。全局批量一百二十八，Flash 工作窗口六万四、Air 八万词元，每次回答最多一万零二百四十词元，最多压缩三次；评测为 SWE-bench Verified 随机二百题与完整 Terminal-Bench 2.0，最多二百五十轮、两次运行取均值。Flash 在压缩评测的两项 Pass@1 达百分之五十六和二十点二，较基础模型五十点五、十三点四提升五点五、六点八；Air 达六十六点八和二十四点五，较基础模型提升七和三点一。</p>
+      <p>消融显示“训练时见过压缩”还不够，必须优化摘要本身。Flash 不训练摘要词元时，压缩评测为 SWE 百分之五十四点五、Terminal 十二点四，完整方法为五十六和二十点二；Air 对应从六十四点五、二十点二升到六十六点八、二十四点五。Air 上去掉词元级归一化，成绩降到六十和二十一点三；去掉跨轨迹 GAE 为六十三和二十二点五，说明长度偏置尤其严重。固定执行器只更换摘要模型，SWE 也从四十九变到五十五点五，相差六点五。分析还显示完整方法在触发压缩的题上最准、工具调用更少，训练后摘要逐渐变长且更具体，推理预算随之增加而熵增长更慢。</p>
+      <p>训练分布决定了它的适用边界。CompactionRL 在启用压缩时最强，但关闭压缩的单窗口评测并不稳定改善：Flash 甚至从基础四十七点五降到四十三点七，表明策略形成了对压缩执行的依赖。跨轨迹 GAE只是对完整信用的近似，多次压缩时早期摘要的长期影响未必由词元距离正确表达。实验证据限于代码导向的 SWE-bench 与 Terminal-Bench，且 SWE 只抽取二百题，不能直接外推网页、对话或多模态观察。训练还需要大模型价值网络、长上下文和异步 RL 资源；更长、更详细的摘要并非永远更好，若环境状态难以文本化或奖励不可验证，联合训练可能保留冗余甚至学会摘要投机。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="05-01.html"><span>上一方向</span>子目标、里程碑、锚点与策略抽象</a>
+      <a class="next" href="05-03.html"><span>下一方向</span>长短期记忆选择、写入与管理</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

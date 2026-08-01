@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="面向 Agent 轨迹的 step/trajectory-aware OPD：StepOPSD: Step-Aware Online Preference Distillation for Agent Reinforcement Learning、Self-Distilled Agentic Reinforcement Learning、SEED: Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning">
+  <title>4.2 面向 Agent 轨迹的 step/trajectory-aware OPD · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>4.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 3 篇</p>
+      <h1>面向 Agent 轨迹的 step/trajectory-aware OPD</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A045"><span>A045</span>StepOPSD: Step-Aware Online Preference Distillation for Agent Reinforcement Learning</a>
+<a href="#paper-A046"><span>A046</span>Self-Distilled Agentic Reinforcement Learning</a>
+<a href="#paper-A047"><span>A047</span>SEED: Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A045" data-paper-id="A045">
+      <header class="paper-header">
+        <p class="paper-kicker">A045 · 约 4 分钟</p>
+        <h2>StepOPSD: Step-Aware Online Preference Distillation for Agent Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">OPSD</span><span class="paper-tag">step-aware</span><span class="paper-tag">preference-distillation</span><span class="paper-tag">agent-RL</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.27140" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多轮 agent 轨迹把推理、可执行动作和不可控环境观察交错在一起，而 GRPO 只把终局奖励广播给所有 token。一个查询拼写、无效动作或过早作答就能毁掉几千 token 的 rollout，但统一惩罚既无法指出致命位置，也会误伤其他正确步骤。普通 OPSD 虽提供 token 级教师信号，仍把整条异质序列当作单一字符串。StepOPSD 因而把“动作中心的 step”设为信用单元：在线探索完全沿用 GRPO，轨迹结束后才解析因果动作跨度、补入 hindsight，再把师生差异变成对原 RL 优势的局部重分配。</p>
+      <p>ALFWorld 仅抽取严格 action span；Search-QA 则保留内部推理但遮罩检索到的外部文本。对同一 GRPO 组中的失败轨迹，教师上下文追加该组第一条成功同伴轨迹，既提供针对当前任务的事后示范，又避免外部 oracle 的标注成本和分布偏移。教师不是永久大模型，而是每十步刷新的 stale reference policy。对每个已生成 token，方法计算 hindsight 教师与普通学生上下文间的对数概率差，以定位一旦知道成功路径后最需要重新评价的决策。</p>
+      <p>该差值先与原优势符号结合，经 sigmoid 映射为零到二的乘法权重，再裁剪到一加减 αclip 的局部信赖区。最终优势在原优势和加权优势之间按 λmix 混合，严格保持正负号，教师只改变更新幅度、不改变环境奖励指定的方向。为防止冗长推理步积累更多权重，作者再做 equal_step_mean_abs 归一化，让每个 step 拥有相同平均绝对修改预算，差值只负责在步内 token 间分配。这使 StepOPSD 更接近“偏好驱动的信用整形”，而非让学生复制教师分布。</p>
+      <p>实验用 Qwen3-1.7B 与 Qwen2.5-3B-Instruct，在 ALFWorld 六类具身任务和七个 Search-QA 数据集上最多训练一百五十步。搜索训练只用 NQ、HotpotQA，其余作为域外评测；对比 GRPO、OPSD、Skill-GRPO、GRPO+OPSD、Skill-SD、RLSD 与 SDAR。默认 αclip 和 λmix 均为零点二，后者在五十步线性衰减至零，因而五十步后的师生差异主要是“学生相对仍定期刷新的旧教师漂移”诊断，不能误解为整形仍同强度生效。</p>
+      <p>收益集中在终局奖励与局部致因最错位的子集。3B、λmix 零点二且 αclip 零点零五时，ALFWorld Heat、Cool、PickTwo 分别达到百分之七十九点一、七十八点九、九十五，平均八十三点六；搜索中较小 λmix 配合紧裁剪，NQ 与 TriviaQA 达到四十五点零和六十一点六，总平均四十五点七，HotpotQA 另有并列最佳四十点四。相反，2Wiki 与 MuSiQue 更依赖跨步证据整合，局部动作修正优势较弱。这说明 StepOPSD 并非均匀提高所有平均分，而是针对单个检索或状态转换决定成败的任务最有效。</p>
+      <p>消融得到“两旋钮规律”：缩小 αclip 在两类环境中都能防止少数 token 过度主导，ALFWorld 后期差值标准差由零点七七降至零点二五二，并缩短成熟轨迹；全局 λmix 则依任务而变，具身控制偏好较弱整形，检索任务有时需要更强锚定。理论附录声称正权重保持梯度方向，并在教师能识别局部真优势时降低方差，但其“逐 token 正缩放必使期望梯度与原梯度非负余弦”的论证依赖较强假设。组内 hindsight 只用于失败样本，成功轨迹仍按原 GRPO 更新；参考策略每十步刷新，避免教师长期落后于正在变化的学生，这也把额外评分限制在训练期。局限还包括新增跨域调参、仅事后整形而不干预生成，以及必须在组内同时出现成功与失败，极稀疏成功任务可能拿不到同伴 hindsight。</p>
+    </article>
+    <article class="paper" id="paper-A046" data-paper-id="A046">
+      <header class="paper-header">
+        <p class="paper-kicker">A046 · 约 4 分钟</p>
+        <h2>Self-Distilled Agentic Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">self-distillation</span><span class="paper-tag">agentic-RL</span><span class="paper-tag">on-policy</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.15155" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多轮 agent 的普通在线策略蒸馏存在结构性风险：教师必须沿学生自己生成的前缀评分，而一次错误工具调用就会让后续上下文偏离教师熟悉的分布，误差随轮次累积。论文实测超过一半 token 的师生对数概率差为负，平均差值也为负，说明即使教师整体更强，它在具体学生状态上也常比学生更不认可已生成动作。若无差别最小化全轨迹散度，这些不可靠的“拒绝”会与环境奖励冲突，搜索任务中的纯 OPSD 甚至接近崩溃。</p>
+      <p>SDAR 不另请外部大教师，而让同一个策略扮演两个角色。学生按正常任务上下文采样；自教师额外读取从经验库检索到的任务技能，再对同一批已生成 token 重新评分。技能相当于训练期特权信息，使自教师更可能识别动作是否符合成功程序，又保持模型架构、词表和基本行为模式一致。每个 token 的教师减学生对数概率差经过 sigmoid 门控，正差获得较高权重，负差被柔和抑制；门控停止梯度，避免权重随目标共同变化产生自指更新。</p>
+      <p>主目标仍是原样的 GRPO，蒸馏只作为独立辅助损失加入，因此不篡改序列奖励或组内优势。作者采用 sampled-token 反向 KL，使更新集中在学生实际访问的轨迹；默认技能用关键词匹配，也比较 UCB、全量和随机检索。实验涵盖 Qwen2.5-3B、Qwen2.5-7B 与 Qwen3-1.7B，训练一百五十步、每题八条 rollout，在 ALFWorld、WebShop 和 Search-QA 上与普通提示、GRPO、Skill-GRPO、OPSD、GRPO+OPSD、Skill-SD、RLSD 等方法统一比较。</p>
+      <p>结果显示增益跨模型和环境存在。以 Qwen2.5-3B 为例，ALFWorld 成功率由 GRPO 的百分之七十五提高到八十四点四，Search-QA 由三十六点四升至四十三点四，WebShop 成功率由六十三点三升至六十八。七十亿模型在 WebShop 达到八十二点八，比 GRPO 高十点二，在搜索上也由四十二升至四十九。单独 OPSD 在搜索几乎失效；朴素 GRPO 加 OPSD 还把 Qwen3-1.7B 的 ALFWorld 从 GRPO 的四十六点一拖到三十二，而 SDAR 达到五十三点九，表明关键不是增加教师损失，而是筛掉不可信局部信号。搜索训练只使用 NQ 与 HotpotQA，其余五个数据集留作迁移评测，因此平均提升还包含未见问答分布上的泛化。</p>
+      <p>消融进一步定位了设计来源。基于师生概率差的门控优于熵门和两者软并集，训练后期成功率约稳定在零点八四；门温度取五最好，取零等于失去选择性，过大又近似硬阈值。辅助权重零点零一优于零点零零一和零点一，后者会压过强化学习；反向 KL 也优于前向 KL 与 JSD。检索并非必须完美：随机技能仍超过 GRPO，但关键词匹配在 ALFWorld、WebShop 分数和成功率上分别带来约四点七、八点五和十点二的更大增益。默认训练还固定学习率为百万分之一、组大小为八、策略裁剪为零点二，使消融只改变蒸馏组件而不混入强化学习配方变化。</p>
+      <p>附录把停止梯度后的门控解释为有界的加权似然，从而说明为何它不会像直接优化动态门函数那样产生额外梯度项。与此同时，实证范围仍限于三类 benchmark、Qwen 系列和预先构建的技能库；检索质量、门温度与辅助权重均需选择，自教师也可能继承学生的共同盲点。训练时还要为同一轨迹进行特权上下文评分，长轨迹成本并未系统量化。经验库中的技能来自训练经验，论文没有系统测试技能冲突、错误技能污染或跨域库迁移；部署虽不必携带技能，训练收益却仍依赖这一额外知识管线。理论只约束单 token 的门控梯度，并不能保证整条环境轨迹的策略改进或避免奖励投机。SDAR 的价值因此是提供一种保守的自蒸馏接口，而不是证明自生成技能在所有开放式 agent 环境中都可靠。</p>
+    </article>
+    <article class="paper" id="paper-A047" data-paper-id="A047">
+      <header class="paper-header">
+        <p class="paper-kicker">A047 · 约 4 分钟</p>
+        <h2>SEED: Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">OPD</span><span class="paper-tag">hindsight-skill</span><span class="paper-tag">dense-token-signal</span><span class="paper-tag">self-evolving</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2607.14777" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>静态经验蒸馏有两种陈旧性：经验由旧策略生成，未必覆盖当前策略的新错误；分析器若固定，也会用过时的能力边界解释轨迹。SEED 将二者同时刷新。它先用少量离线轨迹教模型把完整交互总结成可复用技能，再在强化学习期间让当前策略既做 actor，又做轨迹 analyzer。这样，监督来源随学生共同演化，蒸馏针对的是本轮真实访问的状态和本轮刚暴露的失败，而不是一套越来越失配的外部教程。</p>
+      <p>冷启动阶段每个领域采一百八十项任务、每项八条轨迹，共一千四百四十条，由 GLM-5.2 根据成败生成自然语言 hindsight 技能，再监督微调三轮。在线阶段，策略先采样并完成环境交互，随后读取整条结果：成功时提炼有效工作流，失败时总结应避免的模式。模型以普通上下文作为学生、以追加 hindsight 技能的上下文作为自教师，对原动作 token 成对重评分；教师分支停止梯度，师生对数概率差经 sigmoid 门控后形成 sampled-token 蒸馏损失。</p>
+      <p>该辅助目标与 GRPO 相加，actor 和 analyzer 在每次更新后一起刷新。这里的“技能”不是固定检索库，而是对最新一批轨迹的即时解释，因此同时消除经验与监督陈旧性；推理时无需技能生成、检索或额外分析器。实验沿用 ALFWorld、WebShop 和七数据集 Search-QA，比较 Qwen2.5-3B、Qwen2.5-7B、Qwen3-1.7B，并复现 Vanilla、GRPO、Skill-GRPO、OPSD、GRPO+OPSD、Skill-SD、RLSD、SDAR 等基线；附录还扩展到视觉 Sokoban 与 EZPoints。</p>
+      <p>三组模型上 SEED 均领先。Qwen2.5-3B 在 ALFWorld 达百分之九十一点八，明显高于 GRPO 的七十五和 SDAR 的八十四点四；Search-QA 为四十五点七，WebShop 分数八十八点五、成功率七十八点九。七十亿模型在 ALFWorld 达九十六点一、搜索四十八点六、WebShop 成功率七十八点一，Qwen3-1.7B 也在 ALFWorld 达九十二。训练约四十步时，SEED 成功率已接近百分之五十七而 GRPO 约三十五，最终平均交互轮数约十三而非十六，说明它不仅提高终局成功，也减少无效探索。</p>
+      <p>数据效率和消融支持“持续更新经验”的解释。只用百分之六十训练数据时，SEED 在 ALFWorld 达八十点七，仍超过全量数据 GRPO 的七十五；百分之四十数据的五十八点九已接近百分之八十数据 GRPO 的五十八点六。完整方法为九十一点八，去掉 hindsight 冷启动降至八十六，去掉在线自演化蒸馏降至八十七，改为静态离线技能则为八十四点四。域外 ALFWorld 总体从 GRPO 的七十点九升至八十六点二，但 Clean 子类下降二点九，提醒平均迁移收益并非处处一致。全部主实验训练一百五十步、每题八条 rollout，并在八张 A800 上统一执行，避免不同采样预算解释增益。</p>
+      <p>多模态附录中，SEED 把 Sokoban 从六十七点一提高到八十二、EZPoints 从八十六点九提高到一百，初步说明机制不只适用于纯文本，两项平均由七十七升至九十一。论文也明确承认，自生成分析会继承策略盲点，自偏好可能强化反复出现的错误，概率置信并不等于语义正确；每轮轨迹分析和双上下文重评分的成本还会随长度和图像输入上升。冷启动还使用外部 GLM-5.2，所谓完全自演化仍建立在一批外部高质量技能标注之上；任务数量、分析提示与更新频率改变时能否保持稳定尚未检验。视觉扩展只含两个相对封闭的小游戏，不能代表真实 GUI 噪声和长视频观察。作者建议加入环境状态验证、跨快照分析、不确定性估计与选择性分析。故其贡献是让监督与策略同步，而非消除自举系统的确认偏差。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="04-01.html"><span>上一方向</span>OPD 基础范式与作用机理</a>
+      <a class="next" href="04-03.html"><span>下一方向</span>单教师/多教师的长程 Agentic distillation</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

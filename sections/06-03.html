@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="策略—数据—奖励—环境闭环共演化：Learning to Build the Environment: Self-Evolving Reasoning RL via Verifiable Environment Synthesis、EnvRL: Learn from Environment Dynamics in Agentic Reinforcement Learning、RLAnything: Forge Environment, Policy, and Reward Model in Completely Dynamic RL System、CoEvolve: Training LLM Agents via Agent-Data Mutual Evolution、Agent-World: Scaling Real-World Environment Synthesis for Evolving General Agent Intelligence">
+  <title>6.3 策略—数据—奖励—环境闭环共演化 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>6.3</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 5 篇</p>
+      <h1>策略—数据—奖励—环境闭环共演化</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A068"><span>A068</span>Learning to Build the Environment: Self-Evolving Reasoning RL via Verifiable Environment Synthesis</a>
+<a href="#paper-A069"><span>A069</span>EnvRL: Learn from Environment Dynamics in Agentic Reinforcement Learning</a>
+<a href="#paper-A070"><span>A070</span>RLAnything: Forge Environment, Policy, and Reward Model in Completely Dynamic RL System</a>
+<a href="#paper-A071"><span>A071</span>CoEvolve: Training LLM Agents via Agent-Data Mutual Evolution</a>
+<a href="#paper-A072"><span>A072</span>Agent-World: Scaling Real-World Environment Synthesis for Evolving General Agent Intelligence</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A068" data-paper-id="A068">
+      <header class="paper-header">
+        <p class="paper-kicker">A068 · 约 4 分钟</p>
+        <h2>Learning to Build the Environment: Self-Evolving Reasoning RL via Verifiable Environment Synthesis</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">environment-synthesis</span><span class="paper-tag">verifiable-task</span><span class="paper-tag">self-evolving-RL</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.14392" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>固定 RLVR 数据的验证器虽可靠，题目却会随策略进步而饱和，组内全对或全错后不再有梯度；按题自生成又常用同一策略投票、聚类或自信度当标签，奖励会与学习者一起漂移。EvoEnv 把自合成单位从一道题提升为可复用环境：一段 Python 同时实现实例采样、参考答案计算、自然语言渲染和响应评分，验证一次后可生成无限新实例。关键假设是稳定的“解题—验证不对称”：模型可能容易写出动态规划或图算法，却难以用自然语言稳定执行；也可能难找出子集和解，却很容易检查候选。冻结代码使策略不能靠改变自身判断篡改奖励。</p>
+      <p>同一个策略轮流做生成器和求解器。生成器从十个覆盖排序、动态规划、图、数论与可行性的种子环境出发，产出标准接口的 Python 类；候选代码在受限导入、资源限制和超时沙箱中执行。五层机械门依次检查可解析类和方法、多个种子下完整数据流、同种子确定性、跨种子与难度非平凡变化，以及评分契约：参考必须通过，扰动、畸形和类型错误答案必须失败，解析器不能泄露隐藏答案。通过后，同一策略独立审查三次源代码、实例、参考和评分器，任一认为有语义错误就不准进入训练池。</p>
+      <p>候选还需对当前求解器“难而可解”。系统在八个新实例上各采一答，成功率不能为零或一，质量奖励在约百分之三十成功附近最高。新颖性同时比较提示模板和生成代码的冻结向量，二者各占一半；已接收流越重复，新颖奖励越强，语义近邻超阈值也不能入池。机械有效性、难度和新颖性构成生成器奖励，语义审查只负责准入而不进入梯度，减少迎合语言裁判。求解器从活动池取环境、采新实例并由冻结 scorer 给普通 RLVR 奖励；两种角色分开归一化 GRPO 后共享更新，生成器权重零点三。用满的环境退休并转成未来生成示例，原始种子至少占池中五分之一。</p>
+      <p>三个模型均训练一百步且不使用外部题目—答案数据，在 AIME、AMC、HMMT、Beyond-AIME、Brumo、GPQA Diamond、LiveCodeBench 等八项上测 pass@1。Qwen3-4B-Instruct 平均由四十九点二升到五十三点一，相对加百分之七点九；Qwen3-4B-Thinking 由七十二点四升到七十四点八，固定 DAPO 和手工环境 RLVE 反而降到六十四点八、六十九点二；Nemotron-Cascade-8B 由七十一点零升到七十三点二。强思考模型的 GPQA 从六十五点二到七十点二，LiveCodeBench 从五十九点零到六十三点二，说明收益并非只记忆种子模板。</p>
+      <p>动态曲线中，求解训练分数从零点八八降到零点六一，未见手工环境准确率却从百分之七十二点四升到八十点四；低训练分在这里表示生成器持续抬高前沿，固定环境基线则停在约七十二。百步内从十个种子接收八百四十个环境、形成四十五个结构标签原型；生成器 L2/L3 通过率从五十三点四升至约七十三点六，L4 从四十二点四到六十三，奖励从零点二九二到零点四五二。完整强模型在七项消融平均提高二点四，去质量与难度塑形只提高零点五，去多样性只提高零点六，表明窄而难与广而易都不能维持有效课程。</p>
+      <p>环境接口目前只适合能用确定性 Python 紧凑表达和自动验证的算法、计数与可行性题，不能据此外推到人类偏好、开放判断、长程物理或真实工具交互。生成代码是不可信输入，沙箱、导入白名单、确定种子、资源限制和超时是方法必要部分；扩展到网页、文件和具身环境会显著扩大攻击面。同策略语义审查与 GPT-5.4 的七十九例审计虽有百分之八十八点六准确率和八十七点零 F1，仍会漏掉跨方法数据流与微妙生成病态，错误环境可能污染奖励。十种子也偏向可计数数论任务，生成环境中数论占百分之六十八点二。自主课程会放大双用途推理能力，因此代码公开、环境审计和隔离执行必须与扩展同步。</p>
+    </article>
+    <article class="paper" id="paper-A069" data-paper-id="A069">
+      <header class="paper-header">
+        <p class="paper-kicker">A069 · 约 4 分钟</p>
+        <h2>EnvRL: Learn from Environment Dynamics in Agentic Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">environment-dynamics</span><span class="paper-tag">state-prediction</span><span class="paper-tag">inverse-dynamics</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.17680" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程智能体的环境其实每一步都在回答“这个动作造成了什么”，但普通 GRPO 只在最后告诉模型成败，绝大多数观察被当作不可训练的上下文丢掉。EnvRL 将 rollout 重新解释为一批免费的环境动力学监督：前向状态预测给定当前观察和动作，要求生成下一观察；逆向动力学给定相邻观察和打乱顺序的合法动作集合，要求找出真正导致变化的动作。前者学习行为后果，后者过滤页面或场景中的无关细节、聚焦可控因果。它不是额外训练独立世界模型，而是在同一语言策略上加入两个标准交叉熵辅助目标，使策略参数直接内化转移规律。</p>
+      <p>每次当前策略与环境交互后，完整轨迹拆成相邻状态—动作—状态三元组，只用于本次在线更新后丢弃。主损失仍是终局奖励的 GRPO 或更细信用的 GiGPO，两个动力学损失与其联合反向。辅助权重不能固定：早期模型不懂环境时需要密集监督，后期若仍占很大比重会妨碍最大化任务奖励，因此从初值按余弦逐步衰减到零。逆向任务随机打乱动作候选以避免位置捷径，前向和逆向输出都用结构标签便于抽取；上下文只保留最近两对观察—动作。整套方法复用已有 rollout，每次更新只增加一次前向计算，不新增采样或模型。</p>
+      <p>主实验在 ALFWorld 六类家务与 WebShop 购物上使用 Qwen2.5-1.5B/7B-Instruct，批量十六、每题八条、学习率一百万分之一、训练一百五十步，在八张 A100 上完成；十五亿模型两个辅助权重初值为零点二，七十亿为零点一。对照含 Prompting、ReAct、GRPO、GiGPO 与闭源模型。十五亿的 EnvRL-GRPO 将 ALFWorld 成功率由百分之七十二点八升到七十七点四，WebShop 由五十六点八到六十七点零；搭配 GiGPO 则由八十六点七、六十七点四升到九十一点八、七十四点二。七十亿 EnvRL-GiGPO 达九十四点五和七十六点三。</p>
+      <p>组件消融呈现环境差异。十五亿 EnvRL-GRPO 完整在 ALFWorld／WebShop 为七十七点四／六十七点零，去逆向目标为七十三点五／六十四点五，去前向为七十一点九／六十六点零；家务状态转移更规整，前向预测更关键，网页观察噪声大，逆向识别有效动作更有帮助。GiGPO 完整为九十一点八／七十四点二，去两项目标也各自退化。取消权重衰减，GRPO 只有七十四点二／六十二点八，改线性为七十六点三／六十四点二；固定辅助任务会让熵长期不稳，线性又在早期降得太快，余弦提供更平滑交接。</p>
+      <p>数据量消融中只用全部转移的第一百二十八分之一就已超过纯 RL，随后随比例增加总体上升。EnvRL 平均只需原训练步数的百分之六十八点五便达到基线最终成绩，四种设置范围为六十点七至七十七点九；成功轨迹的交互轮数和响应长度也整体左移。辅助损失每步约一点六秒，远低于 rollout 的一百五十四点六秒和策略更新的十四点三秒。ALFWorld 分布外评测中，GRPO 加 EnvRL 反而略降，但 GiGPO 在十五亿／七十亿由七十五点一二／七十九点二三升到七十八点八四／八十一点七六。SearchQA 七项平均由四十三点三三升至四十五点二一。</p>
+      <p>前向目标直接生成文本观察，容易花容量复现不可控细节，对视觉语言模型的图像状态也不能原样套用，论文明确将多模态专用设计列为未来工作。初始辅助权重虽在零点一至零点二较稳，十五亿用零点四会使 ALFWorld 低于基线，仍需按规模调节，自动平衡尚未实现；现有两种目标也不是环境监督的全部可能。方法学习的是一步局部转移，不显式做多步想象或规划，最近两轮上下文也不足以表示强部分可观测状态。验证主要在两个文本环境及较小搜索扩展，OOD 的 GRPO 组合甚至退化，说明“理解动力学”并不保证任何优化器和分布都受益。</p>
+    </article>
+    <article class="paper" id="paper-A070" data-paper-id="A070">
+      <header class="paper-header">
+        <p class="paper-kicker">A070 · 约 4 分钟</p>
+        <h2>RLAnything: Forge Environment, Policy, and Reward Model in Completely Dynamic RL System</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">environment-policy-reward</span><span class="paper-tag">closed-loop</span><span class="paper-tag">dynamic-RL</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2602.02488" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>真实智能体的长轨迹只靠最终成败过于稀疏，过程奖励模型虽能逐步点评，却通常需要昂贵人工标签；固定任务又会变得全易或全难，同时让策略和奖励模型缺少平衡样本。RLAnything 把三者放进一个闭环：策略用终局结果与过程评价的集成奖励训练；奖励模型不靠独立过程标签，而用终局结果和多次评价之间的一致性接受强化；环境再根据奖励模型总结的具体错误，自动把任务改得更易或更难。改进的奖励给策略更密信号，策略轨迹成为奖励模型的新训练环境，难度适中的任务又同时改善两者的数据分布。</p>
+      <p>每个动作步骤由奖励模型独立评价三次，判断是否推进目标。策略的该步奖励把整条轨迹的正负结果与三次过程判断平均相加，再在同题、同时间索引的多条轨迹间标准化。奖励模型自己的每次判断则看它与该步综合质量是否一致：终局正确且多数评价正，或终局失败且评价能识别错误，都会获得更高信号。理论说明多次评价足够且正负识别率之和超过随机时，平均过程分能正确排序成功与失败步骤；但全成功或全失败任务会让正负样本权重极端失衡，因此难度调节不仅帮助策略探索，也帮助奖励模型学习结果影响。</p>
+      <p>每轮以策略成功率判断任务难度，高于百分之八十就要求环境模型增加约束或换更难目标，低于百分之二十则增加针对性提示或换易找对象。修改依据并非泛泛重写，而是奖励模型对负步骤的去重故障摘要；新任务只有成功率落在指定中间区间且确实朝目标方向变化才替换原题。GUI 中可加减提示或在预建验证器模板间切换，ALFWorld 改目标物体与容器且检查环境有效性，代码场景则联合生成新题和单元测试。策略、奖励模型和环境依次得到当前闭环的反馈，接受的新任务数量随训练近似线性增长，强模型对其至少一次通过率仍约百分之九十四至九十七。</p>
+      <p>实验覆盖 OSWorld GUI、ALFWorld 文本家务和代码。GUI 用 Qwen3-VL-8B-Thinking 同时作策略和奖励模型，每步十二题各八条，Qwen3-4B 改任务；ALFWorld 用 Qwen2.5-7B 策略、14B 奖励模型，每步十六题各八条；代码每题生成三十二份解和三十二组测试。GUI、家务、代码分别训练二百四十、二百、三百步，最多用十二、八、四个节点。OSWorld 策略的域内／分布外准确率从四十点四／十六点一，经仅策略动态到四十八点三／十九点八，加入奖励学习为四十九点六／二十点零，完整闭环为五十二点一／二十一点三。</p>
+      <p>ALFWorld 同样从三十九点零／四十四点九，依次升到五十一点一／五十九点三、五十五点六／六十一点八、六十点二／六十三点六；完整方法相对初始域内高二十一点二、分布外高十八点七。奖励模型过程准确率在 GUI 从八十六点零到九十一点三，在家务从四十七点零到五十六点四，环境动态继续贡献。LiveBench 代码正确率三十一点三到四十三点二，单元测试正确率二十七点八到七十八点九，判错率十九点六到四十八点五；LiveCodeBench 和 CodeContests 也一致提升。过程与终局权重取一时策略最好五十四点一；四分之一为四十八点零，四为五十三点三，后者提高过程准确率却降低结果预测，体现两类监督的折中。</p>
+      <p>论文没有独立限制章节，但闭环依赖很重。过程正确率的“真值”仍由更强模型多次投票获得，主训练的一致性可能形成自证循环；奖励模型若系统性偏见，环境会据其错误诊断定向改题，三者可能共同奖励投机。GUI 所谓环境生成主要依赖四十七个任务预先制作额外验证器，共二百九十五模板，并非任意新桌面任务都能自动验证；训练还需多次奖励采样、环境模型和最多十二节点。把优化后的过程奖励单独用作监督虽超过人工脚本终局奖励，但未充分评估奖励劫持。任务改写只以成功率和有效性过滤，没有安全、价值或分布漂移门控；实际电脑和代码执行若自动扩展，必须加入沙箱、人审与权限隔离。因此它展示了三组件共演化的收益，而非完全自治、无人工基础设施的通用 RL 系统。</p>
+    </article>
+    <article class="paper" id="paper-A071" data-paper-id="A071">
+      <header class="paper-header">
+        <p class="paper-kicker">A071 · 约 4 分钟</p>
+        <h2>CoEvolve: Training LLM Agents via Agent-Data Mutual Evolution</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">agent-data-coevolution</span><span class="paper-tag">capability-gap</span><span class="paper-tag">task-synthesis</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.15840" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>静态专家轨迹昂贵且只能覆盖某一时刻的行为分布，离线合成数据虽便宜，仍不知道当前策略究竟忘了什么、在哪些边界上不稳定。CoEvolve 将训练数据视为随 agent 一起变化的对象：策略在真实可执行环境中 rollout，训练过程抽取弱点信号，外部探索模型针对这些信号重访环境、发现新交互，再把经验证的任务加入下一轮数据。闭环使策略更新改变数据分布，新数据又专门修补当前策略，而非持续随机扩充相似样本。</p>
+      <p>第一阶段在合成任务上用 GRPO 更新策略，同时从轨迹提取三类信号。遗忘信号指同一任务近期曾成功、当前却失败；边界信号指同一提示的八条采样中成功与失败并存，代表策略接近决策边界；稀有信号则统计反复出现但总体频率低于阈值的动作模式，寻找长期欠探索区域。轨迹可同时触发多类信号。实验默认学习率百万分之一、KL 系数千分之一、温度零点九，每题八条 rollout，最多三十次环境交互。</p>
+      <p>第二阶段把任务、动作、环境反馈和触发原因交给 Qwen3-Max 反思，形成结构化探索上下文，再做多轮、多步重探索，保留每一步动作、观察和 rollout 标识。第三阶段按任务聚合这些三元组，让模型抽象用户意图与可行操作序列，而非复制原轨迹；新任务必须回到环境执行验证，成功才接纳，执行失败但获得正奖励的边界情形也可保留。默认以一百个合成任务启动，共训练一百二十步，每十步刷新反馈数据。</p>
+      <p>实验覆盖 AppWorld 与 BFCL-V3，骨干为 Qwen2.5-7B、Qwen3-4B 和 Qwen3-30B-A3B，并在附录扩展 ALFWorld 与 WebShop。三种模型五项平均绝对提升分别为十九点四三、十五点五八和十八点一四。Qwen3-4B 在 AppWorld TestN 的任务完成率由十六点六七升至三十五点七一，BFCL 由二十六点五升至六十三；Qwen3-30B 在两者分别达到五十四点七六和六十七，说明收益可叠加在不同容量骨干上。与只做 GRPO 相比，4B 在 AppWorld 由二十八点五七再升七点一四，BFCL 由五十八再升五点；附录统一骨干的四环境表中，CoEvolve 在 ALFWorld、BFCL、AppWorld、WebShop 为八十二点八六、六十三、三十五点七一、八十点六，均超过课程学习和 ReST。</p>
+      <p>分阶段消融从零样本平均二十一点五九出发，静态合成数据升至四十三点二九，随机探索为四十五点四三，加入反馈后达四十九点三六；去掉遗忘信号降至四十五点一八，是三类中损失最大者。移除环境验证使 BFCL 从六十三降至五十八点五、AppWorld 从三十五点七一降至二十七点三八。边界信号在 AppWorld 与 BFCL 分别占百分之五十一点四和四十五点五，训练中检测信号由二百六十九降至二百零四，说明失败面在移动而非简单累积。反馈任务通过率从零点七一升至零点八五后稳定约零点八，新增计算只占约一成；跨域训练也把 BFCL 零样本从二十六点五提高到四十五。</p>
+      <p>局限首先来自自举噪声：早期策略能力弱时，遗忘、边界和稀有模式可能不完整，外部探索模型越强，上限也越高。匹配探索模型的控制实验中，Qwen3-4B、Qwen-Plus、Qwen-Max 的纯合成到闭环增益都存在，但绝对上限随外部模型提高，证明系统并未消除教师依赖。当前信号仅覆盖少数可量化弱点，任务验证仍会接受部分奖励为正但未完全执行的样本；开放或安全关键环境中的自动数据改写可能放大奖励投机，需要过滤、审计和人工风险门。实验主要是可复现模拟 API 环境，真实服务漂移、权限、副作用和长期安全未被覆盖。附录结果虽证明四环境迁移，仍不能等同于无限开放世界的自主共演化；反馈刷新频率与初始任务数也只做有限设置，闭环能否在极少启动数据下稳定仍待检验。</p>
+    </article>
+    <article class="paper" id="paper-A072" data-paper-id="A072">
+      <header class="paper-header">
+        <p class="paper-kicker">A072 · 约 4 分钟</p>
+        <h2>Agent-World: Scaling Real-World Environment Synthesis for Evolving General Agent Intelligence</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">world-synthesis</span><span class="paper-tag">real-world-tools</span><span class="paper-tag">multi-environment-RL</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.18292" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>Agent-World 把环境从固定训练容器升级为可扩展的诊断与课程基础设施。它从数千个现实主题出发，在网页上深度检索主题相符的数据和 MCP 工具元信息，构造带数据库、可执行函数与状态转移的沙箱，而不是让语言模型直接幻想环境反馈。最终生态含一千九百七十八个环境、一万九千八百二十二个工具，按二十个一级、五十个二级和两千余三级标签组织，可在多环境中训练统一的工具编排、状态跟踪和长程交互能力。</p>
+      <p>环境发现先扩展数据库规模，再生成工具实现与测试用例；函数须能通过 Python 编译、测试准确率超过一半，且环境至少有一个有效工具与用例。任务生成有两条路线：图方法让模型判断工具间强依赖、弱依赖或独立关系，再按权重随机游走并执行链条，反向写出不泄露函数名和模式的自然任务与 rubric；程序方法生成带条件、循环和状态修改的验证脚本。图任务还让 ReAct agent 连续尝试五次，过易、不可稳定执行或 rubric 不一致的候选被过滤；程序任务直接用生成脚本核对答案或数据库终态。两者均在沙箱真实执行，以最终答案或数据库状态作为可验证依据。</p>
+      <p>训练先在这些环境上做多环境 GRPO。图任务由 rubric 条件的评审判定，程序任务直接运行验证代码，组内 rollout 得到可执行结果奖励。持续自演化时，每个一级类别抽五个环境组成动态 arena，每轮重新合成评测任务；诊断 agent 读取失败轨迹、错误分布、工具 schema、数据库说明以及每工具成功失败次数，输出根因类别、薄弱环境排序和具体补题指南。系统随后复杂化相应数据库、合成针对性任务并继续 RL，下一轮又换环境和任务，减少对静态诊断集过拟合，也把环境难度增长纳入闭环。</p>
+      <p>Agent-World-8B 与 14B 在二十三个 benchmark 上评测，覆盖 MCP-Mark、BFCL-V4、τ²-Bench、搜索、代码、通用推理和高级助手任务。14B 在 MCP-Mark、BFCL 与 τ²-Bench 的代表性平均分别达到十三点三、五十五点八和六十五点四；8B 在 τ²-Bench 达六十一点八的表内综合表现，明显超过 EnvScaler-8B 的三十七点九。高级助手的 SkillsBench、ARC-AGI-2、ClawEval 从 8B 的九点二、六点五、三十点五稳定扩到 14B 的十二点六、八点五、三十一点五。</p>
+      <p>环境数量从零增至十、一百、五百、一千和一千九百七十八时，四个代表域平均由百分之十八点四升至三十八点五；Postgres 从四点八升至十九点九，BFCL WebSearch 从七升至四十七，五百环境后仍上升但边际递减。两轮自演化对 Agent-World-14B 的 τ²-Bench、BFCL、MCP-Mark 分别由六十点二、五十二点四、二十九点五升至六十五点四、五十五点八、三十八点一；EnvScaler-8B 接入同一闭环也持续获益，说明诊断循环并非只适配自家初始化。</p>
+      <p>范围边界来自“现实锚定”仍不等于真实服务：工具和数据库由网页元信息重建，异步副作用、认证、隐私、流量限制与服务漂移被沙箱简化；图依赖由 LLM 评分，rubric 任务又依赖评审模型。生态构建使用人工合并 taxonomy，完全自动化程度有限。自演化只展示两轮且收益递减，第一轮往往修复不熟悉环境的模式错误，第二轮只处理残余长链失败；是否继续多轮后遗忘旧环境没有报告。诊断 agent 的误判、任务泄漏和危险状态修改也缺少系统安全评估。论文没有独立限制章节；其证据支持多样环境的规模律和针对性修补，但尚不能证明开放世界的终身无灾难遗忘学习。尤其环境数量实验同时改变了工具与任务多样性，不能据此单独归因于规模；五次执行过滤也会偏向稳定、较短链任务，并压低对偶发恢复能力的测量。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="06-02.html"><span>上一方向</span>经验提取—利用的自进化闭环</a>
+      <a class="next" href="06-04.html"><span>下一方向</span>合成任务、rubric tree 与全训练链路</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

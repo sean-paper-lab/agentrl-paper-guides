@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="技能创建、技能优化与技能库：ReSkill: Reconciling Skill Creation with Policy Optimization in Agentic RL、SkillOpt: Executive Strategy for Self-Evolving Agent Skills、SkillRL: Evolving Agents via Recursive Skill-Augmented Reinforcement Learning、Dynamic Dual-Granularity Skill Bank for Agentic RL">
+  <title>6.1 技能创建、技能优化与技能库 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>6.1</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 4 篇</p>
+      <h1>技能创建、技能优化与技能库</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A061"><span>A061</span>ReSkill: Reconciling Skill Creation with Policy Optimization in Agentic RL</a>
+<a href="#paper-A062"><span>A062</span>SkillOpt: Executive Strategy for Self-Evolving Agent Skills</a>
+<a href="#paper-A063"><span>A063</span>SkillRL: Evolving Agents via Recursive Skill-Augmented Reinforcement Learning</a>
+<a href="#paper-A064"><span>A064</span>Dynamic Dual-Granularity Skill Bank for Agentic RL</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A061" data-paper-id="A061">
+      <header class="paper-header">
+        <p class="paper-kicker">A061 · 约 5 分钟</p>
+        <h2>ReSkill: Reconciling Skill Creation with Policy Optimization in Agentic RL</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">skill-creation</span><span class="paper-tag">policy-optimization</span><span class="paper-tag">self-evolving-agent</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.01619" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>智能体强化学习会把策略参数越训越强，却不会自然积累可审计、可迁移的程序性知识；技能库能补这个缺口，但既有方法通常先由外部模型写技能，再不经验证地塞给正在变化的策略。一个对旧策略有用的流程可能与新策略的习惯冲突，盲目采用甚至会破坏已经学会的行为。Anthropic 的 Skill Creator 通过人工测试再修订技能，可靠却面向冻结策略且依赖人。ReSkill 将这套“提出—盲测—接受或拒绝”的周期嵌入 GRPO：同一题、同一策略下的一组 rollout 被分配给新旧技能版本，环境奖励直接告诉系统哪一版更适合当前策略，让技能创建和参数学习在同一反馈回路中协调。</p>
+      <p>每条 rollout 同时承担三件事：它参与组相对策略更新，写入持续刷新的成功—失败经验池，还为新旧技能版本的比较提供一次观测，因此总生成数量与普通 GRPO 相同。技能由内容和触发条件组成，只在条件命中时加载，并带有“何时使用”和反例，避免整库常驻上下文。技能创建器先对经验池运行一组可更新的规则断言，统计各类失败通过率，再结合分层抽样的轨迹形成按流行度排序的故障画像；随后参考历史提案及其接受结果，对当前库执行增加、修改或删除，并检查新触发器在经验池中的激活覆盖，防止提出永远不会被调用的规则。</p>
+      <p>版本分配用带自适应遗忘的 Thompson Sampling。每轮技能演化开始时，新旧版本各有一份均匀先验；系统按“新版胜过旧版”的后验概率给组内每条轨迹独立分配版本，同时保留最低探索比例。策略每更新一步，成功和失败都会进入对应版本的伪计数，但旧证据会按本步样本量衰减：样本少时保留历史以降方差，样本多时快速忘记旧策略下的结果。记忆参数由已完成周期的预测似然自动选择。默认每五步比较两版后验均值，胜者成为基线，再由创建器提出下一版；技能库容量为八。这样早期无效候选不会占用一半训练预算，晚期证据也不会被过时表现淹没。</p>
+      <p>实验用 Qwen3-4B-Instruct-2507 和 Qwen3-8B，在 ALFWorld、以 NQ 和 HotpotQA 训练并迁移到五个问答集的搜索任务上主测，又扩展到 ScienceWorld、InterCode-SQL 和 WANDS；除自生成消融外，各方法统一用 Claude 4.5 Sonnet 创建技能。ReSkill 相对最强记忆或技能 RL 基线，在四十亿／八十亿模型的 ALFWorld 分别高五点九和六点九，在搜索高二点五和二点三。八十亿模型的 ALFWorld 未见任务成功率达百分之九十五点三，SkillRL 为八十二点六；ScienceWorld 分布外为百分之四十八点八，对照二十六点九，SQL Extra-hard 为六十三点六对五十五点三，WANDS 三步优化为八十六点六对八十二点一。</p>
+      <p>框架消融更直接揭示协调的价值。四十亿模型完整方法在 ALFWorld 和搜索为八十九点八、四十七点六；先技能后策略降为七十九点四、四十五点五，先策略后技能为七十一点三、四十五点九。自动接受所有提案会在训练中途崩溃，最终只有六十二点七、四十五点三，甚至低于 ALFWorld 的普通 GRPO；固定各分一半 rollout 为七十三点二、四十六点零。只用最后一步证据降到七十六点九、四十六点七，不遗忘旧证据为八十六点五、四十七点零；去掉断言画像为八十四点七、四十六点七。把技能创建器换成基础模型虽降四点八和零点五，仍胜已有 RL 基线，说明收益不只是强教师代写。</p>
+      <p>ReSkill 没有新增 rollout，但技能创建、断言分析与版本维护仍有计算和 API 成本。论文明确指出演化频率需按领域调节；间隔过长会让策略适应固定技能，下一次更换反而造成分布突变。触发即加载虽然省一次推理，却不给策略显式决定是否调用的机会；小模型有时把技能名当环境命令，或在不适用时过度执行，显示上下文技能也会增加认知负担。主结果依赖文本环境、可验证奖励和最多八项技能，强创建器仍能显著改善复杂环境，尚未证明在大技能库、视觉界面、非二元偏好或真实不可逆操作中同样稳定。它解决的是训练期技能—策略冲突，而非保证技能本身正确、安全或跨域无损。</p>
+    </article>
+    <article class="paper" id="paper-A062" data-paper-id="A062">
+      <header class="paper-header">
+        <p class="paper-kicker">A062 · 约 4 分钟</p>
+        <h2>SkillOpt: Executive Strategy for Self-Evolving Agent Skills</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">skill-selection</span><span class="paper-tag">skill-composition</span><span class="paper-tag">executive-strategy</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.23904" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>技能通常由人手写、由大模型一次生成，或在失败后整篇重写；这些做法没有学习率、验证集和负反馈，语义跳跃很大，一次似是而非的修改就可能擦掉有效规则。SkillOpt 把技能文档视为冻结智能体的外部可训练状态，把另一个模型当文本空间优化器。目标模型和执行框架始终不改权重，优化器只依据有评分的执行轨迹修订一个领域技能，最终导出静态的 best_skill.md，部署时不再调用优化器。深度学习类比在这里是可执行的：轨迹批量控制证据噪声，文本学习率限制一次改多少，独立选择集负责更新门控，跨轮慢更新保留稳定方向。</p>
+      <p>数据严格拆为训练、选择和测试。每步由当前技能驱动目标模型跑一批任务，记录消息、工具调用、观察、命令输出和验证器反馈；优化器把成功与失败分别分成反思小批次，找出可复用的流程错误和应保留行为，提出结构化的增加、删除或替换编辑。局部提案先在成功侧和失败侧分别合并，再去重、解决冲突并优先修复失败。默认文本学习率允许四项编辑，按余弦计划衰减到两项，候选只有在选择集分数严格提高时才接受，平分也拒绝。未通过的编辑及其分数损失进入本轮缓冲，阻止优化器重复犯错。</p>
+      <p>每个 epoch 结束后，系统让上一轮和当前技能在同一批样本上对照执行，将结果分为改善、回退、持续失败和稳定成功，再把纵向经验写入受保护的慢更新区；普通步级编辑不能覆盖它。优化器侧另有只供教师阅读的元技能，归纳哪些编辑方向有效。候选仍需经过同一验证门。默认四轮优化、rollout 批量四十、反思小批八，并发十六个分析工作单元。最终文档仅三百七十九至一千九百九十五词元，中位约九百二十，六个任务每个只接受一到四次编辑，说明大部分搜索提案被门控拒绝，而部署产物仍可人工通读。</p>
+      <p>评测覆盖 SearchQA、SpreadsheetBench、OfficeQA、DocVQA、LiveMathematicianBench 和 ALFWorld，横跨七种 GPT 与 Qwen 目标模型，并在直接对话、Codex 和 Claude Code 三种执行框架中比较人工技能、一次生成、Trace2Skill、TextGrad、GEPA 和 EvoSkill。五十二个模型—任务—框架单元中，SkillOpt 全部最好或并列最好。GPT-5.5 直接模式六项平均由无技能的五十八点八升到八十二点三，提升二十三点五，并高于逐单元挑最强竞争者所得的七十六点九。SpreadsheetBench 为四十一点八到八十点七，OfficeQA 三十三点一到七十二点一，LiveMath 三十七点六到六十六点九；Codex 和 Claude Code 平均分别提高二十四点八与十九点一。</p>
+      <p>消融显示精确批量或计划并不脆弱，真正关键是受控更新。SearchQA、表格和 LiveMath 的默认组件结果为八十七点一、七十七点五、六十一点三；取消文本学习率、允许不受限改写后为八十四点六、七十五点七、五十七点三，移除拒绝缓冲分别再损失一点六、四点六和二点四。去掉元技能与慢更新时，SpreadsheetBench 从七十七点五骤降到五十五点零。训练证据从一个例子增到完整分区，表格由四十七点五升至七十八点零，LiveMath 由五十九点一升至七十点五。跨模型、跨框架和相邻数学任务的迁移全部为正；Codex 训练的表格技能转到 Claude Code 可在其无技能基线上提高五十九点七。</p>
+      <p>这种方法仍要求可靠的轨迹分数和独立选择集，最适合精确匹配、可执行检查或确定性验证器；主观、多维或昂贵的人类任务需要更强裁判，验证门本身也可能过拟合。虽然部署没有额外模型调用，训练要反复执行任务并调用前沿优化器，只在技能被多次复用时容易摊薄成本。当前刻意只优化单个可移植文档，不适合由许多互不相干程序组成的高度异质领域，也不改变目标模型权重。迁移到差别很大的模型、框架或任务时，训练分布中的领域捷径可能失效，因此“文本可审计”并不等于自动安全。结果大量依赖当代闭源前沿模型，也未证明长期持续编辑不会耗尽验证集。</p>
+    </article>
+    <article class="paper" id="paper-A063" data-paper-id="A063">
+      <header class="paper-header">
+        <p class="paper-kicker">A063 · 约 4 分钟</p>
+        <h2>SkillRL: Evolving Agents via Recursive Skill-Augmented Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">recursive-skill</span><span class="paper-tag">skill-augmented-RL</span><span class="paper-tag">self-evolution</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2602.08234" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>把完整历史轨迹直接存进记忆，看似保留了经验，实际包含探索、回退和冗余步骤，既占上下文又让模型难以找到可迁移原则；只保存成功轨迹还会丢掉错误边界。SkillRL 将经验抽象为技能：教师从成功轨迹提炼关键决策和通用模式，从失败轨迹找出首要故障、错误原因、正确替代及防复发规则，再组织为由名称、原则和适用条件构成的 SkillBank。技能分两层，通用层负责跨任务探索、状态检查和终止判断，任务层编码清洗、加热、购物约束或搜索流程等专门步骤。目标不是复演某条旧轨迹，而是用短规则指导新任务。</p>
+      <p>推理时通用技能始终提供基础约束，任务技能按任务描述的向量相似度检索，超过阈值后取前六项。仅把技能放进基础模型效果有限，因此训练先做冷启动：o3 教师生成显式展示检索、解释和应用技能的成功思考—行动轨迹，Qwen2.5-7B 用七千五百条 ALFWorld 或二千四百条 WebShop 样本监督微调三轮。随后以该模型为策略与参考，用组大小八的 GRPO 根据二元终局成功更新参数。每隔五步在验证集按类别统计成功率；低于阈值的类别分层抽取严重且多样的失败轨迹，教师提出一至三条新技能或修订建议，加入库后继续训练。</p>
+      <p>这种递归过程让策略进入新状态、暴露新故障，技能库再补缺口并反过来帮助策略。初始 ALFWorld 库有五十五项，其中十二项通用、四十三项任务专属；一百五十步后增长到一百项，专属技能增至八十，通用技能只增到二十，符合后期问题越来越局部的观察。技能蒸馏比原轨迹压缩十到二十倍；实际平均提示少于一千三百词元，原始记忆约一千四百五十，减少百分之十点三。RL 学习率一百万分之一、KL 系数零点零一、最长提示六千词元，在八张 H100 上每次实验约三十小时，包含采样、蒸馏、冷启动和二十四小时 RL。</p>
+      <p>ALFWorld、WebShop 与七个搜索问答集验证了抽象收益。SkillRL 在 ALFWorld 总成功率为百分之八十九点九，普通 GRPO 为七十七点六，难度较高的 Cool 和 Pick2 分别多二十三点和二十二点八；WebShop 平均分八十五点二、成功率七十二点七，也明显高于多数记忆增强 RL。搜索在 NQ 与 HotpotQA 训练，迁移到 TriviaQA、PopQA、2Wiki、MuSiQue、Bamboogle，七项平均四十七点一，高于 EvolveR 的四十三点一和 Search-R1 的三十八点五；Bamboogle 达七十三点八，对照 EvolveR 五十四点四。七十亿开源模型还超过 GPT-4o 与 Gemini-2.5-Pro 的 ALFWorld 总成绩。</p>
+      <p>组件消融中，完整方法在 ALFWorld／WebShop 为八十九点九／七十二点七；只保留任务专属技能、去掉层级通用层后为七十六点八／六十一点四，直接换回原始轨迹为六十一点七／五十点二，是最大知识表示退化。取消冷启动监督微调为六十五点二／四十六点五，说明模型必须先学会“如何读技能”；冻结初始技能库、不递归演化仍有八十四点四／七十点三，动态补技能再贡献五点五和二点四。训练曲线中完整方法约六十步即超过百分之八十，静态版本约九十步才到更低峰值，显示技能既提高上限也加速稀疏奖励学习。</p>
+      <p>论文没有专门限制章节，边界可从管线看出。技能和冷启动数据由 o3 生成，成本与偏差会进入整个库；所谓自演化仍依赖外部教师识别故障，且自生成设置未单独证明。库从五十五增长到一百，却缺少基于在线效用的版本比较和系统性删除，长期可能继续膨胀、重复或保留过时规则；语义检索也可能错配。实验只有文本家务、模拟购物和搜索问答，奖励大多可验证，未覆盖视觉、开放偏好和安全关键操作。失败类别阈值、前六检索和每五步更新均需人为设定，冷启动是最大消融项，因此 SkillRL 更接近教师辅助的技能—策略共演化基线，而非从零完全自治的技能发现系统。</p>
+    </article>
+    <article class="paper" id="paper-A064" data-paper-id="A064">
+      <header class="paper-header">
+        <p class="paper-kicker">A064 · 约 4 分钟</p>
+        <h2>Dynamic Dual-Granularity Skill Bank for Agentic RL</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">skill-bank</span><span class="paper-tag">dual-granularity</span><span class="paper-tag">dynamic-memory</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2603.28716" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>任务级技能能告诉智能体“先找物体、再处理、最后放置”，却无法回答打开第一个柜子为空后该怎么恢复；长轨迹中的大量失败恰发生在这种局部观察之后。另一方面，训练不断生成技能，静态技能库会堆积只适合单例、彼此重复或已过时的规则，占据检索和提示预算。D2Skill 同时解决粒度和维护：任务技能负责高层规划，步骤技能根据当前观察纠正局部动作；技能库不只累计文本，还用实际成功增益估计效用、探索未充分使用的候选，并定期删除低价值项。所有技能只来自训练期轨迹，不需要用保留测试轨迹预建“特权库”。</p>
+      <p>每个任务的八条 rollout 在同一策略下均分为技能组和无技能基线组。任务技能的信用来自两组平均成功率之差，步骤技能则用其所在技能轨迹是否成功减去基线组平均；效用以移动平均更新。技能组的终局回报还加入相对基线的 hindsight 内在奖励，再与基线组一起做组归一化 GRPO。这个成对设计把“技能有用”定义为在相同任务、相同策略下带来的增量，而非技能出现后碰巧成功。去掉基线组仍可训练，但失去相对信用；评测显示它主要改善技能估值和检索质量，而不是单独制造全部收益。</p>
+      <p>当技能组成功率低于阈值，反思器抽一条失败轨迹和可用的一条成功轨迹，最多生成一个任务技能及一个步骤技能；步骤技能绑定反思器识别的最早错误观察。检索先按任务描述，或任务加当前观察的向量相似度筛出候选，再将语义匹配、经验效用和对低检索次数技能的探索奖励合成排序，注入前若干项。库超过容量时也按效用与探索项计算淘汰分，新建技能有保护期，避免尚未充分试用便被删除。技能生成、效用更新、检索和剪枝与策略更新同步构成闭环。</p>
+      <p>实验覆盖 ALFWorld、WebShop 和搜索增强问答，使用 Qwen2.5-7B 与 Qwen3-4B-Instruct-2507，反思器比较 O3、Gemini-3-Flash 和经约一千条 O3 反思样本微调后的自反馈模型。七十亿模型的最强配置在 ALFWorld 达百分之九十点六、WebShop 成功率八十四点四；仅自反馈也有八十二点八和八十一点三，均高于 GRPO 的七十五点零与七十二点六。四十亿模型上，ALFWorld 从 GRPO 的五十三点九升到七十二点七。搜索任务中，七十亿 D2Skill 平均四十四点九，高于 SkillRL 的四十三点一；四十亿平均四十二点八，高于 Search-R1 的三十六点零，多跳任务受步骤级指导尤其明显。</p>
+      <p>四十亿 ALFWorld 消融的验证成功率，完整方法为七十二点七，去任务技能六十二点七，去步骤技能六十点二，说明局部纠错不只是高层技能的冗余版本；取消技能管理降到五十七点八，甚至比任一粒度消融更严重。去基线组为六十八点八，只按相似度、不看效用为六十四点八，移除整套效用模块为六十二点五，无技能 GRPO 为五十三点九。采用更强初始化时，D2Skill 四十步已达九十二点二，接近 GRPO 一百二十步的九十二点九；一百二十步最终九十五点三。训练耗时二十五点六小时，对照 GRPO 二十点八、SkillRL 四十九点二，约比 SkillRL 快一点七倍。</p>
+      <p>论文明确承认技能构造质量仍取决于反思监督源和初始化，最强设置继续使用外部模型；所谓 Self 也先用 O3 数据教基本反思。基准只含文本交互与搜索，未覆盖开放、嘈杂的现实环境。成对 rollout 把一半预算用于无技能对照，反思、嵌入、检索和剪枝也增加系统复杂度；短历史只保留最近两对观察—动作，仍是部分可观测近似。效用来自终局相对成功，可能把共同出现的技能误作原因，最早错误定位也依赖反思器。容量、相似度、反思和保护阈值均需调节，因此 D2Skill 提供了更可信的动态技能估值框架，却没有消除错误技能、奖励投机或现实安全风险。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="05-03.html"><span>上一方向</span>长短期记忆选择、写入与管理</a>
+      <a class="next" href="06-02.html"><span>下一方向</span>经验提取—利用的自进化闭环</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

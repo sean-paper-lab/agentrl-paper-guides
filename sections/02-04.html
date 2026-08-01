@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Agent verifier 与原则型 PRM：AgentV-RL: Scaling Reward Modeling with Agentic Verifier、WebArbiter: A Principle-Guided Reasoning Process Reward Model for Web Agents">
+  <title>2.4 Agent verifier 与原则型 PRM · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>2.4</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 2 篇</p>
+      <h1>Agent verifier 与原则型 PRM</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A020"><span>A020</span>AgentV-RL: Scaling Reward Modeling with Agentic Verifier</a>
+<a href="#paper-A021"><span>A021</span>WebArbiter: A Principle-Guided Reasoning Process Reward Model for Web Agents</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A020" data-paper-id="A020">
+      <header class="paper-header">
+        <p class="paper-kicker">A020 · 约 5 分钟</p>
+        <h2>AgentV-RL: Scaling Reward Modeling with Agentic Verifier</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">verifier</span><span class="paper-tag">reward-modeling</span><span class="paper-tag">bidirectional-verification</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.16004" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>测试时扩展无论是从许多候选里选最好答案，还是让演员根据批评反复修改，都把 verifier 当成方向盘。传统 outcome 或 process reward model 多只给标量，生成式 verifier 虽会解释，却常在单轮中顺着候选解答往下读。一旦解答早期有一个看似合理的错误，后续推导会把它包装得更可信，评审模型也容易被带偏；面对大量计算或知识检索，它若没有外部工具只能凭记忆判断。Agentic Verifier 因而把验证改造成一个主动、多轮、有工具的任务，让评审器自行分解检查点、运行计算，并从两个相反方向审视同一条解题链。</p>
+      <p>正向代理从题目条件出发，把解答拆成可验证的原子步骤，逐步检查前一步是否足以推出后一步；反向代理从结论倒推，检查答案是否满足原问题的必要条件、有没有遗漏约束或只证明了部分命题。两者都遵循先规划、再验证、最后裁决的流程。验证阶段可多轮交替思考、调用 Python、读取执行结果，最终输出严格真假判断，并用 True token 的概率作为置信分。Best-of-N 时将正反向置信度平均后排序候选；迭代修订时采取保守规则，只有两者都判真才接受，否则再生成针对性修改建议交给 actor。正向擅长发现局部推导错误，反向擅长抓住与题意不符的完整性问题，二者形成互补。</p>
+      <p>为了不必部署两个大型代理，AgentV-RL 把这种能力蒸馏进单个模型。数据引擎从 Polaris、DeepScaleR-40K 和 AReaL-boba-106k 筛选数学问题，每题先采样八个解答，去掉全部正确或全部错误的无区分题。强模型分别扮演正向或反向代理，生成含规划、工具调用、观察和裁决的验证轨迹，只保留最终裁决与解答真值一致的正负样本。模型先在一万五千条轨迹上做拒绝式微调，学习长程工具验证格式；再在五万条样本上用 GRPO，每个题解对采样八条验证轨迹，以裁决是否匹配真值的正负一奖励训练，并动态移除全对或全错、组内无方差的批次。</p>
+      <p>主模型是 Qwen3-4B，评测 actor 固定为 Qwen2.5-7B-Instruct，以相同温度一次采样一百二十八个候选，所有 verifier 共用候选池。并行选择测试 MATH500、GSM8K、Gaokao2023、AIME24，对比普通文本评审 Qwen、Llama、DeepSeek 和 Mistral，多种 outcome RM，以及 Qwen-Math-PRM、Math-Shepherd、EurusPRM、Skywork-PRM。顺序修订固定每题初始答案，报告三轮后的准确率、纠错率和把正确答案改错的比例。附加实验在 LiveCodeBench 使用 Python、在 HotpotQA 使用网页搜索，检查方法能否越出数学。训练最长轨迹两万一千六百 token，并遮罩工具返回，避免模型记忆环境输出。</p>
+      <p>在 Best-of-128 上，4B Agentic Verifier 的 MATH500、GSM8K、Gaokao2023、AIME24 准确率分别为百分之七十九、九十三点三、五十七点四和五十三点三；MATH500 相比强 outcome RM 提升最高二十五点二。第一轮修订后，MATH500 从错误解中纠正百分之四十一点六，而只把百分之零点六原正确解改坏；最终准确率达到八十四点二，三轮后为八十九点八。消融中正向或反向单用都强于基础评审，合并最好；无工具版本已明显改善，加入 Python 后 Best-of-128 在 MATH500 从七十七点四升至七十九、Gaokao 从五十五点零六升至五十七点四。无训练、SFT、SFT 加 RL 逐级提升，多条验证轨迹聚合和更大模型也呈正向扩展。</p>
+      <p>可靠性提升以显著计算代价换来：完整双向 verifier 平均生成八千三百四十九个 token、进行十一点三轮交互和一点六次工具调用，单张 A100 上延迟约三百二十三秒，接近基础评审一百一十九秒的三倍，不适合严格实时或资源受限场景。训练轨迹主要是合成数学数据，虽在代码和多跳问答有初步泛化，但不能代表现实世界所有推理错误。性能还取决于外部工具覆盖和执行可靠性，工具错误、配额或错误检索会成为新的验证瓶颈；HotpotQA 泛化样本也只有一百五十题。正反向共识是保守启发式，不是正确性证明。因而 AgentV-RL 更适合高价值、可承担多轮核验成本且有可靠工具的候选选择和解答修订。</p>
+    </article>
+    <article class="paper" id="paper-A021" data-paper-id="A021">
+      <header class="paper-header">
+        <p class="paper-kicker">A021 · 约 5 分钟</p>
+        <h2>WebArbiter: A Principle-Guided Reasoning Process Reward Model for Web Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">PRM</span><span class="paper-tag">web-agent</span><span class="paper-tag">principle-guided</span><span class="paper-tag">reasoning-evaluation</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2601.21872" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>网页智能体的成败通常要到一次长交互结束后才能知道，但真正决定结果的往往是中途某个点击、填写或搜索动作。只看终局奖励，既无法及时纠正错误，也不能在推理时从多个候选动作中挑出更好的一个。已有网页过程奖励模型又有两类明显短板：标量模型把复杂进展压成一个难解释的分数，基于检查清单的生成式模型则容易依赖固定页面结构，遇到布局变化、同一目标有多条可行路径或动作含义随状态改变时就会失灵。直接让大模型充当裁判虽然灵活，却成本高、判断不稳定，还可能因语言流畅而奖励并不正确的动作。WebArbiter 因而把问题改写成有依据的比较：模型不仅选出两个候选动作中更能推进任务的一个，还必须说明它依据了哪些由当前任务和页面状态诱导出的原则。</p>
+      <p>训练样本来自 WebPRM Collection。每个状态包含用户指令、文本化的无障碍树观察、此前动作及理由，以及一条专家轨迹中的正确动作和一条被拒绝轨迹中的错误动作；候选动作还附带原策略的推理痕迹。论文将这些数据整理为成对偏好，并把奖励建模做成自回归文本生成：输入完整上下文和两项候选后，WebArbiter 先形成与当前任务有关的判断原则，再逐项核对页面证据、历史和任务前置条件，最后输出结构化解释与唯一偏好结论。它与照着外部清单打勾的做法不同，原则会随用户意图和状态变化，例如先确认目标实体、避免不可逆操作、判断动作是否真正缩短到目标的距离，因此解释既是监督载体，也是可审计的错误线索。</p>
+      <p>训练分成两个阶段。第一阶段从三万条步级偏好对中取一万条，由 o3 教师生成先提炼原则、再落到页面证据、最后比较动作的理由，随后在 Qwen2.5 的三十亿和七十亿参数指令模型上用低秩微调做监督蒸馏。第二阶段使用其余数据做组相对策略优化；模型生成完整理由和结论，只要最终偏好与人工标签一致就得正奖励，否则得负奖励，同时以蒸馏模型为参考加入分布约束。这样，蒸馏先教会模型以什么方式查证，强化学习再用可验证的二元结果修正教师偏差并拉开正确与似是而非动作的差距。实际搜索时，每一步由策略产生五个动作，WebArbiter 通过淘汰赛比较选出下一步，因而不必把自然语言解释再转换成脆弱的绝对分数。</p>
+      <p>论文还构建了 WebPRMBench，用来检验这种过程裁判是否真的会区分网页动作。基准含一千一百五十个步级实例，来自 Mind2Web、WebArena、AssistantBench 和 WorkArena；每例保留环境验证过的正确动作，并由多种模型生成四个风格各异的拒绝动作，再经过规则过滤、人工复核和假负例清理。评测既看单个正确动作能否胜过一个负例，也看它能否同时胜过四个干扰项，后者更接近真实候选排序。WebArbiter 七十亿版本的平均成对准确率为百分之八十九点一九，多候选准确率为百分之七十四点六，后者比 GPT-5 高九点一个百分点，也比同数据训练的 WebShepherd-8B 高三十一点三二个百分点；换用 Qwen3 骨干后最好达到百分之七十六点六六，说明收益并非只属于单一模型家族。</p>
+      <p>消融解释了提升来自哪里。直接在原指令模型上冷启动强化学习会在训练域 Mind2Web 上很强，却在其他网页环境明显崩落；只写流畅理由而不显式提出原则，也容易事后合理化表面上顺眼的动作。完整的原则化蒸馏加强化学习把平均多候选准确率推到百分之七十四点六，而无原则的蒸馏加强化学习只有百分之五十五点一六。把模型放入 WebArena-Lite 的逐步搜索后，GPT-4o-mini 和 GPT-4o 两种策略的平均成功率分别达到百分之四十点五二和四十七点零一，相对 WebShepherd 再提高约六点。适用边界也很清楚：观察只有英文无障碍树，缺少布局、颜色和空间关系等视觉信号；训练与评测没有覆盖多语言网页，目前证明的是推理时动作筛选能力，尚未验证把这类过程奖励直接用于策略后训练是否同样稳定。</p>
+      <p>附录的案例进一步说明“有解释”不等于解释必然正确。在 GitLab 中，清单模型会因为熟悉的操作顺序而偏好绕路，WebArbiter 则能根据当前页面已暴露的入口选择更直接路径；当任务给出的合并请求链接失效时，它也会先搜索确认目标，而不是随便打开一个看似相关的条目。但失败案例显示，模型有时把安全原则权重放得过高，在点击和悬停同一元素之间偏好不会立即改变状态的悬停；遇到只靠视觉位置才能理解的浮层时，文本树也不足以判断。增加同一判断的采样次数能继续提高多候选准确率，说明推理时算力可换可靠性，同时也意味着部署成本随候选数和重复判断增加。因而原则链的主要价值是让错误可检查、让跨站点准则更稳定，而不是把主观裁判变成确定性验证器。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="02-03.html"><span>上一方向</span>证据增强、rubric 合成与奖励共演化</a>
+      <a class="next" href="02-05.html"><span>下一方向</span>过程奖励评测、轨迹错误定位与稠密评分基准</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

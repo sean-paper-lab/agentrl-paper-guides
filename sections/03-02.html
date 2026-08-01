@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="探索控制、探索坍缩与自主探索：T²PO: Uncertainty-Guided Exploration Control for Stable Multi-Turn Agentic Reinforcement Learning、Agent Explorative Policy Optimization for Multimodal Agentic Reasoning、Look Before You Leap: Autonomous Exploration for LLM Agents、Anchored Policy Optimization: Mitigating Exploration Collapse Via Support-Constrained Rectification">
+  <title>3.2 探索控制、探索坍缩与自主探索 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>3.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 4 篇</p>
+      <h1>探索控制、探索坍缩与自主探索</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A031"><span>A031</span>T²PO: Uncertainty-Guided Exploration Control for Stable Multi-Turn Agentic Reinforcement Learning</a>
+<a href="#paper-A032"><span>A032</span>Agent Explorative Policy Optimization for Multimodal Agentic Reasoning</a>
+<a href="#paper-A033"><span>A033</span>Look Before You Leap: Autonomous Exploration for LLM Agents</a>
+<a href="#paper-A034"><span>A034</span>Anchored Policy Optimization: Mitigating Exploration Collapse Via Support-Constrained Rectification</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A031" data-paper-id="A031">
+      <header class="paper-header">
+        <p class="paper-kicker">A031 · 约 5 分钟</p>
+        <h2>T²PO: Uncertainty-Guided Exploration Control for Stable Multi-Turn Agentic Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">uncertainty</span><span class="paper-tag">exploration-control</span><span class="paper-tag">multi-turn</span><span class="paper-tag">stability</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.02178" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多轮智能体强化学习中的探索失败并不只表现为动作太少，还会表现为推理与行动两个时间尺度上的无效犹豫。模型可能在一次思考中持续生成词元，却已不再获得新信息；也可能连续多轮重复相近动作和观察，形式上仍在探索，实际已陷入局部循环。只提高熵会把随机性一并放大，只看置信度又会错过分布整体的不确定性，硬截断或长度奖励则无法区分必要的长推理与冗余拖延。T²PO 因而把稳定训练的关键放在探索控制上：用同一套自校准不确定性信号，分别判断何时应结束当前思考、何时应重采样当前一轮，使计算预算更多落在能改变后续状态的分支上。</p>
+      <p>该信号融合归一化词元熵与模型置信度，既感知概率分布是否平坦，也保留对当前选择可靠性的判断。词元级思考干预先允许最短推理前缀，再在滑动窗口中监测信号变化；当信息增益趋于停滞或达到预算上限时，只触发一次确定性的思考结束和动作起始标记，促使模型从分析切换到执行。作者刻意不在最高熵位置截断，因为任务真正困难的关键步骤本就可能高熵。轮级动态采样则将一轮内的信号聚合，比较相邻轮的变化；若状态演化过于稳定、暗示重复或无效试探，就丢弃该轮并在同一状态重新采样，直到产生更有信息的动作或耗尽重试预算。</p>
+      <p>完整训练先用基础模型采样轨迹，从高分状态—动作对构造拒绝式微调数据，只做一轮冷启动；附录发现超过五轮会削弱推理。随后策略在 WebShop、ALFWorld 或搜索环境中逐轮生成思考、动作并接收观察，记忆仅保留最近两轮以控制上下文。奖励除终局任务反馈外只有轻量格式惩罚，回报沿轨迹折扣传播；优化同时采用轨迹级组相对优势和 GiGPO 的同状态轮级优势。思考干预发生在单次生成内部，动态采样发生在环境轮次边界，最终保留下来的各轮分别参与更新。这样无需额外奖励模型或人工塑形，但分轮优化也使早期动作由稍旧策略产生，留下异步式策略滞后。</p>
+      <p>实验覆盖拥有约一百一十万商品和一万二千条指令的 WebShop、六类家庭任务的 ALFWorld，以及自然问题、HotpotQA 训练后迁移到 TriviaQA、PopQA、2Wiki、MuSiQue 和 Bamboogle 的搜索问答。主干为 Qwen3 四十亿和八十亿参数模型，搜索使用 E5 检索器；不同环境最多允许十五、五十或四轮，训练在八张 H100 上完成并报告三个环境种子。WebShop 四十亿模型的任务分数和成功率达到九十三点八四与百分之八十一点六四，明显高于 GiGPO 的八十六点零三与百分之七十三点八三；八十亿模型成功率也由百分之七十七点九二升至八十二点四二。搜索六项平均分为五十四点九三，高于 GiGPO 的五十二点九七。</p>
+      <p>消融显示两个时间尺度缺一不可。移除词元级干预后，WebShop 得分和成功率降为八十一点二八与百分之七十三点二七；移除轮级动态采样更降至七十二点四零与百分之六十三点六七；不做拒绝式冷启动则为七十九点二八与百分之六十一点三二。简单长度奖励、短思维链提示、无效轨迹过滤和固定硬预算的得分分别只有七十七点九六、八十二点三九、八十五点一七和八十四点九六，均不及完整方法。熵与置信度融合权重取零点四时最好，得分九十四点一五、成功率百分之八十二点七七；把模块接到 GSPO 后成功率也从百分之八十五点一八升到九十一点七九，说明它不是某一优化器的偶然配方。</p>
+      <p>效率分析给出了方法最实际的收益：WebShop 平均交互轮数约少四分之一，ALFWorld 少百分之十六，在相同最大生成预算下平均词元量比 GiGPO 少约百分之二十，性能却更高。这种收益依赖若干边界条件：阈值、窗口、融合权重和冷启动质量仍需按环境设定，动态重采样会增加局部生成次数，GiGPO 的同状态分组也要求环境状态可识别。论文明确讨论了逐轮更新带来的策略滞后，虽在当前配置中稳定，却未证明在更长轨迹、更高并发或快速更新下仍然安全。实验集中于文本购物、家庭仿真和短搜索问答，尚未覆盖视觉界面、不可逆真实操作与开放式奖励，因此 T²PO 更像一套削减无效探索的控制器，而非保证发现全新策略的通用探索理论。</p>
+    </article>
+    <article class="paper" id="paper-A032" data-paper-id="A032">
+      <header class="paper-header">
+        <p class="paper-kicker">A032 · 约 5 分钟</p>
+        <h2>Agent Explorative Policy Optimization for Multimodal Agentic Reasoning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">exploration</span><span class="paper-tag">multimodal</span><span class="paper-tag">policy-optimization</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.28774" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多模态智能体既要在内部推理，也要决定何时调用 Python、网页搜索或图像放大工具，但标准组相对优化会系统性压制后者。原因是纯思考路径近似模型默认行为，方差小且常能拿到部分正确；工具路径需要同时选对工具、参数并正确利用返回结果，早期失败率更高。论文在固定前缀下观察到，工具子组全错的比例约百分之四十，无工具子组约百分之二十五，普通 GRPO 因而给工具调用词元零优势或负优势，使训练后的工具率只有约百分之二十到三十五。作者将这种本来可能通过进一步探索修复、却被组内结果提前惩罚的现象称为“思考—行动鸿沟”。</p>
+      <p>AXPO 只在一个提示的工具型样本非空且全部失败时启动定向探索。它保留原响应直到工具调用开始标记的共同前缀，从这一决策点分叉采样若干后续，允许产生新的工具调用和后续推理，而不是从问题开头浪费预算重走相同思路。额外预算按基础批次与 rollout 数的固定比例封顶，并用广度优先方式分配给不同问题。候选前缀按工具调用词元在源策略下的平均概率排序，优先探索最低置信、也即最可能存在多种语义动作的分支；该近似与精确熵的皮尔逊和斯皮尔曼相关分别为零点八四三和零点八三五，却不需要保存完整词表分布。</p>
+      <p>训练信号在前缀和分支之间严格分工。每组重采样分支单独做组相对优势，固定共同前缀全部屏蔽，只更新真正分叉后的连续动作；原始工具前缀则在任何分支恢复成功时得到一次二元“可恢复”信用，其原失败后缀不再参与损失。这样，策略既学到这个行动入口值得保留，又不会同时收到“调用工具错误”和“同一调用可恢复”的冲突梯度。普通组、成功工具组和无法纳入额外预算的样本仍走标准 GRPO。理论分析也表明，在给定工具前缀后继续采样，可绕开原策略以低概率先进入工具模式的门槛；只要条件恢复率达到合理下界，同样预算下的成功覆盖优于从头重复 rollout。</p>
+      <p>训练从 Qwen3-VL-Thinking 二十亿、四十亿和八十亿参数模型开始，先在六万四千条由 Qwen3-VL-32B 生成并验证的多模态轨迹上监督微调，其中约四分之一含工具，再在一万六千条困难子集和二万二千条 MMFineReason-hard 数据上强化学习。工具为 Python、Tavily 搜索和图像缩放，训练框架为 verl 与 rllm。九个评测覆盖 MathVision、DynaMath、Math-VR 的推理，V*、VisualProbe、HR-Bench 的感知，以及 HR-MMSearch、MMSearch 的检索，并同时报告单次和四次采样成功率。八十亿模型的单次平均分为百分之六十二点三，已达三百二十亿基础模型的百分之九十九；四次采样为百分之七十五点八，超过后者的七十五点一。</p>
+      <p>相对同规模监督加 GRPO，AXPO 在二十亿、四十亿、八十亿上的单次平均分别再提高一点一、一点四和一点八，四次采样提高二点八、二点三和一点八。八十亿收益主要来自感知加二点九和搜索加一点三，推理仍加零点六。关键消融在四项代表基准上，完整方法单次与四次平均为五十三点九和七十点二；不固定前缀为五十二点一和六十九点一，改采无工具分支为五十一点七和六十五点九，随机选不确定前缀为五十一点零和六十五点八，取消前缀信用或独立分组则为五十一点四／六十七点七和五十一点二／六十七点零。简单工具奖励、工具惩罚和把原始 rollout 翻倍也未达到完整方法。</p>
+      <p>训练期间工具使用率提高约二十八个百分点，工具子组全错率下降约十七个百分点，每步约百分之十二的原失败子组被分支恢复，说明提升来自发现有效工具行为而非只增加调用次数。代价是额外生成预算、前缀缓存和多分支调度，低置信也只是新颖性的代理，可能优先选择混乱而非有价值的动作。奖励依赖可自动验证的最终答案；实验仅到八十亿参数且集中于 Qwen3-VL-Thinking，三百二十亿模型只作为教师或推理参照。论文也明确没有真实图像搜索，并未覆盖浏览器、图形界面、终端或把大模型本身作为高延迟工具的长任务；工具执行还需沙箱与安全控制。因此 AXPO 证明的是有限预算下如何挽救被早期奖励压制的工具分支，而不是任何开放行动都应扩大探索。</p>
+    </article>
+    <article class="paper" id="paper-A033" data-paper-id="A033">
+      <header class="paper-header">
+        <p class="paper-kicker">A033 · 约 4 分钟</p>
+        <h2>Look Before You Leap: Autonomous Exploration for LLM Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">autonomous-exploration</span><span class="paper-tag">agent-decision</span><span class="paper-tag">long-horizon</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.16143" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>任务奖励训练出的智能体常把“完成已知任务”误当成“理解环境”。面对熟悉布局，它会迅速利用训练先验；遇到物体搬家、前置条件变化或新配方，则反复执行最像答案的动作，很少主动查看、试验和恢复。更反直觉的是，任务式 GRPO 还会让无目标探索能力倒退：Qwen3-4B 在一百步自由探索中的覆盖率由百分之二十八点五降到十八点八，Qwen2.5-7B 由二十二点二降到十二点六。现有环境手册、离线世界模型或专家演示能补知识，却都预先规定了应学什么。论文因此把探索本身做成独立训练任务，让智能体在不知道之后会接到哪个目标时，先自主发现环境结构。</p>
+      <p>作者为每个环境建立探索覆盖检查点，按地点、对象和可供性等内部状态组织，例如进入某区域、发现某物体或验证某动作的效果。无目标会话给定固定步数，智能体自由行动后生成一份有依据的自然语言总结；系统用确定性的文本或动作匹配判断检查点是否出现，并以已覆盖比例作为 ECC 奖励，而不再让大模型主观打分。探索 rollout 采用 GRPO 的组内归一化优势。训练并非把任务全部换成漫游，而是默认按五比一交错任务会话与探索会话，前者仍用二元成功奖励，后者专门优化覆盖，从而同时保存目标执行能力和主动获取信息的倾向。</p>
+      <p>推理阶段采用“先探索、后行动”：智能体先在固定预算内与环境交互，把轨迹压缩成包含可验证发现的知识摘要，再将摘要与真正任务一起输入行动阶段。探索和行动由同一策略承担，知识在自然语言中临时形成，不需要为每个环境预编手册。训练使用 AgentGym 管线，在 ALFWorld、ScienceWorld 和 TextCraft 上比较 Qwen2.5-7B、Qwen3-4B、Llama-3.1-8B，并用 GPT-4.1 与 Claude Opus 4.5 做能力参照；组大小为八，最长上下文三万二千词元，约三百次更新在八张 H800 上消耗一百九十二 GPU 小时。强模型的自由探索差距很大，GPT-4.1 覆盖四十九点三，Claude 达八十九点五，说明该能力并非任务成功率的简单副产品。</p>
+      <p>单纯在测试时要求原任务模型先探索往往无益甚至有害，因为它产生的摘要缺乏覆盖与可信度。加入探索训练后，Qwen2.5-7B 的三环境直接行动平均分由任务模型的六十八点四提高到七十点九，先探索后行动进一步到七十三点一；Qwen3-4B 相应由七十三点九提高到七十七点二和七十九点五。在 ALFWorld 上，Qwen3 的交错训练直接成功率为百分之九十点五，使用探索摘要后为九十二点七，明显高于任务单训的八十四点六和八十四点三。对原环境叠加物体重定位、前置条件改变和干扰物后，探索感知模型在各类扰动中保持最高成功率或最小跌幅，说明摘要确实承载了当场获得的知识。</p>
+      <p>行为诊断比总分更能说明变化：任务单训模型的失败动作中，重复占百分之六十三点四、循环占十六，信息搜寻仅占一，恢复行为为零；探索感知模型对应降到二十四点九和七点七，同时信息搜寻升至七点五、恢复升至二十点一。训练配比也有明显折中：Qwen3 在 ALFWorld 上五比一时直接与先探索成绩最好，为九十点五和九十二点七；十比一只有八十七点九和九十一，纯探索更跌至四十九点七和五十四点四。预算过短同样会反噬，十步探索常形成片面或错误摘要，说明“先看再跳”只有在覆盖训练和足够观察预算共同存在时才成立。</p>
+      <p>方法的上限首先来自一次性前置探索：真实环境过大或任务中途变化时，开局固定预算不可能覆盖所有相关状态，更合理的方向是动态、任务条件化地决定何时再探索。实验全部是文本环境，检查点依赖模拟器内部真值与严格文本匹配，在视觉界面和开放世界中既难定义也可能被表面措辞欺骗；自然语言摘要还会遗失细节或把偶然观察泛化成规则。探索本身增加交互成本，若动作不可逆、有隐私或安全风险，最大化覆盖甚至可能鼓励越权试验，因此论文强调权限、监控和人工监督。现有结果证明交错训练可以抵消探索坍缩，却没有证明 ECC 是可部署环境中的通用内在奖励。</p>
+    </article>
+    <article class="paper" id="paper-A034" data-paper-id="A034">
+      <header class="paper-header">
+        <p class="paper-kicker">A034 · 约 4 分钟</p>
+        <h2>Anchored Policy Optimization: Mitigating Exploration Collapse Via Support-Constrained Rectification</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">exploration-collapse</span><span class="paper-tag">support-constraint</span><span class="paper-tag">RLVR</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2602.05717" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>可验证奖励强化学习常被理解为把正确答案概率不断推高，但论文指出它同时进行着不可逆的搜索树修剪。正优势会锐化已采到的正确分支，负优势则压低错误词元并把概率按当前分布重新分给其他词元；由于尾部的潜在正确分支本来概率极小，它们几乎分不到这次释放的质量，下一轮更难被采到。反复更新形成“递归空间收缩”，一旦某条有效路径离开采样支持，纯在策略学习就很难让它复活。对 Qwen2.5-Math-7B 的一千道 MATH 题做教师强制分析时，参考答案首选词元覆盖仅百分之八十三点八四，而前八候选覆盖达九十七点四七，说明模型内部仍保留大量未被单一路径代表的安全支持。</p>
+      <p>常见的全分布 KL 约束并不能精准解决问题：它要求新策略匹配参考模型全部密度，会把无关噪声也拉回来，并与提升正确答案的锐化目标长期对抗；而且即使 PPO 主损失已被裁剪，独立 KL 梯度仍可继续推动参数。APO 改为只在负优势词元上做支持约束。它从固定参考策略取当前位置概率最高的若干候选，排除当前已判错的词元，得到一个稀疏“安全流形”；再比较新旧策略在这组锚点上的总概率，把压低错误词元的推力与抬高安全支持的拉力合并成同一个修正概率比。正优势更新完全不变，负更新仍处于 PPO 的裁剪边界内，因此不会让辅助正则越过主目标独自漂移。</p>
+      <p>这种设计的要点不是强迫模型照抄参考答案，而是在惩罚当前错误时为尚未采到的可行替代保留入口。附录证明，在若干光滑性和参考支持假设下，锚点拉力与支持保持目标同向，能够维持锚点内部的相对结构并提供持续恢复机会。实现只读取参考模型前八个词元的概率，相比十几万词表的全 KL 更稀疏，可直接嵌入 GRPO 的负样本项。训练采用 DAPO-17K、组大小八、批量五百一十二、最长上下文二千零四十八，在 Qwen2.5-7B、Qwen2.5-Math-7B 和 Llama-3.2-3B-Instruct 上跑二百四十步，并以 AIME、AMC、MATH500、Minerva 等五项数学基准同时观察单次正确率与多样采样覆盖。</p>
+      <p>Qwen2.5-Math-7B 的基础模型单次与多次覆盖平均为二十七点七零和七十六点九五，普通 GRPO 提高单次到四十八点六八，却把覆盖压到七十六点五六；APO 同时达到五十点六七和七十八点零七。Qwen2.5-7B 上，GRPO 为四十二点六八和七十点五七，APO 为四十三点五七和七十三点三八；Llama 三十亿模型的 GRPO 多次覆盖从基础的五十五点一一塌到四十三点八二，APO 虽不能完全恢复基础多样性，仍以四十七点一一优于 GRPO，同时单次成绩二十五点五一略高于二十五点零八。相较 NSR、全局 KL 与只在错误位置施加 KL，APO 在 Math-7B 上取得最高综合结果。</p>
+      <p>分布统计印证收益不是只靠更长采样：在 Minerva 的 Llama 实验中，APO 将多次覆盖由四十一点九一提高到四十三点六五，多样性由零点二六七增至零点二八三，平均熵由零点四零五升至零点四八五，最大词元概率由零点八七八降至零点八四九。超参数存在明确折中，默认八个锚点、锚定权重零点一和修正系数一点零五时单次与覆盖为五十点六七、七十八点零七；不使用锚定时为四十八点八六、七十六点二六，改成四或十六个锚点也略差。修正过强虽可能把覆盖推高到七十九点五二，却损失单次正确率，符合“保留支持但不能妨碍利用”的初衷。</p>
+      <p>APO 的保护范围由参考模型决定：若正确下一步从未进入参考 top-k，它只能保存已有候选，不能凭空发明新策略；教师强制得到的高覆盖也只是对已知参考解的事后估计，不等于所有合法证明路径。理论结论依赖概率结构与梯度近似假设，实践还新增参考前向、候选数和权重选择。论文没有独立限制章节，实验又只覆盖三种不超过七十亿参数的数学模型、可验证答案和 GRPO 式训练，尚未验证长程工具智能体、开放奖励或持续变化参考策略。因而 APO 最可信的定位，是在负样本更新时防止过度剪枝的局部整流器，而非消除所有探索坍缩的全局保证。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="03-01.html"><span>上一方向</span>序列级、轨迹级与开放域相对优化</a>
+      <a class="next" href="03-03.html"><span>下一方向</span>经验回放、rollout 利用与梯度信号效率</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="搜索、工具探索与工具调用决策：Towards Long-horizon Agentic Multimodal Search、Iterative Tool Usage Exploration for Multimodal Agents via Step-wise Preference Tuning、Tool Zero: Training Tool-Augmented LLMs via Pure RL from Scratch、Efficient Agentic Reinforcement Learning with On-Policy Intrinsic Knowledge Boundary Enhancement">
+  <title>7.1 搜索、工具探索与工具调用决策 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>7.1</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 4 篇</p>
+      <h1>搜索、工具探索与工具调用决策</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A076"><span>A076</span>Towards Long-horizon Agentic Multimodal Search</a>
+<a href="#paper-A077"><span>A077</span>Iterative Tool Usage Exploration for Multimodal Agents via Step-wise Preference Tuning</a>
+<a href="#paper-A078"><span>A078</span>Tool Zero: Training Tool-Augmented LLMs via Pure RL from Scratch</a>
+<a href="#paper-A079"><span>A079</span>Efficient Agentic Reinforcement Learning with On-Policy Intrinsic Knowledge Boundary Enhancement</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A076" data-paper-id="A076">
+      <header class="paper-header">
+        <p class="paper-kicker">A076 · 约 4 分钟</p>
+        <h2>Towards Long-horizon Agentic Multimodal Search</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">multimodal-search</span><span class="paper-tag">long-horizon</span><span class="paper-tag">retrieval-agent</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.12890" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程多模态搜索的瓶颈不只是上下文长度，而是图像无法像文本那样安全摘要：每轮把搜索缩略图、网页图片和中间裁剪直接塞进上下文会迅速耗尽视觉 token，直接丢弃又可能删掉稍后才知道重要的证据。LMM-Searcher 将视觉资产永久外置到文件系统，以 URL 或唯一文本标识在上下文中代理原图。agent 长期记住“在哪里”，只有需要精细观察时才加载原始内容，从而把轻量规划与昂贵感知解耦。</p>
+      <p>工具接口形成从粗到细的感知漏斗。google search、image search 与 visual search 找候选；scrape website 汇总网页文本并保存全部图片 URL；fetch image 根据标识把指定图加载回模型；zoom in 对原图处理后保存新资产并返回新标识。中间件在每个环境观察进入模型前截获交错文档，索引所有图像并以标识替换，保证原图不被不可逆压缩。agent 可在数十轮后回取任何证据，还能基于失败搜索交替做文字检索、反向图片检索和局部放大。</p>
+      <p>训练数据专门构造必须在后续网页中看图的题，而非只把图片放在起始提示。流水线从视觉丰富网页提取唯一核心实体、相关图片和上下文，生成不能仅凭正文回答的单跳视觉问题；再以实体为根迭代扩展知识图，要求每条单独属性不能反推源实体，挑低度节点模糊化，并把叶节点替成显式图片，合成为跨模态多跳问题。Qwen2.5-VL-7B 先过滤无需搜索即可回答的题，Seed-1.8 在四十轮、六万四千上下文内做拒绝采样。</p>
+      <p>最终汇合 FVQA、LiveVQA、REDSearcher 文本和多模态任务及自合成一千五百八十九题，得到一万二千七百三十六条高质量轨迹；自合成轨迹平均十七点二六轮，比 FVQA 的五点六三和 REDSearcher-MM 的十三点二一明显更长。Qwen3-VL-30B-A3B-Thinking 做三轮 SFT，全局批量六十四、学习率十万分之一，只对推理与工具调用计算损失、遮罩工具观察。为补足纯文本长程搜索能力，语言层再与 MiroThinker-1.7-mini 以零点八对零点二插值；作者明确说尚未严谨研究合并机制。</p>
+      <p>四个 benchmark 上，三十轮 LMM-Searcher 在 MM-BrowseComp、MMSearch-Plus、VisBrowse、MMSearch 为二十二点三、三十二点九、四十二、七十一；开启文件式管理、允许一百轮后为三十点一、三十四点八、四十八点三、七十二点三。交互缩放曲线显示基础模型约二十轮即饱和，SFT、语言模型合并和两者结合依次抬高后续轮次上限，MMBC 与 VisBrowse 到一百轮仍上升。相同框架也把 Seed-1.8 的 MMSearch-Plus 从旧框架十一提升到四十六点七。增量数据消融平均由基础二十五点六，经开放视觉数据四十一点一、文本数据四十点九、自合成题四十二点一；去 fetch image 后平均从五十三点三降到四十八点二，VisBrowse 单项跌九点五。</p>
+      <p>局限在于这仍是 SFT 蒸馏而非在线环境 RL，能力上限受 Seed-1.8 教师和成功轨迹过滤决定；训练后模型合并使数据、框架和语言搜索能力的因果贡献难完全拆开。文件标识只有在 URL 长期可访问、缓存正确且权限安全时才可靠，网页删除、同 URL 内容变化和大量资产存储未评估。fetch-image 消融使用更强的 Seed-1.8 而非最终 30B 模型，工具贡献的跨模型一致性仍需确认。所谓一百轮还额外只保留最近五个工具结果，文本历史仍被启发式截断。实验只含四个问答 benchmark、单图 MMSearch-Plus 子集，未覆盖视频、动态 GUI、恶意网页和证据引用校验；文件系统随轮数增长的读写、索引与清理成本也未单独报告。</p>
+    </article>
+    <article class="paper" id="paper-A077" data-paper-id="A077">
+      <header class="paper-header">
+        <p class="paper-kicker">A077 · 约 4 分钟</p>
+        <h2>Iterative Tool Usage Exploration for Multimodal Agents via Step-wise Preference Tuning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">tool-exploration</span><span class="paper-tag">stepwise-preference</span><span class="paper-tag">multimodal-agent</span></div>
+          <a class="source-link" href="https://proceedings.neurips.cc/paper_files/paper/2025/hash/55d16334943f8728073e17139e5baa3d-Abstract-Conference.html" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>复杂多模态任务常没有可廉价标注的完整工具轨迹，整条成功或失败的终局偏好也无法指出是哪一步选错工具、参数或代码。SPORT 在已有基本动作能力的 SFT controller 上做在线自探索：自动合成查询与文件，在每个 ReAct 步骤并行尝试多个“思考加代码”动作，真实执行工具后让 verifier 比较动作及观察，选一条继续展开；优选动作与其他候选构成局部偏好。即使最终轨迹未成功，中间正确分支仍可转成训练信号。</p>
+      <p>任务先从 MAT 的种子、使用工具和少样例提示生成自然查询，再由模型列出所需文件。图片从现有图集按相似度检索，PDF、表格、文档、音频等由模型编写 Python 生成；附录再用视觉模型修订查询与文件对应关系，并过滤不自然或不可解样本。这个先问后文件的顺序避免从任意文件硬凑问题。低多样性消融把提示样例从二十减至五、种子池从四百二十五缩到一百，仍高于 SFT，说明生成规模影响上限但不是方法成立的唯一条件。</p>
+      <p>对每个状态采五个候选，verifier 同时看任务、历史、动作、执行结果，判断哪个工具真正带来有用观察，而非直接猜最终观察真伪。选中分支进入下一步，其余四个与它配对；若轨迹有若干步，就产生每步四组偏好，数据利用率高于只保留成功终局。每轮收集五百条轨迹后用 DPO 更新 controller，SFT 模型固定为参考，再由新策略进入下一轮探索。controller 是 Qwen2-VL-7B，视觉编码器与压缩器冻结，语言层以 LoRA rank 三十二训练，学习率百万分之一、每设备批量二，最大上下文一万零二百四十，全部训练在八张 A100 上完成。</p>
+      <p>SPORT 前置使用 MAT 的两万条 SFT 轨迹，但在线阶段本身无需任务答案或专家轨迹。GTA 含二百二十九任务和二百五十二图，GAIA 含四百四十六任务与一百零九文件，覆盖 PDF、表格、演示文档以及需网页检索的多轮任务。相对 MAT-Qwen2-VL-7B，GTA 答案准确率从五十三点八五升至六十点二六，工具准确率六十四点六三升至七十二点四一，代码可执行率八十四点三二升至九十一点八七；GAIA 从十六点九七升至二十点六一，其中 Level 1 由二十六点四二升至三十五点八五。直接在原 Qwen 上做 SPORT 也从四十二点三一升到五十五点一三。</p>
+      <p>每轮轨迹数取五百最好：二百、五百、一千时答案准确率为五十六点四一、五十七点六九、五十七点零五，体现更新频率与批内多样性的平衡。把 GPT-4o 轨迹作为静态正例的 DPO 只达五十五点一三，在线 SPORT 为六十点二六。累积两轮共一万六千偏好对，拒绝动作代码错误率八十一点九四，优选仅十八点三五；优选与拒绝工具分布差异为百分之四十五点六二，verifier 选择的 BLEU-4 为零点一一、随机选择为零点三四，表明它不是挑近似改写。人类对 verifier 偏好的重合率百分之八十二。附录估算总耗时三十六点五六小时，较 MAT 一百七十三点七五小时快四点七五倍，GPU 成本低三十二点七。</p>
+      <p>核心依赖也是 verifier：它由预训练 Qwen2.5-7B 配合人工规则和提示完成，离群任务上的错误会把整条搜索引向错误分支；只有当前最优分支被继续，早期误选不可恢复。方法并非真正从零开始，controller 先用两万专家轨迹对齐，任务生成也继承 MAT 种子。任务与轨迹五项人评分虽都超过八分，来源仍是少量人工抽样；质量研究人数二十、偏好研究另二十，不能覆盖长尾文件损坏和工具副作用。GTA 多为二到四步，GAIA 闭源强模型仍领先，推理时也关闭采样与验证，训练期的搜索预算不能直接视为部署成本。作者把让 verifier 与 controller 共同自演化、给验证可靠性建立理论保证及跨步保留备选分支留作未来工作。</p>
+    </article>
+    <article class="paper" id="paper-A078" data-paper-id="A078">
+      <header class="paper-header">
+        <p class="paper-kicker">A078 · 约 4 分钟</p>
+        <h2>Tool Zero: Training Tool-Augmented LLMs via Pure RL from Scratch</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">pure-RL</span><span class="paper-tag">tool-augmented-LLM</span><span class="paper-tag">from-scratch</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2511.01934" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>工具 SFT 容易记住函数名和训练轨迹，在同分布 Live 工具上很强，却可能不理解“何时及为何调用”，跨数据集或多轮场景反而输给未专门训练的基础模型。Tool Zero 从未经指令后训练的 Qwen2.5 Base 直接做规则 RL，目标是让推理与工具模式一起被奖励发现。难点是纯严格匹配在初期几乎全零，而永久给部分分又会鼓励模型停留在表面词重叠，因此论文设计随训练从探索逐步转向精确调用的 GG-GRPO。</p>
+      <p>数据来自 ToolACE 与 xLAM，先过滤无法解析的工具和答案，并用四种规则补多轮：拼接相关对话、暂时移除后续再引入工具、遮住参数请求澄清、篡改工具或参数让用户质疑结果。函数名和参数名还被替成通用编号，迫使模型阅读描述和语义而非记名称。xLAM 最终保留六万七千五百单轮和一万零二百五十四多轮；ToolACE 保留九万七千三百单轮、一千九百六十六多轮。附录显示去多轮增强时 xLAM 的 BFCL 多轮仅十六点一八，加入后约三十二点三八。五个评测与训练语料的工具规模从 API-Bank 的四十一个到 ToolACE 的二万五千七百七十一个不等，任意两集工具接口重合率多很低，最高也只是 ToolACE 与 SealTool 的百分之四十七点一，给跨集合结果提供了比单一同分布测试更强的依据。</p>
+      <p>早期通用奖励把生成和真值按工具名、参数名、参数值等元素拆开，以重叠比例给负零点五至正零点五的连续分，让接近正确的调用仍产生组内差异；后期切换到 AST 严格等价。严格阶段另对正确多工具协作加零点三，对每个错误参数值惩罚零点三，并要求思考、答案标签顺序合法。两套奖励用以第二十五步为中心、斜率零点一的平滑 sigmoid 混合，避免突然更换目标；前半程主要扩大有效探索，后半程才把语法和参数全部收紧。GRPO 每题八条 rollout、无 KL，在五组八张 Ascend 910B 上约二十八小时。</p>
+      <p>七十亿与三百二十亿 Tool-Zero 在 BFCL-v3 的 Non-live、Live、Multi-turn 分别为八十八点九八、八十点七六、二十五点九三，以及九十点七六、八十二点四三、二十八点一八，总体六十五点二二和六十七点一二。7B 比 ToolACE-8B 高约七点，也比先 SFT 再 RL 的 ToolRL-7B 总体五十八点三八高六点八四。跨 API-Bank、SealTool、Tool-Alpaca、Nexus Raven，7B 平均七十七点六五、32B 七十九点三二，显示收益不只来自 ToolACE 的函数重合。</p>
+      <p>组件消融中完整 GG-GRPO 比普通 GRPO 高五点二六、比同数据 SFT 高六点八，多工具和参数错误信号贡献大于命名 mask。仅保留严格奖励会在初期产生大量同分组，只有通用奖励则后期停在近似工具或近似参数；渐进混合同时解决稀疏探索与精确收敛。切换中心二十五最好，五十或一百的长探索会奖励投机；斜率零点一优于更陡的零点二与一点零。不同骨干显示 Base 通常优于 Instruct，作者归因于可塑性。规模附录中一点五、三、七、三十二亿的五集平均为六十三点七三、七十点八七、七十七点三二、七十八点九九，规模总体上升但两端并非所有集单调，仍有优化空间。</p>
+      <p>“从零”仅指无 SFT，并非无工具数据、无真值或无人工奖励：训练仍使用 ToolACE/xLAM 的参考调用、AST 和手工加减分，因而不能处理没有确定函数答案的开放 agent 任务。渐进奖励增加大模型 RL 计算，切换步与斜率依赖训练长度；严格 AST 可能把语义等价调用判错，反过来对错误参数逐项扣分也会让长参数表天然承受更大负值。论文限制还指出 BFCL、API-Bank 的长调用链和设计偏好并不代表真实全部工具。实验只到 32B、固定候选工具列表，未覆盖执行副作用、安全权限、动态 API 版本和长期环境反馈；名称遮蔽降低记忆捷径，却不能排除描述文本中的语义近重复与训练测试污染。</p>
+    </article>
+    <article class="paper" id="paper-A079" data-paper-id="A079">
+      <header class="paper-header">
+        <p class="paper-kicker">A079 · 约 4 分钟</p>
+        <h2>Efficient Agentic Reinforcement Learning with On-Policy Intrinsic Knowledge Boundary Enhancement</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">knowledge-boundary</span><span class="paper-tag">tool-call-efficiency</span><span class="paper-tag">dual-path-rollout</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.26952" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>agent RL 常把“能调用工具”误学成“凡题都调用工具”。论文跟踪训练第二十步已答对的样本，到第二百四十步时平均调用继续增加，检索噪声甚至覆盖原本正确的参数知识。直接按调用次数塑形奖励又会诱导无差别少用工具，在真正需要检索时也拒绝调用。AKBE 将知识边界定义为逐题判断能否仅凭参数知识正确回答，以及若必须使用外部工具时的最少调用数；边界随策略学习变化，不能靠一次离线标注固定。</p>
+      <p>每个训练批次同时采两条路径：带工具路径每题十六条，可最多检索六轮；禁用工具路径每题八条，只能内部推理。比较两边是否至少有一条精确匹配答案，把问题分为四类。只有工具侧成功时，从正确轨迹中选调用最少者，教“必要且高效”；两边都成功时，随机选正确无工具轨迹，消除冗余；工具侧失败、无工具成功时，同样选无工具轨迹，纠正检索导致的幻觉；两边都失败时没有可信目标，只保留原 RL 信号。</p>
+      <p>选中的当前策略轨迹以正向交叉熵辅助目标加入 GRPO，不改环境奖励，也不显式压低其他轨迹；下一步重新 rollout 后重新分类，所以模型把知识内化后可从工具依赖类转为效率类。默认辅助权重零点零五，理论上因每题 GRPO 有十六条、辅助至多一条，权重应接近十六分之一。训练批量六十四、微批量八、最长回复六千一百九十二 token，检索每次返回本地 Wikipedia 的前三段；所有实验在单节点八张 H20 上完成。附录比较 DPO 式正负轨迹：它在八十至一百四十步短暂领先，约一百五十步后奖励和 EM 突然崩溃，因为正负轨迹共享调用模式，显式惩罚负例最终连正确调用也压制。</p>
+      <p>实验在 Qwen3-4B 与 Qwen2.5-7B 上使用本地二千一百万条 Wikipedia 检索库，覆盖 HotpotQA、2Wiki、MuSiQue、Bamboogle 四个多跳集和 NQ、TriviaQA、PopQA 三个单跳集。相对 Search-R1，4B 的七集平均精确匹配提高一点八五，调用数约降百分之十八，工具生产率增约百分之二十五；多跳平均四十五点四升至四十六点八二、调用三点一六降至二点六，单跳平均五十四点九七升至五十五点九、调用一点四一降至一点一六。7B 也把多跳平均四十三点一九升至四十五点二四、调用三点七七降至二点九四；单跳五十三点九六升至五十四点五九、调用从一点零五降至一点零，说明收益并非来自单个新架构的参数记忆。</p>
+      <p>AKBE 接到 GRPO、DAPO、GSPO、AEPO 均同时提升准确率和减少调用；例如 DAPO 多跳平均四十六点六五升至四十七点零一，调用二点六一降至二点三八。GSPO 从四十五点六九、三点二三变为四十六点二四、二点八四，AEPO 从四十六点九六、三点零八变为四十七点五、二点七三，说明辅助信号与动态采样、序列级优化和熵驱动探索都兼容。离线 AKBE 调用更少却准确率更低，证明晚期边界对早期弱策略过于乐观。完整消融为 EM 四十六点八六、调用二点六；去工具依赖信号时 EM 跌到四十三点五六、调用二点一五，去效率信号为四十六点五、二点九二，去幻觉信号为四十六点五五、二点五八，仅工具依赖则为四十六点零二、二点八五。辅助权重零点零五最好，超过零点二会过度抑制工具；后期效率类比例增四点二、两边皆错降五点八。</p>
+      <p>额外无工具 rollout 在早期确有成本，但后期因无需环境访问且带工具轨迹更短，实测每步七点二分钟，比 GRPO 八点五分钟快百分之十五。局限是当前每题固定采八条无工具路径，简单题也浪费算力；固定辅助权重不能适应轮次与难度，作者建议先预测边界再选择性采样。只有精确答案的 Wikipedia QA，边界被简化为二元成功，无法处理部分知识、工具质量差异、开放报告和动态世界；参数知识“正确”也可能过时。若无工具侧偶然猜对，系统还可能把本应检索的问题错误归入效率类，而“至少一条答对”的分类概率又会随组大小变化。当前搜索工具固定为同一稠密检索器和三段返回，尚未检验网页、代码执行或多工具组合中是否仍保持相同边界规律。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="06-05.html"><span>上一方向</span>Multi-Agent 协同学习与共演化</a>
+      <a class="next" href="07-02.html"><span>下一方向</span>视觉推理与 GUI 操作 Agent</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

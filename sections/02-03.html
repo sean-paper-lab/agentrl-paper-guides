@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="证据增强、rubric 合成与奖励共演化：Evidence-Augmented Policy Optimization with Reward Co-Evolution for Long-Context Reasoning、ARES: Automated Rubric Synthesis for Scalable LLM Reinforcement Learning、Deep Research as Rubric for Reinforcement Learning">
+  <title>2.3 证据增强、rubric 合成与奖励共演化 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>2.3</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 3 篇</p>
+      <h1>证据增强、rubric 合成与奖励共演化</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A017"><span>A017</span>Evidence-Augmented Policy Optimization with Reward Co-Evolution for Long-Context Reasoning</a>
+<a href="#paper-A018"><span>A018</span>ARES: Automated Rubric Synthesis for Scalable LLM Reinforcement Learning</a>
+<a href="#paper-A019"><span>A019</span>Deep Research as Rubric for Reinforcement Learning</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A017" data-paper-id="A017">
+      <header class="paper-header">
+        <p class="paper-kicker">A017 · 约 5 分钟</p>
+        <h2>Evidence-Augmented Policy Optimization with Reward Co-Evolution for Long-Context Reasoning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">evidence-grounding</span><span class="paper-tag">reward-coevolution</span><span class="paper-tag">long-context</span><span class="paper-tag">search</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2601.10306" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>超长上下文中的难点往往不是模型不会推理，而是它在几十万 token 里找错、漏掉或混淆了关键证据。只按最终答案给奖励时，模型即使靠参数记忆或幸运猜测答对，也能拿到满分，错误引用和无依据结论不会被惩罚。论文先通过一个受控实验检验瓶颈究竟在证据还是推理：让模型严格先抽证据再作答，并分别用语义相似度、LLM 证据评审和推理评审选择搜索树分支。结果是给出高质量证据的上限方案把 MuSiQue 准确率从百分之四十五推到六十三，而只优化推理几乎没有收益；固定证据后，不同推理路径超过百分之九十六语义一致。这支持了“先找对针，模型通常就能完成后续推理”的出发点。</p>
+      <p>EAPO 首先规定证据增强推理格式：模型依次分析任务约束、从原始长文中原样抽取证据、只基于这些证据推导，再给最终答案。显式的证据区块既防止结论完全无出处，也把原本隐藏的中间状态暴露给奖励系统。每个问题采样一组回答后，系统检查格式；若格式合格，就把组内所有证据块交给奖励模型同时比较，以一到五分评价它们对当前问题的相关性、覆盖度、具体性和连贯性，再把分数在组内归一化。最终答案另由 LLM 根据标准答案判定正确与否。格式、证据质量和结果正确三个分量按权重相加，形成 GRPO 的组相对优势。</p>
+      <p>固定奖励模型会在策略变强后逐渐失去区分力，EAPO 因而让奖励与策略共同演化。当前策略不断生成新的证据轨迹，奖励模型先给分；系统只保留“高证据分且答案正确”或“低证据分且答案错误”这类评价与客观结果一致的高置信样本，再用拒绝式微调更新奖励模型。更新后的评审器会更擅长识别当前策略新出现的细微证据差异，并在下一轮继续指导策略。论文每二十个 RL 步骤更新一次奖励模型。这个闭环没有把所有正确轨迹都当作好过程，而是借终局一致性过滤，试图防止奖励模型被策略产生的捷径污染，同时让过程监督不至于很快饱和。</p>
+      <p>训练集只有四千六百六十四条，来自被扩展到三万二至十二万八千 token 的 MuSiQue，以及同时含自由文本、表格和跨表推理的 Wikipedia 混合问答。作者以 Qwen3-14B、Qwen3-30B-A3B-Instruct、Qwen3-30B-A3B-Thinking 三种模型检验规模与结构差异，奖励模型从 30B Thinking 初始化。评测包括 SEAL-0、SEAL-Hard，LongBench 的 MuSiQue、HotpotQA、2Wiki，以及 LongBench-v2 的单文档、多文档和长结构数据问答。基线既有同一模型的普通 GRPO，也有 GPT-4o、Gemini-2.0-Flash、Claude-Sonnet-4、GPT-OSS-120B、QwenLong-32B 等强模型；所有样本限制在一百二十八千 token。</p>
+      <p>30B Instruct 的八项平均分由四十八点一升至五十五点六，比普通 GRPO 高二点五；30B Thinking 从五十八点零升至六十三点一，比 GRPO 高三点九，并超过论文列出的 GPT-OSS-120B 与 Claude-Sonnet-4 平均分。消融显示密集证据奖励使模型更快收敛，而静态奖励模型大约五十步后趋于饱和，完整共演化仍继续提升。奖励模型在六候选中选中与人工证据最接近项的准确率随训练从百分之六十九升到七十四。证据权重从零增加到零点三时总体分数由五十九点二升至六十三点一，继续加到零点五又跌回五十九点二。人工盲评中，EAPO 有百分之九十七点三的证据足以支持答案，高于 GRPO 的九十二点六；证据错误和推理错误率也同时下降。</p>
+      <p>论文没有独立列出完整限制章节，但方法边界可以从设计和实验看出。训练需要标准答案、一个答案评审 LLM 和一个可持续微调的证据奖励模型，不能直接用于没有参考结论的开放写作。奖励模型把证据效用压成相对分数，仍可能偏好措辞或漏掉少见但决定性的事实；只保留与终局一致的样本会把“证据好但后续推理错”和“证据差但侥幸答对”等困难案例排除，形成选择偏差。全部实证是离线长文问答，尚未覆盖动态网页和真实代理行动；强模型 judge 与十六张 H20 的成本也不低。EAPO 最适合证据可从给定上下文明确摘取、答案可评价的长上下文任务，其共演化不能替代独立的人类事实审计。</p>
+    </article>
+    <article class="paper" id="paper-A018" data-paper-id="A018">
+      <header class="paper-header">
+        <p class="paper-kicker">A018 · 约 5 分钟</p>
+        <h2>ARES: Automated Rubric Synthesis for Scalable LLM Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">rubric-synthesis</span><span class="paper-tag">reward-design</span><span class="paper-tag">scalable-supervision</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.23454" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>可验证奖励让数学、代码和短答案强化学习很容易扩展，但开放式医疗建议、写作或复杂指令没有唯一字符串答案。整体式 LLM 评审能给分，却常不稳定也不透明；过程奖励标注昂贵；rubric 可以把质量拆成事实、完整性、约束和风险等多个可检查维度，却又通常依赖专家逐题编写，或对整个数据集套用同一套泛化标准。ARES 的切入点不是再设计一个优化器，而是把海量预训练文档自动转成“问题、参考答案、逐题加权 rubric”的强化学习实例，让每道开放题都有与内容和意图对应的细粒度奖励。</p>
+      <p>流水线先从 DCLM、FineWeb-Edu 和 FinePDFs 等原始语料中筛掉模板页、低质量或信息不足的文档，再给保留文档分配十个知识领域之一，并生成至多三种目标人物身份。相同医学材料因面向医生、学生或照护者，可以产生不同难度、背景假设和回答风格。生成模型在一次调用中共同写出无需看到原文也能理解的自包含问题、忠于文档的参考答案，以及专属于该题的 rubric。rubric 中既有奖励关键事实、推理和格式的正权重标准，也有惩罚幻觉、遗漏和危险建议的负权重标准，条目数量随问题复杂度调整。</p>
+      <p>质量控制同时检查问答和评分标准。问题必须不泄露答案、离开原文仍可理解，参考答案必须被源文档支持；每条 rubric 标准要有完整字段、非零且合法的整数权重，覆盖题目核心要求，并同时包含正负标准。失败样本会丢弃，合格样本再去重并排除评测重合。最终得到十万一千八百四十七条数据、超过一百一十万条标准，平均每题约十点九条，其中约四分之一是负向约束。训练时 Qwen3-32B 对候选回答逐项做二元判断，满足标准得一，否则得零，与权重相乘求和后作为 GRPO 标量奖励；这样不完整回答仍能得到与已满足维度成比例的部分信用。</p>
+      <p>作者从同一个 Qwen3-4B-Base、相同源文档或生成数据出发比较五种训练方式：继续预训练原文、在 NaturalReasoning 上 SFT、使用短答案二元奖励的 Webscale RL、模仿 ARES 参考答案的 ARES-SFT，以及使用 rubric 奖励的 ARES-RL。模型没有预先做指令微调，ARES-RL 每题采样八个回答，训练三轮。评测横跨 MMLU-Pro、GSM8K、HumanEval+、MBPP+、HealthBench、WritingBench 和 IFEval，既有自动验证任务，也有医疗、写作和多约束指令。这个对照把“是否看到相同知识”“是模仿还是 RL”“奖励是二元还是多维”较清楚地分开。</p>
+      <p>ARES-RL 的七项平均分为五十二点六九，分别比继续预训练、NaturalReasoning、Webscale 和 ARES-SFT 高五点三三、六点七八、四点三九和二点九八。相对二元奖励，HealthBench 从三十六点零八升到四十一点四五，IFEval 从三十五点六一大幅升到五十四点八八，GSM8K 和两项代码基准也取得小幅领先；MMLU-Pro 则略低于 ARES-SFT，说明选择题未必需要复杂 rubric。消融把逐题 rubric 换成无标准整体打分、固定通用 rubric 或参考答案相似度，ARES 的平均分最高且七项中五项领先或并列。通用 rubric 在 HealthBench、WritingBench 反而更好，参考答案法在 HealthBench 达五十点一三却在 IFEval 跌到十点五四，揭示不同奖励偏置和逐题标准的跨任务稳定性优势。</p>
+      <p>当前全部训练只在 Qwen3-4B-Base 上完成，rubric judge 也受显存限制固定为 Qwen3-32B，不能据此保证七十亿或更大模型具有同样训练动态。数据生成依赖 Gemini-3.1-Pro-Preview 和 Claude-Sonnet-4.5，不同闭源模型的知识偏差会同时进入问题、答案和评分标准；源文档自身的错误、刻板印象也可能被正式化为奖励。逐标准调用大 judge 的训练成本高于简单验证，论文所谓可扩展主要指免人工编写，并非计算免费。医疗等高风险领域不能只依赖自动 rubric，应做人类审计。ARES 适合把已有文档知识转成多维开放问答训练，但不保证自动生成的“应当满足什么”本身正确、公平或完整。</p>
+    </article>
+    <article class="paper" id="paper-A019" data-paper-id="A019">
+      <header class="paper-header">
+        <p class="paper-kicker">A019 · 约 5 分钟</p>
+        <h2>Deep Research as Rubric for Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">deep-research</span><span class="paper-tag">rubric</span><span class="paper-tag">atomic-constraints</span><span class="paper-tag">open-ended-reward</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.01091" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>开放式研究和长文生成没有唯一答案，rubric 能把完整性、事实性和方法要求拆成多个约束，给强化学习提供部分信用。但现有自动 rubric 常直接让模型看题目后凭参数记忆生成，结果偏向“清晰、相关、连贯”这类通用表面标准，遗漏真正决定答案质量的领域事实、数值阈值和常见误区。DR-Rubric 提出的关键观点是，制定评价标准本身就是一项研究任务：只有先查清这个问题涉及哪些事实、争议、边界和失败模式，才知道一份好回答具体应覆盖什么。它因此把 rubric 构造从一次提示改成有工具、可追踪证据的深度研究流程。</p>
+      <p>第一阶段由研究代理围绕每个问题反复搜索、阅读和修正查询，在最多十次交互中收集来源事实、结构要求、澄清点与潜在错误，形成显式证据轨迹。它与普通检索增强回答不同，目标不是直接给出答案，而是发现评价答案所需的要求。第二阶段把证据压缩成若干原子约束，每条只检查一个独立事项，可以是正向要求，也可以是否定式错误约束，不另外分类或加权。训练时 judge 对候选回答逐条输出满足或不满足，回答奖励就是满足约束的平均比例。每题采样四个回答，奖励组内标准化后进入带裁剪和 KL 锚定的 GRPO，因此即使回答只完成部分研究维度，也能获得比整体正确或错误更密集的信号。</p>
+      <p>依赖 GPT-5 或 Gemini 为所有题做深度研究仍很昂贵，作者进一步让训练后的策略接管下一轮的证据收集和约束生成。第一个模型用外部 rubric 训练后，为同一批新问题生成下一代 rubric，再继续一轮 GRPO，形成 bootstrap 循环。理论上，策略越强，能发现的评价要求也越好；实践却呈现“先专门化、再重新平衡”：第一轮自生成标准更贴近模型能力边界，显著提升专家推理，第二轮变得过于具体和阈值化造成迁移下降，第三轮压缩冗余、恢复词汇多样性后再度提升。论文还提出奖励极化率作为停止信号，即接近零或接近满分的样本比例过高时，说明 rubric 已容易被利用。</p>
+      <p>所有 8B 版本先用 Qwen3-32B 生成的一千条 ReAct 轨迹做 SFT，再以每轮一千题、五个 epoch 训练。训练源由 ResearchQA、RaR-Science、HealthBench、RaR-Medicine 和长文写作混合而成；评测覆盖研究代理任务 ResearchQA、DeepResearchBench、LocalSearchBench，以及专家推理 GPQA、MMLU-Pro、MMLU。对比包括 Qwen2.5-7B、Qwen3-8B、Search-R1、DR-Tulu-SFT/RL、WebExplorer，并严格固定策略、GRPO 和评测检索后只改变 rubric 来源：基准原生标准、GPT-5、Gemini 或 bootstrap。主实验使用静态 mock 检索保证可复现，附录再用实时搜索检查一致性，并补测 14B 和 30B 混合专家模型。</p>
+      <p>只用一千条 GPT-5 rubric，8B 模型在 ResearchQA 和 DeepResearchBench 分别达到七十三点七和四十三点零；Gemini 版本在 LocalSearch 和 GPQA 达四十点零和五十七点三，形成最均衡表现。第三轮 bootstrap 用累计三千条数据，在 MMLU-Pro 达七十八点零、MMLU 达八十五点三，超过各自最强基线三点七和一点五。来源消融说明不存在通吃的 rubric：GPT-5 的约束短、维度多且百分之九十六以上含可验证阈值，利于研究覆盖；紧凑 rubric 更利于专家推理，超大 rubric 更利于代理搜索。新鲜初始化控制复现了第二轮下降和第三轮回升，证明变化主要来自 rubric 质量，而不是参数累计训练。</p>
+      <p>bootstrap 不能无限继续。30B 压力测试中，奖励极化率在第三轮超过零点一五阈值，第四轮代理平均分从约五十一跌到二十二点七，第五轮发生梯度死亡；错误 rubric 经自训练循环累积后，模型会学会表面满足约束而非提高真实质量。作者建议两到三轮并用极化率提前停止，但这一经验阈值尚未在广泛任务验证。实验训练集只有一千到三千题，主要是六个研究与选择题基准，长文写作本身没有作为核心终测；外部生成和 judge 仍可能带知识偏见，原子约束等权也忽略不同事实的重要性。DR-Rubric 适合知识密集、可搜索且回答需要多维覆盖的任务，部署时必须控制研究成本、检查来源可信度并监测自举奖励失真。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="02-02.html"><span>上一方向</span>过程奖励、隐式步奖励与动态塑形</a>
+      <a class="next" href="02-04.html"><span>下一方向</span>Agent verifier 与原则型 PRM</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

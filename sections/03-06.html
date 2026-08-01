@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="简洁 RL recipe 与小模型扩展：JustRL: Scaling a 1.5B LLM with a Simple RL Recipe">
+  <title>3.6 简洁 RL recipe 与小模型扩展 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>3.6</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>简洁 RL recipe 与小模型扩展</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A042"><span>A042</span>JustRL: Scaling a 1.5B LLM with a Simple RL Recipe</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A042" data-paper-id="A042">
+      <header class="paper-header">
+        <p class="paper-kicker">A042 · 约 4 分钟</p>
+        <h2>JustRL: Scaling a 1.5B LLM with a Simple RL Recipe</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">simple-recipe</span><span class="paper-tag">small-model</span><span class="paper-tag">reasoning</span><span class="paper-tag">scaling</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2512.16649" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>小模型数学强化学习近年不断叠加多阶段上下文扩展、课程、动态采样、长度惩罚、温度调度、参考模型重置和海量 rollout，复杂度往往被解释为避免熵漂移或奖励崩溃所必需。JustRL 反过来问：如果先把最小可行基线训练得足够久，许多补丁是否根本不需要？作者在两个已经过推理蒸馏的 1.5B 模型上采用同一套固定超参数，以单阶段 RLVR 连续训练三千至四千余步，强调目标不是证明所有技巧无用，而是建立一个在增加复杂机制前必须超过的强、透明基准。</p>
+      <p>具体配方使用 veRL 的默认 GRPO、DAPO-Math-17k 原始训练集和 DAPO 的轻量规则验证器，不做离线难度过滤或在线动态采样。提示仅追加逐步推理与 boxed 最终答案，最大响应长度固定为 15k、总上下文 16k；训练批量 256、每题八个 rollout、温度 1、常数学习率 1e-6，不使用 KL 损失或熵正则。唯一保留的稳定技巧是把 PPO 裁剪上界提高到 1.28、下界保持 0.8，以避免长程策略更新过早收缩。相同配置直接用于 DeepSeek-R1-Distill-Qwen-1.5B 与 OpenMath-Nemotron-1.5B，没有逐模型调参。</p>
+      <p>评测覆盖 AIME 2024、AIME 2025、AMC 2023、MATH-500、Minerva Math、OlympiadBench、HMMT 2025、BRUMO 2025 和 CMIMC 2025。多数竞赛集采样三十二次，后三个经典集中的部分按四次采样；推理上限 32k，并用 CompassVerifier-3B 补救规则验证的假阴性。对比包括 DeepScaleR、ProRL-V2、BroRL 和带部分思维提示课程的 QuestA。DeepSeek 起点训练 4380 步，Nemotron 起点训练 3440 步，均使用 32 张 A800 约十五天，但按 token 预算仍显著低于多阶段或超大 rollout 方案。</p>
+      <p>JustRL-DeepSeek 在九项平均达到百分之五十四点八七，高于 ProRL-V2 的五十三点零八，并在六项领先；估算 token 预算约为 ProRL-V2 的一半、BroRL 的约五分之一。JustRL-Nemotron 平均百分之六十四点三二，略高于 QuestA 的六十三点八一，且只需约一点一乘十的八次方千 token，对方约二点六乘十的八次方千 token。两个起点都呈平滑单调改进：训练奖励约从负零点六升到正零点四，策略熵后期稳定在一点二至一点四，响应长度则从约八千 token 自然收敛至四五千，无需长度惩罚或阶段切换。</p>
+      <p>两个反直觉消融支持“先简后繁”。在基础配方中加入 DAPO 式末四千 token 超长惩罚，AIME 2024 在三千步后约停在百分之五十，而基础模型达到五十五；再换成更宽容的 DeepScaleR verifier，结果进一步降至四十五。两种修改都把熵压到约零点五至零点六。作者推测显式短化压力过早牺牲探索，而宽容验证器减少了由严格格式和精确计算产生的细粒度训练信号。该解释不是严格因果证明，但至少说明“更强验证器”和“更短回答”并不在所有训练组合中单调有益。训练曲线同时报告奖励、熵和长度，说明单看最终准确率会漏掉这种渐进式探索收缩。</p>
+      <p>证据边界同样明确：全部实验仅为 1.5B、数学推理和两个已蒸馏起点，无法外推到代码、通用问答、更大模型或噪声奖励环境，也无法从联合配置中分离究竟是数据、验证器还是裁剪范围最关键。作者只消融了长度惩罚和一种 robust verifier，未系统比较课程、温度调度、参考重置等其余技巧；较低于复杂基线的算力对资源有限团队仍不便宜，更长训练后是否还需干预也未知。因此论文最有价值的结论是方法论：复杂机制应针对已观察到的具体故障增加，而不是默认作为小模型 RL 的前置条件。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="03-05.html"><span>上一方向</span>长周期自博弈稳定性</a>
+      <a class="next" href="04-01.html"><span>下一方向</span>OPD 基础范式与作用机理</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

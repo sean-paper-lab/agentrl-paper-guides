@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="经验提取—利用的自进化闭环：EvolveR: Self-Evolving LLM Agents through an Experience-Driven Lifecycle、Complementary Reinforcement Learning、Evolving-RL: End-to-End Optimization of Experience-Driven Self-Evolving Capability within Agents">
+  <title>6.2 经验提取—利用的自进化闭环 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>6.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 3 篇</p>
+      <h1>经验提取—利用的自进化闭环</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A065"><span>A065</span>EvolveR: Self-Evolving LLM Agents through an Experience-Driven Lifecycle</a>
+<a href="#paper-A066"><span>A066</span>Complementary Reinforcement Learning</a>
+<a href="#paper-A067"><span>A067</span>Evolving-RL: End-to-End Optimization of Experience-Driven Self-Evolving Capability within Agents</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A065" data-paper-id="A065">
+      <header class="paper-header">
+        <p class="paper-kicker">A065 · 约 4 分钟</p>
+        <h2>EvolveR: Self-Evolving LLM Agents through an Experience-Driven Lifecycle</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">experience-lifecycle</span><span class="paper-tag">self-evolving-agent</span><span class="paper-tag">adaptation</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2510.16079" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>许多智能体会搜索和调用工具，却把每次任务当作独立事件：成功策略与重复错误在会话结束后一起丢失。保存原始轨迹只能让模型模仿旧案例，外部强模型写反思又使改进依赖“代笔者”，两者都没有让策略学会自主提炼和使用经验。EvolveR 构造一个交替生命周期：在线阶段，智能体可查询外部知识和内部经验库来解题并产生新轨迹；离线阶段冻结参数，由同一个策略回看成功或失败，分别蒸馏指导性或警示性原则；随后用这些经验条件下的轨迹做强化学习，使策略学会何时检索、怎样把原则转成行动，再进入下一轮。</p>
+      <p>每条原则含简洁自然语言描述和若干结构化知识三元组。新原则先在同一题的多条 GRPO 轨迹间做语义去重，再用 BGE-M3 检索库中相近条目，并由策略做二元等价判断；新颖项加入，重复项把来源轨迹并入既有原则。每项记录被使用和成功的次数，用平滑成功率衡量实际效用，周期性删除低于零点三的条目。在线时智能体显式选择“查经验”“查知识”或“回答”，两种检索各取前三项。检索内容只作上下文并屏蔽损失，避免把暂时相关的原则无差别写入参数；附录中直接放开经验词元梯度反而略降，证明未经相关性加权的“吸收”会传播噪声。</p>
+      <p>训练先用 NQ 与 HotpotQA 约七百条轨迹做冷启动，只教思考和两类搜索的交互格式；随后每步取一百二十八个提示、每题八条轨迹，用精确匹配终局奖励加轻量格式奖励做 GRPO。格式项要求完整的思考、搜索和回答，并奖励适量推理及两类搜索而非无限调用。Qwen2.5 的五亿、十五亿、三十亿和七十亿版本用于尺度分析；三十亿完整训练在八张 A100 上约三十九点四小时，最大输入八千一百九十二、输出一千零二十四词元。经验库用 Milvus，约一万四千条原则时取前三只需零点零六秒。</p>
+      <p>NQ、HotpotQA 用于训练，TriviaQA、PopQA、2Wiki、MuSiQue、Bamboogle只做分布外评测。三十亿模型七项平均精确匹配为零点三八二，高于 Search-R1-Instruct 的零点三二五；七十亿为零点四一七，高于其零点三八五。EvolveR 随规模从五亿的零点一五零、十五亿的零点二七零升到三十亿的零点三八二。外部 GPT-4o-mini 教师在五亿时把平均从零点一五零升到零点二二零，但三十亿时自蒸馏零点三八二反超教师的零点三七零，说明模型足够强后，与自身错误和表达方式对齐的原则更可用，而小模型仍受抽象能力上限约束。</p>
+      <p>禁用测试时经验检索后，五亿、十五亿、三十亿分别由零点一五零、零点二七零、零点三八二跌至零点零七八、零点一二三、零点三四零。组件归因中，无学习为零点一三四，单独 RL 为零点三二五，有原则和检索但无 RL 为零点三五七，有蒸馏和 RL 但无检索为零点三四零，完整闭环最高。相同成功轨迹改用 SFT 只有零点三五七，GRPO 为零点三八二。人工抽查显示低分原则只有百分之二十六理想、百分之二十四错误，且一半过于空泛；高分层理想率八十二、错误率降到八。库扩至四万九千九百三十四条时检索零点二秒，成绩未崩，但从四万五千条的零点四一零回落到零点三八七。</p>
+      <p>自蒸馏能力决定演化天花板，小模型需要强教师，错误或空泛原则仍会进入库后再靠使用反馈淘汰。跨轮稳定性证据也不足。实验全部是带精确答案的搜索问答，格式奖励、检索动作和剪枝阈值均为手工设计，尚未证明可迁移到具身交互、创造性任务或主观目标。近五万原则虽然延迟低，成绩已出现回落，真正终身运行的存储、遗忘和污染仍未解决。更重要的是，自主原则会放大其奖励函数所偏好的策略；若奖励不价值对齐，系统可能把有害捷径蒸馏成可复用“智慧”。论文因此把显式原则视为可解释与可控机会，也明确要求未来研究自演化安全，而不能把闭环增长本身当作可靠性保证。</p>
+    </article>
+    <article class="paper" id="paper-A066" data-paper-id="A066">
+      <header class="paper-header">
+        <p class="paper-kicker">A066 · 约 4 分钟</p>
+        <h2>Complementary Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">experience-extractor</span><span class="paper-tag">actor-coevolution</span><span class="paper-tag">sample-efficiency</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2603.17621" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>稀疏终局奖励没有解释长轨迹为什么成败，而静态经验库或固定抽取器又会随演员变强而过时：早期“基础避错”对后期策略已无价值，甚至造成分布错配。Complementary RL 借鉴互补学习系统，把慢速形成能力的策略演员与快速整理情节的经验抽取器都纳入强化学习。演员依靠结果奖励学习，同时受结构化经验指导；抽取器观察完整任务、轨迹、结果及旧经验如何影响行为，生成可增加、更新或忽略的规则，并根据这条经验后来是否促成成功获得正负反馈。改进后的演员产出更高质量轨迹，改进后的抽取器又给演员更合时宜的策略，形成双模型共演化。</p>
+      <p>经验抽取器使用 CISPO：同一经验若指导多条轨迹，先把对应成败求平均，再把生成该经验的提示—回答对放入缓冲，达到批量后独立更新。经验库不只是追加；周期性合并让抽取器按块检查相似、冲突和冗余项，决定保留、融合或丢弃。演员训练则把每题八条 rollout 等分为有经验和无经验两组，并在组内分别归一化优势。若所有轨迹都带经验，策略会依赖脚手架而不内化；若跨两组统一算优势，两种条件的奖励尺度和方差不同，会产生偏差甚至崩溃。分组优势既学习如何使用经验，也保持无经验独立解决能力。</p>
+      <p>工程上主循环持续采样和更新演员，后台异步蒸馏、合并并训练抽取器，中央 ExperienceManager 用队列、读写锁和批量嵌入维护全局一致库。相同任务的并行查询先缓存并微批处理，再分发给多个检索工作单元；演员还可在任意决策步发起 search-and-ask，用当前状态与困难构造查询，抽取器再按情境细化取回经验。周期合并避免组式 rollout 产生大量近重复规则。默认演员 Qwen2.5-7B，抽取器 Qwen3-4B-Thinking；AdamW 学习率一百万分之一，不使用 KL，经验训练缓冲六十四，每五步合并。</p>
+      <p>单任务覆盖 MiniHack、WebShop、ALFWorld 和 SWE-Bench；前三项默认七十亿演员，SWE 使用 Qwen3-4B。MiniHack Room 与 ALFWorld 的最终性能约为无经验基线的一点三倍，SWE-Bench 提高三个百分点；成功任务的动作数在 MiniHack 少一点五倍，在 ALFWorld 少两倍。三任务联合训练中，无经验基线在 MiniHack、WebShop、ALFWorld 和平均为零点六八、零点八一、零点七二、零点七五；完整方法测试时检索经验为零点七八、零点八七、零点八二、零点八二，不检索仍有零点七五、零点八四、零点七四、零点七八，表明部分经验已进入参数。</p>
+      <p>对照也说明“在线建库”不等于共演化。固定抽取器即使测试时检索，三任务平均只有零点五九，不检索为零点五四；只训练抽取器、冻结演员仅零点三三。把抽取器从四十亿换成 Qwen3-30B-A3B，联合任务平均再提高约五点，经验质量仍受模型容量支配。任务混合扩大到三项和六项，完整方法相对基线分别高百分之六点六和八点一，异步检索在不同并行批量下几乎不增加 rollout 时间。周期合并和 search-and-ask 的曲线消融均显示，缺失后学习变慢或上限降低；直接把成功经验指导轨迹逐步自蒸馏进演员，早期更好却在后期崩溃。</p>
+      <p>论文没有独立限制章节，但若干失败暴露边界。系统需要两个可训练模型、全局经验库、并发锁、后台队列和独立更新日程，复现与运维复杂；经验信用只是“使用后成败”，无法严格证明因果。强抽取器继续提高结果，而四十亿版本会产出更弱经验，说明闭环并未摆脱能力上限。直接自蒸馏晚期崩溃，经验如何稳定内化仍未解决；测试时检索仍带来约四点平均收益。任务以规则成败为主，SWE 还筛去全易和全难样本，未覆盖主观反馈、视觉现实环境或长期安全。经验库若遭遇错误、恶意轨迹或跨任务污染，异步高吞吐也可能更快放大问题。</p>
+    </article>
+    <article class="paper" id="paper-A067" data-paper-id="A067">
+      <header class="paper-header">
+        <p class="paper-kicker">A067 · 约 4 分钟</p>
+        <h2>Evolving-RL: End-to-End Optimization of Experience-Driven Self-Evolving Capability within Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">experience-extraction</span><span class="paper-tag">experience-utilization</span><span class="paper-tag">OOD-generalization</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.10663" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>经验驱动自进化同时要求模型会从轨迹抽象可迁移技能，也会在新任务中真正使用技能。既有系统多研究技能怎么存和检索，默认基础模型已具备这两种能力；近期 RL 又往往只训使用端，抽取仍靠强教师或手工过滤。若技能噪声大，最稳定的策略反而是忽略上下文，使用端单独优化会退化；抽取端只在原题上评判又容易写出不可迁移的规则。Evolving-RL 将一次技能的价值定义为它在若干相关下游任务上的实际增益，用同一策略同时扮演抽取器和求解器，让跨任务转移反馈共同训练“会总结”和“会执行”。</p>
+      <p>每轮先让共享策略无技能解决一个源任务，得到完整轨迹和奖励，再从该状态采样八条候选文本技能。系统不按技能内容检索测试题，否则不同技能面对不同难度，而按源任务描述找四个语义相近任务并包含原题；每条技能都在同一组任务上驱动求解器 rollout，平均环境奖励就是抽取器回报。八条技能在组内做 GRPO，只有跨多个任务稳定帮助求解的抽象才获正优势。技能表述天然多样、评测又有噪声，抽取熵会持续增长，ALFWorld 因此加入负熵正则和规则门控，防止共享模型在共演化中崩溃。</p>
+      <p>下游评测轨迹不会浪费。对每个相关任务，八条由不同技能条件化的响应组成跨技能组，以同一任务的奖励归一化求解器优势：好技能下的正确行为被强化，误导技能下的错误行为被压制，策略也学会忽略无关提示。抽取损失和求解损失按权重合并，一次共享参数更新同时改善两种角色。训练以 Qwen2.5-7B-Instruct 为基础，ALFWorld 做完整轨迹优化，Mind2Web 因错误动作没有后续网页状态而做逐轮优化；每步十六个源任务，训练七十五／一百五十步，在八张 H800 上约十／十七小时。所有结果取五次运行平均。</p>
+      <p>ALFWorld 按任务类型拆已见与未见，Mind2Web 用官方跨任务、跨网站和跨领域划分。ALFWorld 中，GRPO 无技能总成功率七十九点九、未见三十三点七，加入其自提技能为八十三点三、四十四点六；Evolving-RL 无技能已达九十三点一、未见八十一点一，加入技能进一步到九十六点零、八十八点六。Mind2Web 的 GRPO 总动作准确率二十二点八三，Evolving-RL 无技能二十八点零五、有技能三十点八七；跨任务、跨网站、跨领域的技能版分别四十一点九九、三十五点一四、二十六点九七。跨网站加技能没有明显超过无技能，显示测试轨迹偏移会削弱现场抽取。</p>
+      <p>目标消融揭示两端必须协调。基础模型无技能／有技能为四十五点五／四十四点五，劣质自提技能反而伤害；只训练抽取端为五十三点七／六十一点七，但未见任务只有二十八点六／二十七点六，明显过拟合已见轨迹。只训练求解端为九十点九／九十点四，参数泛化强，却因学会忽略噪声而不能从测试技能再获益；完整共演化为九十三点一／九十六点零，未见八十一点一／八十八点六。无关技能的表现接近无技能，相关技能才明显提升。把完整方法的技能交给基础模型，总成功率从四十五点五升到六十点四；交给 GRPO 从七十九点九升到八十八点八，证明不是私有暗号。</p>
+      <p>当前技能管理和检索很简单，训练后部署期的持续积累、去重、版本控制并未真正解决。每条技能只用四个相似任务估计转移价值，论文理论和实验都承认有限采样会产生评估误差，噪声足以造成熵增长和训练不稳定；ALFWorld 所需的负熵与门控也未在所有领域统一。Mind2Web 只能沿金轨迹前进，错误即终止，动作准确率和不足百分之二的任务成功率仍离真实网页代理很远；测试时还允许在测试集合上采集轨迹和技能，属于转导式自适应。实验只有七十亿单模型、两个文本环境，现场技能也并非所有分布偏移都有效，因此方法证明了联合目标的潜力，尚未证明开放部署中的长期安全演化。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="06-01.html"><span>上一方向</span>技能创建、技能优化与技能库</a>
+      <a class="next" href="06-03.html"><span>下一方向</span>策略—数据—奖励—环境闭环共演化</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

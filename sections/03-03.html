@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="经验回放、rollout 利用与梯度信号效率：Freshness-Aware Prioritized Experience Replay for LLM/VLM Reinforcement Learning、Breaking Entropy Bounds: Accelerating RL Training via MTP with Rejection Sampling、EchoRL: Reinforcement Learning via Rollout Echoing、Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning">
+  <title>3.3 经验回放、rollout 利用与梯度信号效率 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>3.3</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 4 篇</p>
+      <h1>经验回放、rollout 利用与梯度信号效率</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A035"><span>A035</span>Freshness-Aware Prioritized Experience Replay for LLM/VLM Reinforcement Learning</a>
+<a href="#paper-A036"><span>A036</span>Breaking Entropy Bounds: Accelerating RL Training via MTP with Rejection Sampling</a>
+<a href="#paper-A037"><span>A037</span>EchoRL: Reinforcement Learning via Rollout Echoing</a>
+<a href="#paper-A038"><span>A038</span>Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A035" data-paper-id="A035">
+      <header class="paper-header">
+        <p class="paper-kicker">A035 · 约 4 分钟</p>
+        <h2>Freshness-Aware Prioritized Experience Replay for LLM/VLM Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">experience-replay</span><span class="paper-tag">off-policy</span><span class="paper-tag">freshness</span><span class="paper-tag">LLM/VLM</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.16918" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>大模型强化学习最昂贵的环节往往是环境 rollout，但主流在策略训练通常使用一次便丢弃；经典优先经验回放能反复利用高价值样本，却假设数据分布变化较慢。语言策略在少量更新后就可能显著改变，同一条轨迹即使奖励稀有、看似“重要”，其行为策略与当前策略也已相距很远，持续高频回放会产生高方差比率和错误梯度。论文的实验甚至发现不考虑年龄的标准 PER 在若干任务上不如完全不回放。FreshPER 因而把经验价值拆成两个相乘因素：一项衡量样本是否提供强学习信号，另一项随采集后经历的更新次数指数衰减，让“旧而惊奇”不会永久压过“新而有用”。</p>
+      <p>缓冲区保存完整轨迹、终局奖励、采集时行为对数概率和时间步。无评论器的 REINFORCE++ 默认用奖励绝对值加小常数作为基础优先级，也可替换成优势或时序差分误差；新鲜度则按年龄和衰减时间常数计算。作者从重要性权重方差与卡方散度的关系出发，说明有效样本量会随策略 KL 增长而恶化，并用“KL 随梯度步近似线性增长”解释指数衰减形式及时间常数的意义。每轮先采一批新轨迹并做一次在策略更新，再从缓冲区按新鲜优先级抽取两个回放批次；后台 CPU 异步刷新优先级，分层抽样和 sum-tree 使操作保持对数复杂度，还可用逐步退火的重要性权重校正抽样偏差。</p>
+      <p>默认缓冲区容量五万，优先指数零点六，衰减常数五百，重要性权重指数零点四，学习率一百万分之一。实现基于 ROLL 和 REINFORCE++，在文本与视觉语言模型上覆盖搜索问答、数学、网格控制和几何问答：七十亿模型处理 Natural Questions 搜索与 AIME，五亿模型处理简单／困难 Sokoban、FrozenLake、CliffWalking 和 GSM8K，三十亿视觉模型处理图像版 FrozenLake 与 GeoQA。为让离策略更新可控，作者把优势裁剪从默认二十收紧到零点二，并关闭 KL 与熵项；这说明经验复用不是即插即用地增加两次梯度，而需要重新约束更新幅度。</p>
+      <p>FreshPER 在困难且奖励未饱和的任务上优势最明显。Natural Questions 的最高分从无回放的零点五零八升至零点七四二，AIME 从零点二零五升至零点二四二；简单 Sokoban 从零点四九三跃至二点三零四，困难版从负零点八四二改善到负零点五一二；文本 FrozenLake 由零点二九七到零点三零五，视觉版由零点二七零到零点六三零，GeoQA 由零点四七五到零点四八一。与不衰减 PER 相比，FreshPER 在这些任务上也普遍更稳，而标准 PER 在简单 Sokoban 的峰值甚至为负零点九零七，直接展示陈旧高优先经验的危害。</p>
+      <p>时间常数并非越大越好。简单 Sokoban 在五百时峰值二点三零，放宽到一千只剩一点五零，一千五百又降至负零点九零；FrozenLake 则在一千时最好，达到零点三三六，五百只有零点二六六，说明策略变化速度和任务稀疏度共同决定新鲜窗口。重要性校正在五百设置下把 FrozenLake 峰值由零点二六六推到零点二八一，并让后期保持更久。CliffWalking 很快饱和，三种方法都达到最优；GSM8K 的起点已约百分之九十三至九十五，最后都约百分之九十七，回放几乎没有空间。这些对照支持论文的核心判断：新鲜回放主要提高困难阶段的样本效率，而不是普遍抬升所有任务。</p>
+      <p>代价是每次新采样后还有两个优化批次，样本效率提高不等于墙钟时间一定缩短；后台扫描十万条经验虽只需约五十至一百毫秒，显存、存储和训练计算仍会增加。衰减常数强烈依赖任务，论文明确把自动估计策略漂移并调节它列为未来工作；离策略稳定性还依赖行为对数概率可靠、优势裁剪和可选的重要性权重。规模只到五亿、三十亿和七十亿参数，作者也承认七百亿以上是否成立未知。结果集中于规则奖励和可重复环境，尚未覆盖长时在线智能体、非平稳人类反馈或高风险真实操作，因此 FreshPER 展示的是一种有年龄意识的复用原则，而不是任意历史轨迹都值得反复学习。</p>
+    </article>
+    <article class="paper" id="paper-A036" data-paper-id="A036">
+      <header class="paper-header">
+        <p class="paper-kicker">A036 · 约 4 分钟</p>
+        <h2>Breaking Entropy Bounds: Accelerating RL Training via MTP with Rejection Sampling</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">MTP</span><span class="paper-tag">rejection-sampling</span><span class="paper-tag">entropy</span><span class="paper-tag">training-acceleration</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.12370" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多词元预测头能一次猜出未来若干词元，再由主模型并行验证，按理很适合吞吐受限的强化学习 rollout；实际接入后，加速却随训练波动甚至消失。论文把原因拆成主策略自身熵和草稿—目标失配：即使让目标模型充当完美草稿并贪心预测，连续接受长度仍被当前分布最大概率限制，高熵推理步骤天然难以一次确认多个未来词元。强化学习恰会在题目、阶段和更新间大幅改变熵，所以基于贪心接受率的 MTP 存在任务相关的“熵上界”。作者进一步测得，在合理训练的预测头中，失配并非主要瓶颈，真正主导吞吐的是目标熵。</p>
+      <p>Bebop 用拒绝采样替代贪心验证。草稿按自身分布采样，目标按两者概率比接受，拒绝时从校正分布补采，因此最终词元仍严格服从目标策略；单步期望接受率等于两分布重叠质量，而不再直接受目标最大概率束缚。若失配与目标概率近似成比例，作者给出接受率对熵不敏感的界，并在实测中把接受率相对熵的斜率从负一点六八压到负零点零六，下降超过百分之九十五。普通交叉熵或 KL 虽能减小平均失配，却会把小误差铺到大量高熵词元上，多步相乘后仍明显损害连续接受，因此训练目标也必须围绕重叠质量设计。</p>
+      <p>具体训练先用总变差损失直接缩小草稿与目标分布差异，其梯度有界且更关注真正影响接受的概率质量，而非逐一拟合长尾。进一步的端到端多步目标直接最大化归一化期望接受长度，把各预测头连续被接纳的乘积纳入训练，并自然给靠前、影响更多后继接受的预测头更高权重。一次预强化学习的 MTP 监督训练通常已经足够：主干冻结，只训练五个未来词元头，之后 RL 期间保持预测头不动。在线更新 MTP 没带来额外收益，若继续用交叉熵反而会侵蚀总变差草稿；确需联合训练时，论文建议分离学习率与归一化，并只让相关梯度进入预测头。</p>
+      <p>核心模型为 Qwen3.5-35A3B，MTP 在混合拒绝式微调语料上训练一轮，批量二百五十六、最长序列二十五万六千词元、学习率三点五乘十的负五次方，评测通常使用三个预测头；更大 Qwen3.6、Qwen3.7 变体也用于系统实验。交叉熵加强拒绝采样在数学、代码、SWE、智能体和 MT-Bench 的接受率分别为百分之七十五、七十一点三、七十五点一、九十点三、六十五点三；端到端总变差对应提高三、三点三、八、六点七和二点三个百分点，智能体任务达到约百分之九十七。只逐步优化总变差已接近完整方法，但多步目标在长接受链上更稳定。</p>
+      <p>强化学习评测覆盖 HMMT 2025、AIME 2025、LiveCodeBench，以及使用 OpenHands、最长两百轮和十二万八千上下文的 SWE-Verified；推理类最长生成六万四千。系统以 SGLang 和异步 veRL 训练，拒绝采样与总变差方案在策略熵变化时保持接受率，而贪心 MTP 的吞吐随阶段起伏。相对不使用 MTP，每步端到端训练速度约提升一点五至一点八倍，智能体 rollout 最高约二点四倍，同时奖励曲线和最终准确率基本不变；部分模型与任务的接受率可到百分之九十五乃至九十九。一次离线训练、RL 期间冻结也减少了在线同步和额外反向传播。</p>
+      <p>理论仍有清楚边界：熵不敏感结论建立在“失配近似按目标概率分配”的启发式模型上，并非对任意草稿的无条件证明；总变差训练只在监督语料覆盖的熵区间内建立这种结构，如果 RL 走到分布外推理状态，熵依赖可能重新出现，此时仍需在线 TV 更新。系统依赖模型预留 MTP 头、精确概率和拒绝采样内核，收益还受批处理、硬件、生成长度与环境延迟影响，不能从接受率直接外推所有部署时延。实验以新一代大规模 Qwen 系列和工程化集群为主，也没有证明同样配方适用于小型密集模型或非自回归工具动作。Bebop 因此打破的是常见贪心验证的熵瓶颈，而不是生成本身的信息论成本。</p>
+    </article>
+    <article class="paper" id="paper-A037" data-paper-id="A037">
+      <header class="paper-header">
+        <p class="paper-kicker">A037 · 约 4 分钟</p>
+        <h2>EchoRL: Reinforcement Learning via Rollout Echoing</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">advantage-degeneration</span><span class="paper-tag">rollout-reuse</span><span class="paper-tag">entropy</span><span class="paper-tag">RLVR</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.31228" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>组相对强化学习依靠同一问题多个 rollout 的奖励差来构造优势，但当模型变强、简单题的一组答案全部正确时，组内方差归零，整组梯度也随之消失。训练越成功，可利用的提示反而越少，这种“优势退化”在大模型和后期尤其严重。直接丢掉全对组浪费了已经付费生成的正确推理，引入外部专家又增加成本。EchoRL 的出发点是：正确轨迹并非同样平淡，其中高熵位置常对应模型尚未固化的关键分叉。论文发现黄金推理的这些步骤熵更高，优先删除高熵片段比删除低熵或随机片段更快破坏答案，因而可从当前策略自己的成功 rollout 中提取仍有学习价值的局部证据。</p>
+      <p>算法先在每个提示的成功响应中按换行词元切分推理步骤，计算每步所有词元的平均熵，再跨该提示的全部成功响应选出熵最高的一步。所谓 EchoClip 不是只复制这个句子，而是截取从响应开头到该步结束的前缀；训练在原 RL 目标之外加入一个很小的负对数似然项，让策略“回声式”自模仿这段高价值前缀。若没有成功响应则不启用，避免强化错误；有成功响应时，即使整组奖励相同、GRPO 优势为零，回声损失仍能提供梯度。实现与原目标共用一次计算图和反向传播，不需教师、额外 rollout、拒绝采样或独立经验库，也可叠加到 GRPO、DAPO、LUFFY 和 UFT。</p>
+      <p>训练使用 OpenR1-Math-45K，覆盖 Qwen2.5-Math-1.5B/7B、Qwen2.5-7B-Instruct 和 Llama-3.1-8B；视觉扩展在 Geometry3K 上训练 Qwen2.5-VL-7B。每批生成一百二十八条轨迹、更新批量六十四、每题八个响应、温度零点六、最长八千一百九十二词元。评测包含 AIME 2024/2025、AMC、MATH500、Minerva、OlympiadBench 六项域内数学，以及 ARC-Challenge、GPQA-Diamond、MMLU-Pro 三项分布外知识推理，并加入视觉几何。该设计特意同时检查“记住训练题型”和“保留可迁移探索”两种效果。</p>
+      <p>三次运行的统一统计中，GRPO 在六项域内与三项域外的平均为四十四点六和五十五点四，加入 EchoRL 后为四十六点八和五十八点六；DAPO 从四十七点七和五十八点零升到四十九点六和六十一点一，LUFFY、UFT 以及不同骨干也持续获益。视觉几何同样有小幅提升。训练曲线显示回声模型在后期维持更高策略熵，且增益随模型规模增加，符合“强模型产生更多全对组，也损失更多标准优势”的机制解释。平均响应长度没有被系统性拉长，有时反而更短；演员更新约四十至五十五秒，显存和反向次数基本不变，因此额外训练成本接近零。</p>
+      <p>消融支持“高熵前缀”而非一般自蒸馏。GRPO 上模仿完整成功响应只有四十四点五和五十五点六，选择低熵前缀降到四十二点九和五十四点零，而 EchoClip 达四十七点零和五十八点四；DAPO 对应的完整、低熵和高熵结果为四十八点三／五十八点零、四十六点一／五十六点二、四十九点九／六十点九。回声权重零点零零一最稳，放大到零点一会明显退化，说明辅助项必须保持轻量。只在训练中段三百至五百步启用可让 DAPO 略升到五十点三和六十一点三，但需要额外调度；默认全程启用在跨算法和跨模型比较中更简单可靠。</p>
+      <p>方法仍要求至少有一条可验证成功轨迹，因此对全错组、极难任务或开放式偏好奖励无能为力；反过来，答案正确也不保证过程无误，自模仿可能巩固碰巧得分或带有伪推理的前缀。平均词元熵只是新颖性代理，按换行切步依赖模型格式，代码、工具调用或无明显行边界的轨迹未必适用；小权重敏感性也意味着它不是免费的强监督。实验主体集中在数学、知识选择和视觉几何，没有长程环境交互与真实工具任务。论文没有单列限制章节，因而最合理的结论是：EchoRL 高效回收了“已有成功但优势为零”的 rollout 信息，却不能替代对失败轨迹、过程正确性和因果关键步骤的专门建模。</p>
+    </article>
+    <article class="paper" id="paper-A038" data-paper-id="A038">
+      <header class="paper-header">
+        <p class="paper-kicker">A038 · 约 4 分钟</p>
+        <h2>Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">asynchronous-RL</span><span class="paper-tag">single-rollout</span><span class="paper-tag">long-horizon</span><span class="paper-tag">systems-efficiency</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2607.07508" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>异步强化学习能让生成与训练并行，却把不同旧策略产生的 rollout 混入同一更新；GRPO 还必须等同题多条响应凑成一组，最慢样本形成屏障，等待期间策略又继续变化。长推理和软件工程任务的生成时长差异巨大，这种组同步既浪费算力，又扩大策略滞后；在真实在线场景中，一个用户反馈本来也未必能配出同组样本。SAO 因而把训练单位降到单条 rollout：样本一到即学，不要求问题重复或组内基线，同时通过离策略筛选、可训练价值函数和跨观察的词元级回报传播，补上单样本高方差与历史策略混合带来的稳定性缺口。</p>
+      <p>第一层控制是双边重要性筛选。系统在生成时保存行为策略的词元对数概率，更新时与当前策略比较；概率比落在预设下界之外或上界之外的词元直接屏蔽，不像普通 PPO 只在优势推动比率继续越界时才裁剪。它不保存一串历史检查点，而把存储概率当作行为策略代理，以受控偏差换取较低方差。实验中的屏蔽比例始终非零，说明异步样本确实发生了可观漂移；去掉该机制的 VAPO 变体后期会崩。把同一筛选塞回组式 GRPO 能显著改善基线，却仍受分组等待和零方差问题限制。</p>
+      <p>第二层是价值模型。每次演员更新配两次评论器更新，评论器从规模匹配的初始化开始，只训练混合专家投影而冻结注意力；附录发现全参数价值训练的注意力梯度过大、解释方差较差。对智能体轨迹，外部观察词元不是策略动作，不能像普通语言序列那样参与 GAE。SAO 跳过它们，把一轮最后一个动作词元的回报直接桥接到下一轮第一个模型动作词元，从而在词元粒度传播延迟奖励；相比给整步一个值，它既保留思考内部信用，也不让网页或终端回显污染价值目标。评论器先做尺度预训练，再随在线数据快速追踪奖励变化。</p>
+      <p>数学实验以 Qwen3-30B-A3B-Thinking-2507 为演员和评论器，先用 GPT-OSS-120B 生成的 Python 工具推理数据监督初始化，再以批量一百二十八、最长十二万八千词元训练；SAO 每题一条，GRPO 用十六题各八条。基础模型在 AIME 2025、BeyondAIME、HMMT 2025 十一月版和 IMOAnswerBench 上为八十点四、五十三点三、七十五点二、五十三点三，GRPO 为八十四点二、五十四点八、七十六点零、五十五点八，SAO 达九十七点三、七十四点八、八十八点三、七十四点零。普通 GRPO 约一百六十步后退化，SAO 可稳定到约一千步；性能差距在四百步后随价值模型改善继续扩大。</p>
+      <p>消融中，只用双边筛选、不用完整单样本价值管线仍有九十四点二和七十一点五；GRPO 加筛选为九十三点五和七十点八，完整 SAO 在 AIME 与 BeyondAIME 为九十七点三和七十四点八。评论器每步只更新一次降到九十五点零和六十九点八，全参数评论器为九十点六和七十四点五，去筛选的 VAPO 为九十一点三和六十九点零，运行均值基线仅七十九点八和五十五点三。同为四百步时，步级、只取最后词元和完整词元 GAE 的两项平均分别为八十五点八／六十点五、八十七点三／六十二点八、八十九点八／六十六点八。SWE-Verified 上基础、GRPO 加筛选和 SAO 为百分之二十三、二十七、二十九点八。</p>
+      <p>论文还用“学术、可爱、中二、古典”等连续变化的写作偏好模拟在线反馈，GLM-4.7 同时判断质量和风格；价值模型能比运行均值更快追踪最近一百二十八条奖励，说明单样本更新适合非平稳流。边界也很明确：实验只验证一个三百亿 MoE 主干，集中于超长数学、OpenHands 软件工程和模拟偏好，不能直接外推到小模型、密集奖励、短回复或常规 RLHF。SAO 需要可靠保存生成时词元概率，还增加一个训练良好的价值模型，其偏差可能替代组基线偏差；在线偏好不是真实用户研究。实际部署还需隐私保护、反馈防操纵和安全约束，因此它解决的是异步吞吐与单反馈学习的算法接口，不是无条件开放在线自我更新。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="03-02.html"><span>上一方向</span>探索控制、探索坍缩与自主探索</a>
+      <a class="next" href="03-04.html"><span>下一方向</span>鲁棒恢复与专用推理优化</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

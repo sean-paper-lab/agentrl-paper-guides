@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="长程 turn/step 信用分配：From Reasoning to Agentic: Credit Assignment in Reinforcement Learning for Large Language Models、Group-Graph Policy Optimization for Long-Horizon Agentic Reinforcement Learning、Hindsight Credit Assignment for Long-Horizon LLM Agents、TRACE: Turn-level Reward Assignment via Credit Estimation for Long-Horizon Agents">
+  <title>2.1 长程 turn/step 信用分配 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>2.1</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 4 篇</p>
+      <h1>长程 turn/step 信用分配</h1>
+      <p class="section-deck">共同问题是：只有最终成败时，怎样判断中间哪一步真正有贡献。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A009"><span>A009</span>From Reasoning to Agentic: Credit Assignment in Reinforcement Learning for Large Language Models</a>
+<a href="#paper-A010"><span>A010</span>Group-Graph Policy Optimization for Long-Horizon Agentic Reinforcement Learning</a>
+<a href="#paper-A011"><span>A011</span>Hindsight Credit Assignment for Long-Horizon LLM Agents</a>
+<a href="#paper-A012"><span>A012</span>TRACE: Turn-level Reward Assignment via Credit Estimation for Long-Horizon Agents</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A009" data-paper-id="A009">
+      <header class="paper-header">
+        <p class="paper-kicker">A009 · 约 5 分钟</p>
+        <h2>From Reasoning to Agentic: Credit Assignment in Reinforcement Learning for Large Language Models</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">credit-assignment</span><span class="paper-tag">long-horizon</span><span class="paper-tag">trajectory</span><span class="paper-tag">reasoning-to-agentic</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.09459" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>这篇专门综述从一个简单却危险的做法出发：GRPO 等结果奖励算法常把整条轨迹的最终分数广播给每个词元，于是导致成功的无关步骤都被表扬，早期关键动作却可能因后来失误受到惩罚。短数学推理已会受此影响，进入智能体场景后轨迹从数百至数万词元扩展到几十甚至上百轮、十万至百万词元，粗略方差还会随长度增长；环境又是随机、部分可观测的，动作包含语言、工具、代码和等待，最终目标未必可自动验证。同一段似乎合理的推理可能只是回声模板，一次不起眼的点击却可能开启整个成功路径，因此信用分配从优化细节变成训练能否工作的核心结构。</p>
+      <p>作者按“信用落在哪里”和“信用怎样估计”建立二维分类，粒度从词元、片段、推理步骤、智能体回合一直到多智能体，方法则涵盖蒙特卡洛、时序差分、模型评论者、博弈分解与信息论。检索窗口覆盖二〇二四年一月至二〇二六年四月，最终整理四十七种方法，其中四十一种为核心信用方法、六种为相邻使能技术。推理任务通常转移确定、答案可验证，可以从中间前缀反复展开或训练过程奖励模型；Agent 任务需要重新执行昂贵环境，保存中间状态也不总可行，价值模型还只能看到局部观测。这个差异解释了为什么某个数学方法不能只把“步骤”改名为“回合”就迁移到网页或软件工程。</p>
+      <p>推理侧从细粒度蒙特卡洛与奖励重分配发展到片段比较、树式时序差分、过程奖励和层次信用。VinePPO 从前缀分叉估计词元价值，较无偏但额外前向成本随分叉数和序列长度增长；SPO 按语义片段比较，SCAR 用边际贡献分摊，TEMPO 利用搜索树回传；PURE、SPRO、CAPO 和 HICRA 分别用保守过程分、掩码优势、语言模型评论者及规划与执行层次减少错误归因。量化表中，SPO 在 MATH-500 相对 GRPO 增加七点六分、在 GSM8K 增加十一分，SPRO 在 AMC 增加八点三分，HICRA 在 AIME 二〇二四和二〇二五约增四点六与五点一，但模型和预算不同，只宜看各论文内部增量。</p>
+      <p>Agent 侧更强调回合价值、事后反事实、层次结构与稀疏关键行动。AgentPRM 用时序差分和广义优势，在 WebShop 与 TextCraft 相对终局奖励模型分别提高十九和十三点四，并报告八倍样本效率；SWEET-RL 让训练期评论者访问特权环境信息，Turn-PPO、SORL 与 TARL处理回合级更新和偏差。HCAPO、C3、CCPO 与 CriticSearch 在完成后重构“如果删掉或替换这一步会怎样”，GiGPO 在同一状态内再分组，ALFWorld 和 WebShop 分别比 GRPO 高十二点六与九点一。CARL只更新高熵关键动作，以少百分之七十二的梯度更新保持表现；信息增益、隐式偏好与逆向学习则试图免去昂贵评论者。</p>
+      <p>多智能体把问题再扩大一层：全局成功需要分给不同专长、不同奖励尺度的成员，还要计算消息本身的价值。SHARP 用联盟边际贡献分解全局准确率并报告相对单智能体平均提高百分之二十三点七、相对多智能体基线提高十四点一；MAPPA 用人工智能评审给每个动作过程奖励，在 AIME 增加五至十七点五个百分点，Dr. MAS 则按智能体各自奖励分布归一化，避免全局基线让异质成员梯度爆炸。可是留一法对成员数线性增加反事实执行，完整联盟分解更昂贵，现有方法也多忽略通信贡献。作者因此把“全局成败、局部行动、成员协作”视为不同层次，而非一个归一化公式能同时解决。</p>
+      <p>综述提出一张实际选择图：短且可验证的推理可先用组相对或过程奖励，长推理在预算允许时用分叉或层次方法；五至三十轮工具任务可选状态分组、回合评论者，五十轮以上软件任务更需要关键动作、事后反事实和层次评论者。真正未解的是固定算力下“多采粗信用”与“少采精确信用”的效率前沿、不可验证开放任务、信用不确定性驱动探索、记忆写入与检索的超长延迟贡献，以及几十个智能体的可扩展分解。作为单作者综述，它受预印本波动、检索遗漏、分类判断和单人编码影响；跨论文表格更换了模型、任务和预算，作者明确只视为有限证据。推荐清单要求今后报告轨迹长度、信用开销、GPU 小时、同模型终局基线、消融与多次方差，正是当前文献最缺的可比信息。</p>
+    </article>
+    <article class="paper" id="paper-A010" data-paper-id="A010">
+      <header class="paper-header">
+        <p class="paper-kicker">A010 · 约 5 分钟</p>
+        <h2>Group-Graph Policy Optimization for Long-Horizon Agentic Reinforcement Learning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">graph-credit</span><span class="paper-tag">group-optimization</span><span class="paper-tag">long-horizon</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.22995" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>现有长程 Agent 强化学习有两种典型粗糙视角：轨迹级方法把几十轮观察与行动拼成长样本，让所有步骤共享终局奖励，既占显存又无法归因；较新的步骤级方法虽然逐步训练，却仍把每次探索当成彼此孤立的直线。实际上，不同轨迹常回到同一网页、房间或应用状态，这些重复观察天然构成节点，动作则是连接节点的边。若只用某一次轨迹的最终成败评价中间状态，一个好状态可能因后来犯错被判坏，一个差状态也可能靠偶然补救被判好；若只在同一节点的备选动作间局部比较，又无法区分微小改进与决定任务进展的关键跨越。G2PO 就从这两个缺口出发，把整组探索重建为全局状态转移图。</p>
+      <p>对同一任务，算法并行采样八条多轮轨迹，按完全相同的环境观察把所有中间步骤聚成状态组，再以组为节点、模型行动为有向边。每个单步先继承该轨迹经时间折扣的终局回报，一个状态组的价值则取所有经过该观察的样本平均。这样评价的是“从这个状态出发通常能否成功”，而不是一次幸运或失误的结果。附录证明，在样本独立等假设下，组大小超过一时，价值估计方差按组大小反比下降；源节点和目标节点价值正相关时，两者差值的方差也不高于传统单轨迹优势。证明依赖理想假设，但平均组大小约为五，WebShop 与 ALFWorld 中只有百分之十一点九和八点一步骤无法成组，机制在实际采样中并非空转。</p>
+      <p>G2PO 为每个动作合并三种信用。终局优势保留整条轨迹是否完成目标，防止策略只追逐局部进展；节点优势比较同一状态发出的不同动作，回答“在这里选哪个更好”；边优势用目标组与源组价值之差表示一步带来的进展，再把整张图全部边的变化统一标准化，回答“这一步对全局有多关键”。最后用固定权重融合细粒度与终局信号，并沿用组相对策略的裁剪和参考约束更新，无需训练评论者或标注过程奖励。权重过低时退化为粗糙的终局方法，过高时模型变得短视，WebShop 扫描在零点八附近最佳；这说明全局目标与局部进展必须同时存在，而不是图信用越强越好。</p>
+      <p>实验覆盖电商操作 WebShop、具身文字环境 ALFWorld 和跨应用接口任务 AppWorld，前两者使用 Qwen2.5-1.5B 与 7B，后者因难度使用 14B。比较对象包括超大现成模型、ReAct、Reflexion，以及 PPO、RLOO、GRPO 和局部状态分组的 GiGPO；所有强化方法共享提示和主要超参数，组大小统一为八，结果取三个随机种子。十五亿模型上，G2PO 在 ALFWorld 总成功率达到百分之九十五，GRPO 为七十二点八，GiGPO 为八十六点七；WebShop 成功率七十一点二，GRPO 五十六点八。七十亿模型在两项上分别为九十六点九和七十八点三，也稳定超过所有训练基线。</p>
+      <p>AppWorld 要从 Python 接口返回推断持久数据库状态，Qwen2.5-14B 的 G2PO 成功率二十七点六、综合分二十一点七，GRPO 为二十四点八和二十点七，显示完全相同观察分组在复杂接口上仍有作用。逐步消融从终局优势出发，加入节点优势、组聚合和边优势后持续改善，组聚合在两基准贡献明显，完整全局边信用优于仅作局部比较。状态价值方差图证实同一观察经常导向不同结局；训练后的 Agent 还以更少交互轮次完成任务。图构建和优势估计都在中央处理器执行，每步约多一秒，只占总训练时间百分之零点四，远小于约一百八十九秒的采样和五十六秒的更新。</p>
+      <p>方法的适用条件也很具体。当前实现用观察字符串完全相等定义同一状态；网页中视觉或文本轻微变化、部分可观测下两个相同观察对应不同隐藏状态时，会错过合并或错误合并，论文没有系统研究语义聚类阈值。方差证明假设跨轨迹独立、相邻组正相关且组大小大于一，图中循环、策略滞后和相关采样会削弱保证。实验只接入 verl-agent 框架，作者把树式和异步采样列为后续工作；任务虽最长五十步，仍是可重置、终局规则奖励的三个模拟环境。G2PO 因而特别适合能并行复现、频繁重访可识别状态的长程任务；对开放网页、不可逆工具和隐藏状态显著的系统，还需更稳健的状态表示与离策略校正。</p>
+    </article>
+    <article class="paper" id="paper-A011" data-paper-id="A011">
+      <header class="paper-header">
+        <p class="paper-kicker">A011 · 约 5 分钟</p>
+        <h2>Hindsight Credit Assignment for Long-Horizon LLM Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">hindsight</span><span class="paper-tag">credit-assignment</span><span class="paper-tag">trajectory-relabeling</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2603.08754" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程智能体常常要搜索、导航或连续操作很多步，环境却只在最后告诉它成功还是失败。把这个终局分数原样发给整条轨迹，会让真正改变局面的动作、无关的绕路和碰巧没造成损害的错误得到同样评价。GRPO 一类无价值网络的方法还用起点处一组轨迹的平均回报充当所有中间状态的基线，随着状态不断变化，这个基线会越来越不合适。过程奖励模型虽能逐步打分，却通常需要昂贵标注或额外模型，也可能把训练带向标注器的偏好。论文因此把问题表述为两个相互关联的缺口：如何事后识别每个动作对已知结局的实际贡献，以及如何在不训练价值网络的前提下为不同中间状态建立更有辨别力的参照。</p>
+      <p>HCAPO 的核心直觉是让模型在知道结局以后重新审视自己当时的动作。对一条已经完成的轨迹，方法把当前状态、候选动作和最终状态一起放回同一个语言模型，询问在已知结局的条件下这个动作有多可能被选择。若一个动作在看到成功结果后变得明显更可信，它更像通往目标的关键动作；若可信度下降，它可能只是噪声。模型并不重新生成动作，而是在一次前向计算中给已有动作的 token 打分，再把这些分数按轨迹内部平均值归一化并限制在安全区间，得到 hindsight ratio。该比率与折扣后的终局回报相乘，形成逐步的 hindsight Q 值，相当于用结局信息给原本粗糙的蒙特卡洛回报加上一层“因果滤镜”。</p>
+      <p>训练时，HCAPO 同时保留宏观和微观两种信号。宏观部分仍是 GRPO 的组内终局优势，负责保证整体方向始终指向真实任务成功；微观部分把同组所有步骤的 hindsight Q 值做跨状态标准化，突出越过任务瓶颈的动作并压低无贡献步骤。两部分相加后进入带裁剪和 KL 约束的策略更新。成功轨迹中的负向 hindsight 信号会被保护性遮罩清零，以免事后评分误伤已经验证有效的行为。对 ALFWorld 这类严格因果链任务，作者还把后一步的信用以时间平滑方式向前传一格，让“到达位置、打开容器”等准备动作能分享到最终执行动作的信用。整个流程只复用策略模型评分，不增加独立 critic 或外部判分模型。</p>
+      <p>实验覆盖文字具身环境 ALFWorld、网页购物环境 WebShop，以及七个搜索增强问答数据集。前两者使用 Qwen2.5 的 1.5B 和 7B 模型，搜索任务使用 3B 和 7B 模型；对比包括提示式 ReAct、Reflexion，带 critic 的 PPO，以及 RLOO、GRPO、EMPG、GiGPO、Search-R1、ZeroSearch、StepSearch 等方法。ALFWorld 最多运行五十个环境步骤，WebShop 最多十五步，搜索问答最多四轮；组式方法通常每题采样八条轨迹。作者保持与 GiGPO 相同的训练配置，并报告三随机种子结果。除成功率和购物得分外，论文还考察轨迹长度、被判断为冗余的动作比例、训练耗时和不同模型规模下的稳定性。</p>
+      <p>结果显示，7B 模型在 ALFWorld 的整体成功率由 GRPO 的百分之七十七点六升至百分之九十一点四，加入时间平滑后达到百分之九十六点九；WebShop 成功率由百分之六十六点一升至百分之七十三点八，购物得分也由七十九点三升至八十五点一。七个搜索问答集上的平均成功率，3B 与 7B 分别达到百分之四十四点三和四十八点三，整体与 GiGPO 相当或略高。训练过程中冗余动作持续减少，WebShop 平均轨迹从约七点八步缩短到五点八步，而事后评分只占单轮训练时间约百分之八点三。消融中，微观权重从零逐渐增至一时，ALFWorld 成功率从百分之七十二点八单调升至八十七；时间平滑也显著提升复杂长链任务，证明收益来自逐步归因而非单纯增加计算。</p>
+      <p>这一方法最适合终局状态能够清楚表示、且基础模型已经有能力理解动作与结果关系的长程任务。它把同一个模型当作事后批评者，因此小模型推理能力不足时，hindsight 分数可能不够准；把最终状态提前放入提示也构成训练分布之外的信息，评分不一定等价于真实因果效应。跨状态归一化在理论上针对瓶颈状态有解释，但仍依赖组内采样覆盖关键转折，极少出现的动作可能得不到稳定比较。时间平滑目前只向相邻步骤传播，较长的准备链仍可能断开。论文的基线数字部分直接沿用既有工作，虽然配置对齐，但不如全部重跑严格。因而 HCAPO 更像低成本的信用校正层，而不是能替代可靠终局验证或通用价值学习的完整方案。</p>
+    </article>
+    <article class="paper" id="paper-A012" data-paper-id="A012">
+      <header class="paper-header">
+        <p class="paper-kicker">A012 · 约 5 分钟</p>
+        <h2>TRACE: Turn-level Reward Assignment via Credit Estimation for Long-Horizon Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">turn-level-reward</span><span class="paper-tag">credit-estimation</span><span class="paper-tag">dense-feedback</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2607.13988" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>在深度搜索里，一条轨迹可能包含几十次搜索、打开网页和页内查找，最后才给出一个短答案。终局奖励能可靠判断答案对不对，却无法区分失败轨迹中曾经找到关键线索的动作，也无法惩罚成功轨迹里无用的重复搜索。随着交互长度增加，把同一个组相对优势贴到所有动作上会造成更高方差，甚至把早期有价值的探索和末尾错误一起压低。逐步标注、强模型评审或另训过程奖励模型虽可提供密集反馈，却增加标注、推理或训练负担，也可能偏离最终答案正确性。TRACE 要解决的是：不用额外 critic、过程标签或强评审模型，能否直接估计一次工具调用究竟让正确答案变得更容易还是更困难。</p>
+      <p>TRACE 把每次工具调用及返回观察看成一个状态转移，并在每个工具边界截取当前轨迹前缀。训练数据已有标准答案，方法用策略初始化时冻结的一份参考模型进行 teacher forcing，计算在该前缀下生成标准答案的平均对数概率。这个参考模型不是裁判，也不参与更新，只充当稳定探针：若新观察包含有用证据，标准答案在其条件下通常更可预测。为避免原始对数概率在不同置信区间尺度失真，TRACE 把初始前缀与当前前缀的“剩余答案概率缺口”做对数比，定义状态价值。相邻状态价值之差就是一次工具交互的即时信用，正值表示更接近答案，负值表示搜索方向变差。</p>
+      <p>一步信用具有望远镜求和性质：一串中间操作的总信用只取决于起点与终点，单纯增加重复调用不能凭空累积奖励。考虑到搜索动作的效果常在后续打开文档时才显现，TRACE 还使用有限步的时间差分回看，把未来几步的价值变化按折扣加到当前轮，并在窗口触及轨迹末端时注入组归一化的终局优势。工具动作 token 得到终局优势与轮级信用的加权和，最终答案 token 仍主要受结果正确性约束，再用裁剪的 GRPO 目标更新策略。所有前缀的标准答案概率可批量前向计算，工具返回内容被遮罩，不进入策略梯度，因此整个机制没有可学习价值网络，也不会把环境文本误当作模型动作。</p>
+      <p>作者在 OpenResearcher 的离线文档库上合成需要至少两个不可替代来源的多文档问题，通过实体桥接、交集、条件计数、比较和反向查找等模板制造真正的长链检索，并用独立模型重做答案、模糊匹配和来源必要性检查过滤样本。搜索代理只有 search、open、find 三种工具，最多六十轮。Qwen3-4B-Thinking 与 Qwen3-30B-A3B-Thinking 都从基础搜索策略直接进行纯强化学习，没有冷启动 SFT、agent 中训或在线网页训练。控制基线为相同数据和接口下的 GRPO、GSPO、GiGRPO，外部参照包括 ASearcher、WebDancer、CutBill 和 TongyiDS；评测覆盖闭网 BrowseComp-Plus 及开放网页 BrowseComp、GAIA、xbench-DeepSearch。</p>
+      <p>在 BrowseComp-Plus 上，TRACE 把 4B 基础模型从百分之七点二提升到三十五点六，把 30B 混合专家模型从百分之八点四提升到四十二点六；相对结果奖励 GRPO，两种规模的四项平均分分别从二十九点五升至三十四点零、从三十二点五升至三十八点一。闭网训练得到的策略也迁移到开放网页，30B 模型在 BrowseComp、GAIA 和中文 xbench 上分别达到十二点九、五十二点零和四十五点零。学习曲线更早抬升、较快达到高平台，并更早学会延长有意义的工具链。奖励形式消融中，原始概率差、剩余缺口线性归一化和对数比依次改善，后者最好；适中的轮级权重和三步回看有效，权重过大或传播过远都会使局部信号盖过最终正确性并降低表现。</p>
+      <p>TRACE 的边界很明确：它要求训练时有一个短而确定的标准答案，且冻结参考模型对这个答案的条件概率能合理代表任务进展。代码代理要产生多文件补丁、开放式助手要满足模糊偏好时，输出很长或存在多种等价答案，这一价值代理未必可靠。论文的主要实证集中在搜索，若检索观察包含误导信息，参考模型的概率上升也不保证真实进展；训练合成数据和闭网索引虽然便于控制，却不能覆盖现实网页变化。多数消融只有单次训练，小差异不能当成稳健结论。方法因此适用于标准答案可验证的长程信息搜集，扩展到代码、规划或开放式交互需要执行进度、结构化子目标等新的状态价值目标。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="01-03.html"><span>上一方向</span>训练机理、能力干扰与失效诊断</a>
+      <a class="next" href="02-02.html"><span>下一方向</span>过程奖励、隐式步奖励与动态塑形</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

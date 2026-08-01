@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="合成任务、rubric tree 与全训练链路：QUEST: Training Frontier Deep Research Agents with Fully Synthetic Tasks">
+  <title>6.4 合成任务、rubric tree 与全训练链路 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>6.4</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>合成任务、rubric tree 与全训练链路</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A073"><span>A073</span>QUEST: Training Frontier Deep Research Agents with Fully Synthetic Tasks</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A073" data-paper-id="A073">
+      <header class="paper-header">
+        <p class="paper-kicker">A073 · 约 4 分钟</p>
+        <h2>QUEST: Training Frontier Deep Research Agents with Fully Synthetic Tasks</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">synthetic-task</span><span class="paper-tag">deep-research</span><span class="paper-tag">rubric-tree</span><span class="paper-tag">midtrain-SFT-RL</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.24218" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>深度研究不只有唯一答案式检索，还包括多源综合、可读报告和逐项可核验引用；单一正确答案既限制任务分布，也只给二元终局奖励。QUEST 合成 Quest-8K，每题配一棵任务特定 rubric tree：根节点汇总总分，内部节点表示高层约束，叶节点是可直接验证的事实、来源或格式条件。客观题可用 Python 与检索验证，多答案和开放报告则按覆盖、连贯、可读性、洞察与引用建树，从而用同一结构表达部分完成度。</p>
+      <p>客观题先从时事关键词自主搜索、生成复杂问题，再迭代精炼约束、自动编写验证代码并执行过滤；一万七千个候选最终留五千九百三十四个。开放题三千个候选经格式、质量和参考报告过滤后留二千二百二十七个。开放题生成参考报告，评审同时看候选和参考，对每个节点分别打分，再按二者相对质量归一，避免独立打分普遍偏高。人工抽查五十个客观脚本时，两例不可执行、六例含 rubric 错误，说明严格过滤仍非无误。</p>
+      <p>长轨迹用结构化 Context State 管理记忆，把信息分成已由 URL 核验的可信事实、被来源反驳的不可信内容和待搜索的存疑项。上下文超过一万六千 token 时，GPT-5-mini 把全部搜索、页面、推理和旧记忆压缩为新状态，agent 在新窗口继续，存疑项直接成为后续行动。训练按压缩边界切成 session，同一 rollout 的各 session 共享组内优势并去重计数。这比 discard-all 或只留最近若干轮更能保存早期已核验事实，避免重复搜索和跨窗口监督自相矛盾。它把单次显存长度与总研究长度解耦，附录报告十六张 H100 可训练超过二十万 token 的轨迹，并在推理时泛化到两百余轮。</p>
+      <p>训练依次进行 mid-training、SFT 和 RL。前者用约三十万条状态摘要和一百零五万条网页相关信息抽取，教模型过滤噪声、理解记忆格式；SFT 从 Tongyi-DeepResearch 轨迹中筛选高分样本，每题最多五次初始 rollout，客观失败样本带细粒度 rubric 提示再重试三次，最终有五千零七十个客观和一千九百五十八个开放任务。RL 用八百六十四个客观、二百六十九个开放任务，开放报告的连续相对分被映射成五档奖励；rubric 占四分之三，引用事实核验占四分之一且不能超过任务完成分，避免只堆正确引用却不回答问题。</p>
+      <p>Quest-35B 在 BrowseComp、Mind2Web 2、DeepResearch Bench、GAIA 分别达六十四点六的 discard-all 结果、三十点七、四十八点二和八十点八，后两三项超过 OpenAI-DR 或 GPT-5 的对应数值；八项中整体领先同尺度开放 agent。阶段消融显示 SFT 改善多数客观题却伤开放报告，mid-training 总体补回，RL 把 DeepResearch Bench 从三十九点七升至四十八点二，却令 HLE 和 GAIA 略降，呈现专业化税。二十亿 SFT 模型在 HLE 和 GAIA 已达三十点三、七十二点八，但 DeepResearch Bench 只有二十一，说明事实检索可强压缩，长报告综合对容量更敏感。</p>
+      <p>论文还公开了失败配方：搜索结果预测与现有摘要任务冲突，rubric 错误识别因缺外部证据只会找表面问题，长报告 DPO 因偏好高方差而不稳；点式开放评分约半数接近满分，简单胜负平又因学生初期总输而坍为零，最终才采用连续相对分。局限包括大量环节依赖 Claude、GPT-5、Tongyi 教师和在线搜索，严格说数据无人手写但监督并非自足；rubric 与引用 judge 可错，网页会变化，缓存影响新鲜性。单个 rubric 评测平均约四分钟、长尾可达三十分钟，系统靠异步 Ray 队列和超时恢复隐藏停顿，但也使旧策略样本与较新样本混合。完整 RL 需三十二张 H100，八十个异步步，成本和复现门槛仍高。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="06-03.html"><span>上一方向</span>策略—数据—奖励—环境闭环共演化</a>
+      <a class="next" href="06-05.html"><span>下一方向</span>Multi-Agent 协同学习与共演化</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

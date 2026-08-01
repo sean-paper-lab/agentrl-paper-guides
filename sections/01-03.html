@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="训练机理、能力干扰与失效诊断：Rethinking Generalization in Reasoning SFT: A Conditional Analysis on Optimization, Data, and Model Capability、Reasoning and Tool-use Compete in Agentic RL: From Quantifying Interference to Disentangled Tuning、RAGEN-2: Reasoning Collapse in Agentic RL、On the Direction of RLVR Updates for LLM Reasoning: Identification and Exploitation、Demystifying Reinforcement Learning for Long-Horizon Tool-Using Agents: A Comprehensive Recipe">
+  <title>1.3 训练机理、能力干扰与失效诊断 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>1.3</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 5 篇</p>
+      <h1>训练机理、能力干扰与失效诊断</h1>
+      <p class="section-deck">这组回答“Agentic RL 到底改变了什么、为什么会坏、不同能力为何互相干扰”。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A004"><span>A004</span>Rethinking Generalization in Reasoning SFT: A Conditional Analysis on Optimization, Data, and Model Capability</a>
+<a href="#paper-A005"><span>A005</span>Reasoning and Tool-use Compete in Agentic RL: From Quantifying Interference to Disentangled Tuning</a>
+<a href="#paper-A006"><span>A006</span>RAGEN-2: Reasoning Collapse in Agentic RL</a>
+<a href="#paper-A007"><span>A007</span>On the Direction of RLVR Updates for LLM Reasoning: Identification and Exploitation</a>
+<a href="#paper-A008"><span>A008</span>Demystifying Reinforcement Learning for Long-Horizon Tool-Using Agents: A Comprehensive Recipe</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A004" data-paper-id="A004">
+      <header class="paper-header">
+        <p class="paper-kicker">A004 · 约 5 分钟</p>
+        <h2>Rethinking Generalization in Reasoning SFT: A Conditional Analysis on Optimization, Data, and Model Capability</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">SFT</span><span class="paper-tag">generalization</span><span class="paper-tag">reasoning</span><span class="paper-tag">data-model-interaction</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.06628" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>这篇论文针对“推理监督微调只会记忆训练题、甚至损害分布外能力”的流行结论做条件化检验。作者认为，很多研究只训练一个周期便停止，于是把优化早期的暂时下降误当成最终泛化规律；同时，数据质量、是否包含长推理链以及基座模型容量也常被混在一起。实验因此不追求新损失，而是控制训练步数、数据重复、学习率、样本来源和模型规模，连续观察分布内数学、分布外代码与知识、一般指令能力和安全性的变化。核心发现是典型的“先降后升”：模型先快速适配训练分布，旧能力短暂受扰，继续训练后又形成更稳定的推理策略并恢复甚至超过起点，所以一次早停快照不足以证明监督微调不能泛化。</p>
+      <p>默认数据 Math-CoT-20k 从 OpenR1-Math-220k 中取二万零四百八十道题，由 Qwen3-32B 生成思考过程，再用数学验证器拒绝错误答案，最长回答一万六千三百八十四词元。作者主要在 Qwen3-14B、Qwen3-8B 和 InternLM2.5-20B 基座上训练，也扩展到四十亿和十七亿模型；默认使用八个周期、批量二百五十六、余弦学习率，并以高上限生成完整回答。分布内评测是 MATH-500 与 AIME 二〇二四，分布外包含 LiveCodeBench、GPQA-Diamond 和 MMLU-Pro，一般能力覆盖指令遵循、偏好胜率、幻觉与真实性，安全性则用三百条有害提示和外部评审模型衡量攻击成功率。</p>
+      <p>固定为六百四十次参数更新后，重复高质量数据明显优于只看一遍更多独立样本。Qwen3-14B 用二万样本、批量二百五十六训练八轮后，MATH 达到九十五点一、AIME 达到六十六、代码达到五十五点一、GPQA 达到六十三点三、MMLU-Pro 达到七十四点四；同样二万样本但批量三十二只训练一轮，对应结果仅九十二点九、四十八、四十五点四、四十六点八和七十点五。回答长度在训练早期先增加、能力恢复时又缩短，成为优化阶段的可见信号。只有把学习率提高、采用恒定调度并训练十六轮的激进组合，才出现广泛过拟合和长度再次反弹，说明“继续训练”有效并不等于可以无限训练。</p>
+      <p>数据消融进一步表明，泛化来自基座能力与监督信号的匹配，而非数学题本身的神奇作用。一百四十亿级主模型从基础状态到高质量长链数据后，MATH 从七十七点八升到九十五点一，AIME 从十四点七升到六十六，代码从三十七点五升到五十五点一，GPQA 从四十四点一升到六十三点三。去掉推理链的 Math-NoCoT 在复杂推理上更弱，却更好地保留部分指令和偏好能力；混入质量不齐的 NuminaMath 会普遍伤害表现。更有意思的是，规则简单的 Countdown-CoT 也能把 MATH 推到九十一点五、AIME 推到四十一点七，说明只要轨迹训练了可迁移的搜索与校验过程，题目语义不同也能带来收益。</p>
+      <p>模型容量决定这一恢复机制能否出现。一百四十亿、八十亿及二百亿级基座较稳定地跨过早期干扰区，四十亿收益较弱，十七亿模型则常以冗长输出换取很小甚至负的泛化，提示小模型可能没有足够余量同时吸收新格式并保留旧能力。长推理链还有明确安全代价：三种基座经 Math-CoT 训练后，在有害提示上的攻击成功率都显著上升，而只训练最终答案的版本上升小得多。质性案例显示模型会用被强化的“持续推理”替危险请求寻找合理化路径。因而推理能力、安全拒答与简洁指令遵循不是一个总分能覆盖的同向指标，训练检查点应同时接受多维评测。</p>
+      <p>论文的贡献是把一个绝对命题改写成条件命题：在高质量数据、合适优化时长和足够强基座上，推理监督微调可以产生广泛迁移；换成低质轨迹、过强优化或小模型，结论就可能反转。边界也很清楚：训练数据基本是数学，稠密模型不超过二百亿参数，没有直接与强化学习做等预算对照，优化、数据和容量之间仍可能存在未穷尽的高阶交互；安全实验集中于一种有害提示集和自动评审。结果不能推出所有领域都应重复数据八轮，更不能说明推理链越长越好。实践上应跟踪完整学习曲线，在多个能力面上选检查点，并把数据验证、容量诊断和安全回归视为推理微调配方的一部分。</p>
+    </article>
+    <article class="paper" id="paper-A005" data-paper-id="A005">
+      <header class="paper-header">
+        <p class="paper-kicker">A005 · 约 4 分钟</p>
+        <h2>Reasoning and Tool-use Compete in Agentic RL: From Quantifying Interference to Disentangled Tuning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">reasoning-tool-interference</span><span class="paper-tag">disentangled-tuning</span><span class="paper-tag">tool-use</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2602.00994" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程工具智能体通常要边推理边调用搜索、数据库或执行器，直觉上把两种能力放在同一次强化学习里应当相互帮助，这篇论文却发现共享参数会让它们竞争。只看最终准确率无法分辨提升究竟来自更会思考、更多调用工具还是二者组合，作者于是先设计能力效应分析，把基础能力、纯推理训练、纯工具训练、联合训练和推理时拼接专门策略等多个条件放进同一线性分解。每个问题采样五十条轨迹，通过不同条件的成功率反推出基础效应、单能力增益和成对交互项。结果中基础与推理、基础与工具大多为正，而推理与工具的交互项持续为负，说明联合表现低于两种增益简单相加，并非个别数据集上的偶然波动。</p>
+      <p>梯度分析解释了这种负交互从何而来。作者分别收集推理与工具轨迹，在相同角色内计算的更新方向较一致，但跨角色梯度接近正交；共享的低秩模块或主干在一次更新里只能选择折中方向，既不能充分保留长思考所需的表示，也不能专门适配结构化行动。简单增加低秩秩数只扩大共享容量，没有消除方向冲突；软混合专家让多个适配器按连续权重共同参与，也仍会让同一词元承受混合梯度。更直接的启示是，能力干扰不只是样本比例问题，而是“哪组参数在什么动作上被更新”的路由问题，因而需要在训练信号到达模型之前就划清参数边界。</p>
+      <p>DART 的做法是冻结基础模型，在所有线性层上挂接两套互不重叠的低秩适配器，一套只学习自然语言推理，另一套只学习工具动作。模型生成原子化的搜索或数据库哨兵词时，确定性硬路由切换到工具适配器，退出工具段后再回到推理适配器；每个词元反向传播时也只更新当时激活的那一套。训练仍采用常规自回归式 Agentic RL 和组相对优化，不需要额外过程奖励：问答用最终答案精确匹配，数据库任务用查询执行正确性，失败工具调用自然由终局结果惩罚。冻结主干是关键，否则两条路径仍会在共享权重中重新发生干扰；推理时只有一个模型和两组小适配器，避免部署两个完整智能体。</p>
+      <p>开放域问答训练合并 Natural Questions 与 HotpotQA，测试覆盖 NQ、TriviaQA、PopQA、HotpotQA、2WikiMultiHopQA、MuSiQue 和 Bamboogle，搜索每次返回前三条、最多调用四次。Qwen2.5-3B-Instruct 上，Search-R1 七项平均为零点三三六，软混合低秩为零点三六二，DART 达到零点三九九；使用基础版模型时三者分别为零点三零三、零点三二五和零点四零五。七十亿指令版从约零点三九六提升到零点四二零，Llama-3.1-8B 从零点四四三提升到零点四六四。固定检索结果的对照仍显示 DART 更好，说明收益不只来自多搜几次，而是推理路径本身也更有效。</p>
+      <p>在自然语言到数据库查询任务中，作者使用相同 SkyRL 训练数据，在 BIRD、Spider 及其困难、真实、同义改写和测试变体上做执行准确率评估。Qwen2.5-7B-Instruct 的单模型基线平均约零点七一六，软混合模块降到零点六九二，两个完整智能体达到零点七三零六，DART 达到零点七三零九，几乎以一套主干复现双智能体收益。匹配总参数量的单适配器、改变两套适配器秩数、只在推理时拼接分别训练的模块等消融都不能解释完整提升；联合训练但参数硬隔离最好，证明关键不是容量，而是让两类轨迹在共享环境目标下协同学习，同时避免更新到同一增量参数。</p>
+      <p>方法的边界来自这份干净的二分假设。实验中的动作由明确哨兵词标记，搜索和数据库调用都容易与推理文本分开；在浏览器点击、代码编辑或多工具嵌套中，动作角色可能重叠，手写路由规则会变脆。两套适配器虽远小于两个模型，高并发服务仍要承担切换、缓存和批处理调度成本；主干完全冻结也限制了模型吸收真正跨能力的新表示。实验覆盖问答与数据库查询，但没有百步软件工程、开放世界噪声或多智能体协作。因而 DART 最适合动作边界清楚、终局可验证且希望低成本保留多种能力的场景，它证明了解耦参数是一条有效路径，却还不是任意 Agent 能力冲突的通用答案。</p>
+    </article>
+    <article class="paper" id="paper-A006" data-paper-id="A006">
+      <header class="paper-header">
+        <p class="paper-kicker">A006 · 约 4 分钟</p>
+        <h2>RAGEN-2: Reasoning Collapse in Agentic RL</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">reasoning-collapse</span><span class="paper-tag">failure-analysis</span><span class="paper-tag">long-horizon</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.06268" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>论文研究一种比输出变短或熵降低更隐蔽的失败：智能体仍能对同一问题生成多种看似丰富的推理，却对不同问题反复套用几乎相同的模板。作者称之为推理坍塌，并用信息分解指出，常见熵指标主要测量给定输入后的随机性，无法判断轨迹是否真正依赖输入；真正需要观察的是输入与推理轨迹之间的互信息。一个策略可以保持很高采样熵，却把所有任务都解释成同一种套路，因此表面多样性与条件化推理能力并不等价。这个诊断把 Agentic RL 中“训练分数停滞”从笼统的不稳定问题，细化为策略逐渐失去输入敏感性的结构性退化。</p>
+      <p>真实轨迹无法直接计算互信息，作者设计了无需外部模型的组内代理量。一个批次取六十四个提示并为每个提示生成多条轨迹，再把每条轨迹放到所有提示下计算似然；若模型能从轨迹反推出它属于哪个提示，检索准确率应明显高于六十四分之一的随机水平。互信息标准分数则比较匹配提示与错配提示的对数概率，并用滑动平均降低训练噪声。这个跨输入评分揭示四种状态：既有条件差异又有样本多样性的健康探索，只依赖输入但过于确定的僵化策略，不依赖输入却随机变化的模板坍塌，以及两者都低的完全退化。实验中互信息代理与最终表现的秩相关约为零点三九，而熵相关只有负零点一一到负零点一四，说明熵并非可靠预警器。</p>
+      <p>机制分析把注意力放在奖励方差决定的梯度信噪比。对同一提示采样的结果若有成功也有失败，任务奖励能产生区分行动的梯度；若全部成功或全部失败，组内奖励方差接近零，任务方向几乎消失，而熵、散度等与输入无关的正则梯度仍保持相似幅度，于是更新越来越由通用模板方向主导。作者据此提出 SNR-Aware Filter：先按每个提示的组内奖励方差排序，保留累计信息量最高的一部分提示参与反向传播，采样轨迹本身不增加。与按单条轨迹挑高奖励不同，它保留同一提示下成败对照，从而直接提升区分“哪种行动导致成功”的信号；计算方差只占训练时间不到千分之一。</p>
+      <p>实验横跨 Sokoban、FrozenLake、MetaMathQA、Countdown、SearchQA、WebShop 和 DeepCoder，主要使用 Qwen2.5-3B，在 PPO、DAPO、GRPO 与去长度偏置的组优化上训练四百轮，每轮八个提示、每个提示十六条轨迹，并扩展到五亿、十五亿、七十亿参数、Llama-3.2-3B 和文本或图像输入的视觉语言模型。过滤在 PPO 三十亿模型的七任务平均分上带来六点九分，Sokoban 增加十六分、FrozenLake 增加十点九分；其他算法平均也多为正。跨规模增益约四点一到五点五分，Llama 增加五点三分，视觉模型文本输入增加二十九点八分、图像输入增加三十五点八分，显示方法并不依赖单一模型族。</p>
+      <p>消融给出了更接近因果的证据。Sokoban 中，奖励方差最高四分位的表现为二十一点一、互信息零点九五，最低四分位只有十一点零和零点七三；不筛选时表现十二点九、互信息零点八三，按提示方差筛选后达到二十三点六和一点八零，而按单轨迹筛选只有十六点八、互信息零点二零。训练附录还显示保留最大方差组明显优于保留最小组，策略熵和长度筛选都不稳定。过滤使每轮反向传播的轨迹数约减半，单步时间下降百分之二十六到四十一。边界实验也很诚实：当奖励含百分之八十至百分之百噪声时收益消失；FrozenLake 的 GRPO 本来信号充足，过滤反而下降约五分。</p>
+      <p>方法不改变奖励、采样或优化器，适合已经有组采样且奖励方差分布很偏的训练；标准差与均值之比等简单统计可先判断是否值得开启。局限是理论把任务梯度与正则梯度分开处理，真实大模型的耦合更复杂；研究集中在单智能体，互信息代理依赖跨提示似然可比性，稀疏或带系统噪声的奖励会让方差失真。策略也可能通过制造不稳定行为“博取方差”，过强过滤会缩窄探索并丢掉尚未学会或已经掌握的任务，保留比例需要调节。最重要的结论不是永远筛掉零方差数据，而是训练应同时看输入依赖性和信号结构，先诊断是否坍塌，再根据奖励机制选择干预。</p>
+    </article>
+    <article class="paper" id="paper-A007" data-paper-id="A007">
+      <header class="paper-header">
+        <p class="paper-kicker">A007 · 约 4 分钟</p>
+        <h2>On the Direction of RLVR Updates for LLM Reasoning: Identification and Exploitation</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">RLVR</span><span class="paper-tag">update-direction</span><span class="paper-tag">optimization-theory</span><span class="paper-tag">reasoning</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2603.22117" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>这篇论文不再把强化学习后的模型只看作“能力更强但分布略变”，而是追问策略究竟沿哪个方向移动。作者保存训练前基座与 RLVR 模型，对每个生成位置比较同一词元在两者下的对数概率变化；这个带正负号的差值能区分被强化和被压低的行为，而熵、散度或困惑度大多只描述变化大小。三个模型对在 AIME 二〇二四上的分布都呈稀疏双峰：绝大多数词元变化很小，少数位置发生强烈定向移动。由此得到一个重要观察，RLVR 的收益可能由很少的“方向性词元”承载，平均熵下降或整体分布距离并不能告诉我们这些关键变化在哪里。</p>
+      <p>为检验方向指标是否真抓住因果位置，作者做逐词替换实验：先由基座模型生成完整回答，再按某个指标挑选一小部分位置，用 RL 模型在相同前缀下采样的词元替换，最后让后续继续生成。仅替换约百分之五到三十的位置就能恢复大部分 RL 模型收益，其中带符号概率变化在约百分之十替换率时用词最少，随后是一般分布差异，熵指标最差。实验覆盖 ORZ 的 PPO 模型、DAPO 模型和基于 Qwen3 的组相对模型，每题采样三十二次。虽然替换会改变后续前缀，不能视为完全独立的单词干预，但多模型一致结果说明更新方向比“哪些位置不确定”更接近实际能力来源。</p>
+      <p>理论与统计都指向基座下的低概率词元。策略梯度对被采样动作的更新幅度会随其原概率降低而增大，因此罕见但获奖的探索行为承担更强方向信号；训练前就很高概率的常规词元反而更新有限。作者在训练中直接裁掉低概率尾部，哪怕保留累计概率百分之九十五，也会降低最终推理表现，说明尾部不是可以无损删除的噪声。这个结论并非鼓励无约束随机性，而是提醒 RLVR 的价值正在于把偶然发现的有效低概率路径稳定放大；若采样截断、数据过滤或更新权重系统性忽略这些位置，就会削弱强化学习区别于监督模仿的探索机制。</p>
+      <p>论文先在推理时利用这个方向。解码同时查询基座与 RL 模型，只在被 RL 明显压低的位置继续沿训练方向外推，使被削弱的候选更弱、相对有利候选更突出。AIME 二〇二四的三十二次平均准确率中，ORZ 从四十六点一五升到四十七点五，DAPO 从五十二点五升到五十五点四二，UniReason 从五十四点五八升到五十五点八三；单纯替换方向词元也接近原 RL 表现。增大外推强度起初改善、随后在约五十五分附近平台，说明方向有用但不能无限延伸。论文在理想化表格策略和自然策略梯度下给出解释，但真实语言模型、截断采样与非平稳训练只近似满足这些假设。</p>
+      <p>训练时无法预先知道最终方向，作者便用当前策略的低概率作为代理，在 DAPO 的优势上额外放大罕见词元，除这一权重外保持配方一致。Qwen2.5-Math-7B 在 AIME 二〇二四的三十二次平均从三十五点七三升至三十九点零六，通过率从五十四点零九升至六十点五八；跨 AIME 二〇二五、AMC 与其他数学集，平均分从四十二点一二升到四十三点七五，通过率从五十七点八六升到六十二点三三。Qwen3-8B 的跨集平均也从四十四点二六升到四十六点七八。与按困惑度或“支配概率”加权的基线相比，该简单权重总体最好，四次独立训练保持同样趋势。</p>
+      <p>作者还在 Minerva 的非数学 STEM 问题上复验，Qwen2.5 的 DAPO 平均从四十六点四三升到四十九点七二，Qwen3 从五十五点零四升到五十六点五七，证明信号不只对应某个数学模板。不过实验仍以 Qwen 系列、数学和短文本 STEM 为主，尚未覆盖工具行动、百步交互或非可验证奖励；推理时外推要同时运行基座和 RL 分布，近乎增加一次解码成本，阈值与强度也需要校准。理论保证建立在理想化表格策略上，训练代理把“低概率”与“有用方向”近似等同，过度放大可能强化偶然错误。最合适的结论是：更新方向是比熵更有解释力的诊断与控制变量，但还不是无需验证的通用解码规则。</p>
+    </article>
+    <article class="paper" id="paper-A008" data-paper-id="A008">
+      <header class="paper-header">
+        <p class="paper-kicker">A008 · 约 4 分钟</p>
+        <h2>Demystifying Reinforcement Learning for Long-Horizon Tool-Using Agents: A Comprehensive Recipe</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">empirical-study</span><span class="paper-tag">training-recipe</span><span class="paper-tag">long-horizon</span><span class="paper-tag">tool-use</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2603.21972" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>这篇论文把长程工具强化学习拆成一套可复验配方，而不是再提出一个只在单项设置取胜的新算法。作者选择 TravelPlanner：智能体要搜索城市、航班、距离、餐馆、景点和住宿，在最长数十次工具调用中同时满足预算、日期、交通与常识约束，只有整份行程所有宏观要求都成立才算成功。这样的环境有稀疏终局奖励、长上下文和工具失败，正好能检验数据、奖励、模型规模、算法与环境可靠性如何交互。论文先用可验证合成任务和成功轨迹做监督预热，再分别改变强化阶段的单一因素，因此它给出的不是神秘技巧，而是一组知道何时成立、何时反转的经验因果线索。</p>
+      <p>STAR 数据管线先让 GPT-OSS-120B 与 DeepSeek-V3.2 按可行性和难度生成一万条旅行需求，再通过规则环境验证；人工抽查二百条，成功率二十一点九，与官方验证集二十一点一相近。教师模型在五千条任务上展开，筛出一千一百九十八条完整成功轨迹，平均约一万零三百词元和九点二次工具调用，用于 Qwen2.5 的十五亿、三十亿和七十亿指令模型监督微调。强化数据与监督数据不重合，默认一千题，难度比例四比三比三，每题八条采样，最大上下文三万、工具预算六十，训练五轮。无效格式得零分，超长样本不计策略损失但仍参加组内优势归一化，避免悄悄改变基线。</p>
+      <p>奖励实验比较三种信号：把所有微观与宏观检查相加，只给各宏观约束通过分，以及只给最终全成功；还设计先密后疏的课程，逐步从总和奖励过渡到宏观和终局奖励。十五亿模型从监督后的百分之六点九提升到总和奖励三十三点一、宏观三十点一、终局三十三点八，课程最好为三十四点九；三十亿模型分别达到四十七、四十八点二、四十六点六和四十九点九。七十亿模型却以总和奖励六十二点八最好，课程只有五十七。这说明小模型需要密集信号先学会工具流程，较强模型能直接利用细致检查，所谓通用奖励课程会随容量改变，不能只在一个规模上定配方。</p>
+      <p>扩展与数据消融揭示更多边界。使用总和奖励时，模型从十五亿的三十三点一提升到七十亿的六十二点八，容量是长程约束保持的重要来源；三十亿课程用一百题只有三十七点五，一千题四十九点九，两千题仅再升到五十点八，显示一千题附近已出现收益递减。只练容易、中等、困难任务分别得到四十五点三、四十一点一和二十五点九，按比例混合反而达到四十九点九，说明课程覆盖比一味追难题有效。环境失败率低于百分之五时影响很小，升到百分之十会放慢并损害训练，实践中应先保证工具返回与重置可靠，再用算法补偿。</p>
+      <p>算法比较没有单一赢家。十五亿模型上，GRPO、DAPO、ARPO 分别为三十点一、三十六点九、三十七点五；三十亿时 GRPO 四十八点二反超另两者；七十亿时 GRPO 六十二点八，DAPO 与 ARPO 约五十八。ARPO 在七十亿设置耗费约五百四十七 GPU 小时，而 GRPO 约三百六十八，提升并未覆盖成本。迁移到七个维基百科问答集时，三十亿课程平均三十五，高于监督模型三十点七与搜索基线三十二点五；七十亿总和奖励却从监督的四十一点九降到三十六点七，出现对旅行任务的对齐税，而宏观奖励仍有四十二点九。训练内成功率与通用工具能力必须分开报告。</p>
+      <p>最终配方是有条件的：先合成可验证且难度混合的任务，用少量成功长轨迹教会格式和基本工具，再以一千量级不重叠任务做在线强化；小模型优先课程或更密信号，强模型比较总和与宏观奖励，同时监控分布外能力、环境错误率和总算力。论文的局限也直接限制外推：TravelPlanner 是本地模拟器，真实网页噪声、权限和不可逆动作更复杂；分布外只测问答，模型最大七十亿，消融一次只改变一个因素，无法揭示模型、奖励和数据之间的全部交互；奖励检查依赖任务专用规则。它适合作为长程工具训练的工程基线与实验设计模板，而非所有 Agent 环境都能照搬的固定最优参数。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="01-02.html"><span>上一方向</span>On-Policy Distillation 专题综述</a>
+      <a class="next" href="02-01.html"><span>下一方向</span>长程 turn/step 信用分配</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

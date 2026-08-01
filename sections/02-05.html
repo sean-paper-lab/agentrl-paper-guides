@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="过程奖励评测、轨迹错误定位与稠密评分基准：ToolPRMBench: Evaluating and Advancing Process Reward Models for Tool-using Agents、Where Do Deep-Research Agents Go Wrong? Span-Level Error Localization in Agent Trajectories、Long-Horizon-Terminal-Bench: Testing the Limits of Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading">
+  <title>2.5 过程奖励评测、轨迹错误定位与稠密评分基准 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>2.5</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 3 篇</p>
+      <h1>过程奖励评测、轨迹错误定位与稠密评分基准</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A022"><span>A022</span>ToolPRMBench: Evaluating and Advancing Process Reward Models for Tool-using Agents</a>
+<a href="#paper-A023"><span>A023</span>Where Do Deep-Research Agents Go Wrong? Span-Level Error Localization in Agent Trajectories</a>
+<a href="#paper-A024"><span>A024</span>Long-Horizon-Terminal-Bench: Testing the Limits of Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A022" data-paper-id="A022">
+      <header class="paper-header">
+        <p class="paper-kicker">A022 · 约 5 分钟</p>
+        <h2>ToolPRMBench: Evaluating and Advancing Process Reward Models for Tool-using Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">benchmark</span><span class="paper-tag">PRM</span><span class="paper-tag">tool-agent</span><span class="paper-tag">process-evaluation</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2601.12294" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>工具智能体要在长对话中选择函数、填写参数并依据返回结果继续行动，最终成功并不能说明每一步都合理，最终失败也不能指出第一处错误。过程奖励模型本应为搜索和剪枝提供步级信号，但数学推理、网页导航上的奖励模型未必理解工具说明、隐含状态和调用顺序，过去又缺少一个统一基准来比较通用大模型、通用过程奖励模型和专用工具裁判。ToolPRMBench 的目标正是把完整工具轨迹改造成可检验的局部选择题：给出用户要求、此前对话与工具反馈、可用工具说明，以及一个正确动作和一个看似合理但错误的动作，测试模型能否辨认哪个选择真正满足当前状态与接口约束，而不是只凭工具名或语言风格猜测。</p>
+      <p>数据来自 GTA、ToolTalk、BFCL 和 ToolSandbox，覆盖信息检索、多步推理、会话式调用和有状态工具执行。离线采样沿着金标准轨迹前缀前进，只在某一步让策略另提动作，因此能隔离局部工具或参数错误；在线采样则让策略从头与环境交互，保留失败轨迹，再让标注模型借助金轨迹或任务里程碑找出第一处错误并给出修正动作，因此能覆盖错误传播和偏离后的真实状态。因为金动作不一定是唯一可行解，论文又让 GPT-5、Gemini-3-Flash 和 Claude-4.5-Haiku 独立判断每对动作，按投票过滤，并抽查人工一致性，随机一百例的人机一致率为百分之九十六。最终基准约一千例，包含选错工具、参数错误、该对话却调用工具、该调用工具却只回复文本等常见故障。</p>
+      <p>作者同时训练三种四十亿参数的专用模型来说明基准如何推动方法研究。ToolPRM-Base 直接在随机交换左右位置的动作对上学习正确标签；ToolPRM-CoT 先由 GPT-5-mini 蒸馏二到六句判断理由，再联合预测理由和动作；ToolPRM-GRPO 从监督模型继续做组相对强化学习，每个问题采样八个判断，只按最终标签是否正确给零一奖励，并用分布约束稳定更新。训练只取 BFCL 和 ToolSandbox 的一部分，按原始指令划分训练和测试，避免同一任务的变体泄漏；GTA 与 ToolTalk 完全留作分布外评测。附录给出的配置是两轮全参数监督微调和一轮强化学习，最长上下文四千零九十六词元，说明这些结果不依赖隐藏的超大专用骨干。</p>
+      <p>十七个受测系统呈现清楚的层次。闭源 API 模型整体较强，平均准确率约百分之七十三到七十五；开源指令模型随规模上升而改善，但即使 Qwen3-14B 也只有百分之六十三，数学或网页过程奖励模型大多徘徊在百分之五十左右，显示知识迁移并不自动带来工具状态理解。ToolPRM-GRPO 以百分之七十八点六取得最高平均成绩，在 BFCL 上达到百分之八十六点四，超过三种闭源裁判。监督训练的 Base 和 CoT 在同分布上进步明显，换到未见过的 GTA 与 ToolTalk 后分别相对下降百分之二十点四和十三点六；强化学习版本的分布外表现反而提高百分之二十一点八，说明仅模仿训练样式容易学到数据集捷径，而结果驱动的相对优化形成了更稳健的决策边界。</p>
+      <p>基准是否有实际意义还通过八选一搜索验证：在 GTA 和 BFCL 上，ToolPRMBench 准确率越高的奖励模型，越能提高原策略的 Best-of-N 结果；准确率低于随机水平的裁判甚至会把搜索带向更差动作。合成错误在 GTA 上让两种专用模型相对提升超过百分之二十二，却在 ToolTalk 上几乎无益，提醒研究者不能把廉价扰动当成通用真实错误。专用模型的单次成本远低于闭源裁判，但论文没有大规模评测搜索与强化学习结合后的端到端收益，数据也只覆盖四个既有基准，未纳入正在普及的 MCP 工具环境。它更适合作为过程判别和分布外诊断基准，而不是证明高离线准确率必然转化为所有真实工具系统的成功率。</p>
+      <p>论文给出的文件系统案例揭示了基准真正测什么：用户先找出文件，再要求复制到当前目录下的备份文件夹。错误动作直接调用复制函数并传入长路径，表面意图完全正确，却违反接口要求源和目标必须相对当前工作目录；正确动作是先切换目录。要判对这一例，模型必须联合读取历史结果、工具说明和隐含状态转换，而不能只看哪个动词更符合用户要求。数据统计也刻意让正确与错误动作的工具类型分布相近，避免仅凭高频函数猜标签。不过，离线采样围绕金轨迹制造单步偏离，在线样本的首错又由大模型参考里程碑定位，两者仍会偏向“有标准流程”的工具任务；存在多个等价方案、工具说明不完整或环境状态不可见时，标签可靠性会下降。附录还显示训练与测试按原始指令整体切分，而不是随机拆动作对，这是防止相似轨迹泄漏的必要设计，也是结果可信的前提。</p>
+    </article>
+    <article class="paper" id="paper-A023" data-paper-id="A023">
+      <header class="paper-header">
+        <p class="paper-kicker">A023 · 约 5 分钟</p>
+        <h2>Where Do Deep-Research Agents Go Wrong? Span-Level Error Localization in Agent Trajectories</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">error-localization</span><span class="paper-tag">deep-research</span><span class="paper-tag">trajectory-cleaning</span><span class="paper-tag">span-level</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.02060" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>深度研究智能体的日志并不是一串互不相干的搜索动作，而是一条逐渐建立承诺的链：它先选定实体和约束，接受某条证据或计算结果，后面的检索、比较和结论又把这些中间判断当成事实。最终答案错误时，真正有害的地方常常早已发生；反过来，搜索失败、尝试弱线索或随后被纠正的猜测并不一定是错误。只用终局分数会把这两类行为混在一起，直接让大模型通读原始长日志也容易盯着最后答案、误罚正常探索，或漏掉一个早期但后来被反复复用的无依据承诺。论文因此把任务定义为语义片段级错误定位：不是寻找看起来奇怪的句子，而是识别哪个片段首次引入、依赖、放大或最终确认了会影响答案路径的错误主张。</p>
+      <p>数据管线从 GAIA 验证集、XBench 和下采样后的 BrowseComp 测试集选出四百六十五个任务，用 GPT-5、Gemini-2.5-Pro 和 Claude-Sonnet-4.5 分别驱动 MiroFlow 与 OAgent，得到二千七百九十条真实长轨迹。作者先把不同框架的工具调用、嵌套子代理消息和环境反馈还原为统一执行顺序，再按局部目标变化切成规划、检索、核验、比较或收尾等语义片段；同一目标下的改写查询和重试仍留在一段内。两种前沿模型先高召回提出可疑片段，再由七名熟悉智能体日志的专家中的两人独立核对完整轨迹、证据和边界，分歧再裁决。标签只把会改变答案路径的错误承诺算作错误，不把普通噪声和已恢复的失误一概处罚。</p>
+      <p>在完整语料中，一千八百九十条轨迹含至少一个错误片段；经过可验证性、边界稳定性、长度和干扰项筛选后，TELBench 保留一千条，其中六百条较容易、四百条较难，平均每条有十一点九五个片段。评测输入只有问题和按顺序排列的原始片段文字，不泄露阶段、错误类型或人工理由，指标同时看片段级宏平均精确率、召回率、综合分数和最早错误命中率。机制分析另外给每段标注八种操作阶段，并从四千六百三十一个自由错误理由中自底向上归纳出六大类十八种主故障。结果显示检索虽然最常出现，归一化错误率仅百分之二点九；真正危险的是决策和最终化，错误率分别达到百分之六十点五和五十一点八，说明瓶颈常在如何承诺和汇总证据，而不是有没有搜索。</p>
+      <p>DRIFT 用四步结构替代逐段独立分类。Claim Keeper 首先通读整条轨迹，建立主张账本，记录每个实体选择、约束解释、证据判断或计算结论在哪一段出现、何时开始影响决策、被哪些后续片段复用，以及它仍是探索还是已经定案。Support Seeker 再回到日志内查证，把关键主张分成直接支持、弱支持、缺少支持或与证据冲突，并保存支持来源。随后按实体、约束、检索、证据、计算和流程等技能路由专门审计，最后由 Dependency Tracer 沿依赖关系回溯和前向追踪。只有当风险主张被当作前提、继续传播、用于计算、导致放弃或写入答案时，相应片段才被标错；这样既能找出最初承诺，也能标出后来放大错误的片段。</p>
+      <p>在 DeepSeek-V3.2、GPT-5.4、Claude-Sonnet-4.6 和 Gemini-2.5-Pro 等骨干上，DRIFT 的整体综合分数始终高于直接通读以及改造后的 Codex、Claude Code 审计流程。以 Claude 为例，综合分数从百分之二十一点八九升到五十四点九一；DeepSeek 从二十二点四六升到五十点五一。模块消融呈连续增益，主张账本贡献最大，支持核验提高召回，依赖追踪进一步平衡精确率与召回率。然而最早错误定位依然很难：完整 DRIFT 在各骨干上的总体命中率也只有约百分之二十到二十四，困难集更低；轨迹越长，所有方法都会下降。另有百分之三十六点九的最终成功轨迹仍含过程错误，说明本基准诊断的是可靠过程而非简单复刻成败标签。其边界在于昂贵的人类标注、只覆盖两套研究代理框架和三类基准，且审计推理会显著增加词元开销。</p>
+      <p>错误分布还纠正了几个直觉。失败轨迹中百分之九十七点三至少有一处过程错误，但大部分片段依然被标为正常，说明标注没有把整条失败日志一锅端；失败轨迹的错误片段占百分之十七点四，成功轨迹也有百分之六点三，后者可能靠后续恢复或碰巧得出正确答案。不同框架和模型的第一错误指纹也不同：有的更常在证据支持上失手，有的更常误读约束，GAIA 则出现较多信息已收集后的处理错误。DRIFT 对证据核验、约束语义、无依据承诺和漏检约束等难类提升最大，却需要为账本、支持记录和依赖追踪重复阅读上下文。它适合离线轨迹清洗、失败复盘和生成细粒度监督，若要在线控制代理，还需解决审计延迟和外部事实无法仅凭日志验证的问题。论文的词元表也显示不同骨干在 DRIFT 下开销差异很大，不能把同一审计编排视为固定成本。</p>
+    </article>
+    <article class="paper" id="paper-A024" data-paper-id="A024">
+      <header class="paper-header">
+        <p class="paper-kicker">A024 · 约 5 分钟</p>
+        <h2>Long-Horizon-Terminal-Bench: Testing the Limits of Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">benchmark</span><span class="paper-tag">terminal-agent</span><span class="paper-tag">dense-grading</span><span class="paper-tag">partial-credit</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2607.08964" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>现有终端和软件工程基准多是几十分钟内完成的局部任务，评分也常只有测试全过或完全失败。这样的设置看不出智能体在数小时工作流中能否维护计划、保存中间状态、反复验证并从错误中恢复，也会把已经完成九成但漏掉最后一步的运行与开局就卡住的运行都记为零。Long-Horizon-Terminal-Bench 把评测对象换成持续执行能力：任务要求智能体只通过终端检查代码和数据、运行脚本、修改产物并迭代调试，通常需要数百轮操作。基准关注的不只是每个局部动作对不对，而是智能体能否在固定时间和上下文预算内把一串大体正确的动作收束为完整、可验证的最终成果。</p>
+      <p>基准最终收录四十六个容器化任务，覆盖九个汇总领域，包括软件与逆向工程、地球气候与能源、多模态和成像分析、科学计算、研究复现、系统性能与安全、专业工作流、互动游戏以及逻辑约束题。每个任务有自然语言总目标、装好所需工具与资产的 Docker 环境、弱基线程序、公开生成脚本、官方解法和隐藏验证器。公开检查只验证命令行行为、文件格式和少量简单例子，权重较低；高权重隐藏压力测试会改变清单嵌套、压缩编码、字段名、缺失值、噪声、图像旋转裁切或时间坐标。这样，硬编码公开答案拿不到高分，智能体必须真的修好解析、核心算法和端到端产物。</p>
+      <p>每个总任务被拆成少量有语义的子目标，验证器从最终容器状态读取文件、测试结果或模拟器反馈。布尔子任务检查服务、脚本和测试是否通过；连续子任务按与参考指标的距离给部分分；游戏或重复审计则聚合多个回合的成功比例。各项按权重汇总成零到一的奖励，论文主要把至少零点九五视为解决，同时报告严格满分和平均奖励。任务从一百二十个候选中经质量筛选保留四十六个，并用 DeepSeek-V4-Pro 在九十分钟预算下反复校准难度。评测统一使用 Harbor 与 Terminus-2 终端框架，不过 GPT-5.3 使用 Codex 框架；十七个前沿模型各跑四十六项，记录通过率、平均奖励、轮数、时间、词元和估算 API 成本。</p>
+      <p>结果显示长程执行远未饱和。最强的 Grok 4.5 在宽松阈值上也只完成十三项，通过率百分之二十八点三，严格满分仅九项；GPT-5.6-sol 与 GPT-5.5 都只有百分之十五点二。所有模型合计七百八十二次运行中，仅五十次达到零点九五，而四百九十一次取得了非零但未通过的部分进展；二百二十三次至少做完一半。平均一次任务消耗约九百七十九万词元、二百三十九轮、八十八点九分钟和十点八美元。通过率与平均奖励的秩相关只有零点七四，说明“能否收尾”和“能推进多远”并非同一能力；严格二元评分会让十个零满分模型大量并列，也会漏掉九十次奖励介于零点七五和零点九五之间的近失。</p>
+      <p>稠密评分还揭示了失败机制。未解决运行中百分之七十九因九十分钟耗尽，说明多数模型不是立刻崩溃，而是在重复探索、验证和修补中无法完成；百分之十九主动提前结束，其中十四次奖励已经超过零点七五，属于接近完成却误判结束的假收尾。论文据此把瓶颈定位为进度管理、记忆、自检和停止校准，而非单步命令能力。这个结论的边界是：四十六项仍是人工设计和筛选的小规模集合，子任务分解与权重反映作者对工作流的理解，固定时间预算也把速度和能力绑定在一起；每个模型主要是单次运行，且 GPT-5.3 使用不同代理框架，不能把排行榜差异完全归因于基础模型。隐藏验证器提供的是最终状态上的稠密部分分，并非训练中实时可见的逐步奖励。</p>
+      <p>成本分析同样提醒人们不要把更多推理预算当成万能答案。模型每任务估算成本从约三点六美元到二十五点八美元不等，最贵的 GPT-5.4 通过率却只有百分之二点二；Grok 4.5 以约十一美元取得最好成绩，形成效率前沿。很多超时运行的平均奖励只有零点一到零点三五，说明单纯延长剩余时间未必足够，代理还需减少无效搜索、保存已完成检查并主动安排最后验证。另一方面，接近完成却提前退出的案例表明，公开测试全过并不能代表隐藏要求已满足。该基准最适合比较“单位时间能积累多少可靠进展”，也可为以后训练进度预测器或停止策略提供细粒度目标；若用它声称某模型具有普遍数小时自治能力，还需要更多任务、重复运行和人类耗时标定。任务官方解法必须在所有隐藏压力项上拿到满分，这至少证明低通过率不是验证器本身无解，也为每项部分分提供可复核的上界，结论需结合固定预算理解。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="02-04.html"><span>上一方向</span>Agent verifier 与原则型 PRM</a>
+      <a class="next" href="02-06.html"><span>下一方向</span>视觉弱到强奖励设计</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

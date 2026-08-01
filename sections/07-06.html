@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="代码驱动图像生成 Agent：GenClaw: Code-Driven Agentic Image Generation">
+  <title>7.6 代码驱动图像生成 Agent · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>7.6</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>代码驱动图像生成 Agent</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A085"><span>A085</span>GenClaw: Code-Driven Agentic Image Generation</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A085" data-paper-id="A085">
+      <header class="paper-header">
+        <p class="paper-kicker">A085 · 约 4 分钟</p>
+        <h2>GenClaw: Code-Driven Agentic Image Generation</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">image-generation</span><span class="paper-tag">code-agent</span><span class="paper-tag">multimodal</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.30248" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>GenClaw针对文本生成图像中一个长期错位：黑箱扩散或自回归模型擅长材质和光照，却难精确遵守数量、坐标、长文字、遮挡和层级；提示词代理反复改写自然语言，仍不能为这些几何约束提供可执行保证。纯SVG或程序绘图能把结构写死，又常显得平、缺少真实质感。作者因此把图像生成改写为代码驱动的代理任务，以“概念化、草图、着色”三阶段把语义研究、精确布局和视觉渲染分别交给最合适的表示。</p>
+      <p>概念化阶段由Claude Opus 4.6代理解析用户意图和参考图，按需调用搜索、知识库与推理工具，补足数学、地理、物理或文化事实，再把对象、关系、数量、文本和风格写成逐行JSON的结构记录。这个中间表示既是规划记忆，也是可检查合同：后续若元素数量错，可以追查概念记录；若坐标或层级错，可以检查代码；若纹理不佳，则定位到生成模型。与一次提示完成相比，系统把不可见的隐式推断变成用户和模型都能修改的显式资产。</p>
+      <p>草图阶段选择可执行画布。需要严格计数、位置和分层时生成SVG；海报、排版和长文字偏向HTML与CSS；物理、几何或三维关系可用Python、Canvas或Three.js计算。代码先确定形状、坐标、字号、遮挡和层顺序，形成低纹理但结构正确的底图。编辑已有图片时，视觉模型负责理解修改，SAM切出对象，图像模型补全被遮挡区域，JSON层记录透明度与顺序，从而尽量只改目标层，不让整张图重新采样后发生身份或背景漂移。</p>
+      <p>着色阶段再调用现成图像生成器补充材质、光照和自然细节，默认使用Gemini 3.1 Flash Image，但框架可替换底层模型。代理和用户能够回看草图并迭代，形成从检索事实、执行代码到视觉渲染的可追溯链。论文没有训练新的基础模型，也没有强化学习过程，其贡献是系统编排与表示选择；因此“训练数据”并非核心。评测覆盖GenEval++的组合遵循、LongText-Bench中英文文字、ImgEdit局部编辑，以及Mind-Bench中需要知识、几何与复杂关系的图像任务。</p>
+      <p>在GenEval++上总体0.878，计数0.950、多重计数0.900，高于MindBrush总体0.782、Gemini 3 Pro的0.761和GPT-Image 1.5的0.750。LongText-Bench英文和中文准确率为0.989、0.988；ImgEdit的视觉模型评分4.29、PSNR 27.87、SSIM 0.718，虽主观分低于GPT-Image 1.5的4.69，却远高于其PSNR 16.36和SSIM 0.433，支持分层编辑更能保住未修改像素。Mind-Bench总体0.57，对比MindBrush 0.31和Nano Banana Pro 0.38，诗歌类达到0.90。</p>
+      <p>论文没有标准化组件消融，因而这些比较证明完整系统有效，却不能量化搜索、结构记录、画布选择或分层编辑各自贡献，物理与三维案例也主要是定性展示。不同基准又使用自动视觉评分、像素相似度和任务正确率等不同口径，长文字接近满分不意味着摄影真实感、审美偏好或复杂中文排版都已解决；对封闭底层模型的版本变化也缺少控制。当前报告也未统一披露每个任务的调用次数、价格和端到端时延，难以量化结构收益的代价。作者明确承认效果依赖前沿图像生成器，较弱开源模型仍会产出伪影或扁平SVG；多阶段调用增加延迟与算力，当基础模型继续变强时边际收益可能下降。代码本身也会出现坐标、尺度和层序错误，当前任务分解仍较粗。参考图编辑还依赖分割质量，透明、细小或重叠对象可能破坏图层分离。因此适用范围是对结构、文字和可编辑性要求高且能接受多步成本的创作，而非实时单次出图或完全像素级保证，真实成本比较仍待公开。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="07-05.html"><span>上一方向</span>任意规模工具集的通用推理 Agent</a>
+      <a class="next" href="08-01.html"><span>下一方向</span>Agentic reasoning 模型架构与 MoE 配置</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

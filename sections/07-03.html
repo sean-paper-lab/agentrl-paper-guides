@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Computer-Use 可验证环境与任务生成：CUA-Gym: Scaling Verifiable Training Environments and Tasks for Computer-Use Agents">
+  <title>7.3 Computer-Use 可验证环境与任务生成 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>7.3</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>Computer-Use 可验证环境与任务生成</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A082"><span>A082</span>CUA-Gym: Scaling Verifiable Training Environments and Tasks for Computer-Use Agents</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A082" data-paper-id="A082">
+      <header class="paper-header">
+        <p class="paper-kicker">A082 · 约 4 分钟</p>
+        <h2>CUA-Gym: Scaling Verifiable Training Environments and Tasks for Computer-Use Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">computer-use</span><span class="paper-tag">gym</span><span class="paper-tag">verifiable-environment</span><span class="paper-tag">task-generation</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.25624" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>CUA-Gym把计算机使用智能体的瓶颈定位为“可验证训练单元”不足：强化学习不仅需要一句任务指令，还要有可执行初始状态和能确定判分的奖励。人工编写可靠却慢且覆盖窄，视觉语言模型裁判容易被表面现象误导，纯代码浏览器模拟又难覆盖桌面软件。论文因此联合生成任务、环境状态和程序化验证器，并把它们部署到可重置的网页与桌面环境中，目标是让奖励来自应用真实状态而非截图印象，从而支持大规模可验证强化学习。</p>
+      <p>生成器获得主题、上下文和领域技能后，在一个隔离虚拟机内编写initial_setup.py和golden_patch.py，前者构造初态，后者把环境推进到正确终态。判别器看不到脚本和工作目录，只能根据任务、上下文、领域说明以及两个运行后的环境，先把目标拆成若干判定条件，再写出取值零到一的渐进奖励。编排器最多反复修正五轮，并要求初始脚本和金标补丁都能执行、金标状态得满分、初态得零分，同时扫描把答案常量、单纯检查文件存在等危险模式挡在奖励之外。</p>
+      <p>通过基础闭环后，数据还要接受语言模型多数投票，检查语义一致、可执行性、奖励投机风险、表述清晰度与难度；再让Claude Sonnet 4.6作为教师实际操作，验证任务可解且奖励随进度变化。两级过滤分别淘汰约3100和1278个样本，留下32112个任务。任务空间来自产品文档和网页整理出的四层功能树，再按平台、十类O*NET职业领域、难度、情景和任务类型组成五维矩阵，以逆频率采样补齐长尾。环境含94个自建网页应用和16个桌面应用，共110个，并提供统一状态接口、会话隔离、注入和重置。</p>
+      <p>训练集从中选择10858个验证单元，先用3578条Claude成功轨迹监督热身，再对Qwen3.5-35B-A3B和397B-A17B做GSPO。为处理长桌面轨迹，作者保留系统与任务消息，将久远截图压缩，只完整保存近期观察和动作，在144K上下文、最多一百轮内训练。监督阶段用AdamW、峰值学习率七乘十的负六次方、批量512训练一轮；强化学习每题组大小16、候选过采样32，学习率十的负六次方，批量128、训练1000步，不加KL。大模型阶段使用512张GPU，说明该方法的规模收益伴随很高基础设施成本。</p>
+      <p>在OSWorld-Verified上，A3B模型由54.5升到62.1，A17B由62.2升到72.6；WebArena分别由40.8升到44.5、由54.0升到56.0。小模型训练后大致追平未训练的大模型，却只有约十分之一总参数。训练还涌现一次发出多个动作的行为，平均每步动作由1.0增到1.4至1.9，整条轨迹缩短33%至45%。从约1400、3000到12000条强化学习数据，曲线持续抬升且未见饱和；在固定三千条时把环境从十个扩到八十个有温和增益，再把广环境数据增到六千条提升更大，说明环境多样性和样本数量互补。</p>
+      <p>数据构成中约45%为困难任务、38%需要跨应用，且没有单一类别超过21%，这比只在少数高频应用重复采样更接近预期长尾。平均分仍掩盖了局部回退，例如A3B在Chrome由63.0降到54.3、Thunderbird由69.4降到44.9，表明统一训练仍可能造成领域干扰，也提示按应用监测遗忘比只看总分更重要。论文明确限制是奖励只比较终态，无法区分安全完成与先破坏后恢复到同一终态；静态扫描和隔离只是工程防线，不能形式证明无奖励投机。自建应用也省略了真实部署中的登录、第三方依赖、延迟、限流和罕见服务器故障，且主要强化学习实验只有单一随机种子。因而论文有力证明可验证环境可扩展，却没有给出真实开放桌面的性能上限、长期鲁棒性或破坏性操作安全保证，部署前仍需逐应用回归测试。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="07-02.html"><span>上一方向</span>视觉推理与 GUI 操作 Agent</a>
+      <a class="next" href="07-04.html"><span>下一方向</span>工业级小模型工具调用与双数据飞轮</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

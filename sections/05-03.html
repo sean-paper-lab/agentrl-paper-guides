@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="长短期记忆选择、写入与管理：ECHO: Prune to Act, Trace to Learn with Selective Turn Memory in Agentic RL、Task-Focused Memorization for Multimodal Agents、Agentic Memory: Learning Unified Long-Term and Short-Term Memory Management for Large Language Model Agents">
+  <title>5.3 长短期记忆选择、写入与管理 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>5.3</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 3 篇</p>
+      <h1>长短期记忆选择、写入与管理</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A058"><span>A058</span>ECHO: Prune to Act, Trace to Learn with Selective Turn Memory in Agentic RL</a>
+<a href="#paper-A059"><span>A059</span>Task-Focused Memorization for Multimodal Agents</a>
+<a href="#paper-A060"><span>A060</span>Agentic Memory: Learning Unified Long-Term and Short-Term Memory Management for Large Language Model Agents</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A058" data-paper-id="A058">
+      <header class="paper-header">
+        <p class="paper-kicker">A058 · 约 4 分钟</p>
+        <h2>ECHO: Prune to Act, Trace to Learn with Selective Turn Memory in Agentic RL</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">selective-memory</span><span class="paper-tag">turn-pruning</span><span class="paper-tag">trajectory</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2606.31650" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程代理可用删除、摘要或编辑记忆把历史塞回有限窗口，但“能继续行动”不等于“能正确学习”。滚动摘要把许多旧观察折叠成一个新文本，策略可能靠它答对，却看不出摘要里的证据究竟来自哪次搜索；终局强化学习若把正优势密集发给整条轨迹，就会连同有用证据一起强化重复查询、偶然推理和无关摘要词元。ECHO 关注的正是这个来源断裂：上下文管理应在行动时剪短历史，同时保留从当前记忆回指原始环境轮次的出处，使学习器能把成功奖励送回真正被复用的证据，而非所有恰好共存的动作。</p>
+      <p>每次工具调用与观察完成后，同一个受训策略只把该轮写成一条紧凑 finding，并保存源轮次编号、动作简写和 finding 内容；这些记录形成持久、非折叠的档案，没被当前选择的记录也不删除。达到压缩边界时，模型读取有界的近期状态和全部记录列表，输出值得复用的源编号；修复器去掉非法、越界和重复编号，限制模型最多选八条，再自动并入最近三轮。下一段策略上下文由原问题、所选记录和当前段的近期交互重建，因此窗口保持三万二千词元以内，同时每条记忆仍可定位到原始工具证据。</p>
+      <p>同一选择轨迹还用于信用分配。ECHO 采用高效的最终来源近似，只追踪最后一次重建上下文所选的历史轮次，而不递归展开所有中间依赖；可获正奖励的词元包括最终子轨迹、被最后上下文复用的原始动作轮、这些轮次生成的 finding，以及执行选择的词元。组相对优势只取正部后乘上这一硬掩码，失败或低于组均值的轨迹不会沿可能误导的选择路线分配负信用，掩码之外也没有正信用。这样，选择器既决定行动时看什么，也决定训练时奖励什么，把历史裁剪和结果信用变成同一套可追踪接口。</p>
+      <p>主实验在 BrowseComp-Plus 上训练 Qwen3-32B-Instruct 稠密模型和 Qwen3-30B-A3B-Instruct MoE，每题八条 rollout，工具为 search、open page、finish，最多五次重建，单次窗口三万二而累计交互预算可到十九万二。稠密模型的 ECHO 留出集准确率百分之四十三点四，高于原始 GRPO 的二十八点九和滚动摘要 SUPO 的三十六点一；SUPO 最终平均六十二点五轮、分段率八十五点五、每条 rollout 四点一八段，ECHO 只用四十五点三轮、分段率五十七点八和三点一三段。MoE 上 GRPO 为二十二点九，SUPO 训练到第五十步跌至十三点三，ECHO 稳定在约三十五。</p>
+      <p>消融表明记忆“可寻址”和信用“沿出处走”都必要。把学习选择换成静态语义 Top-k，虽同样保持短上下文，准确率与跨任务平均分都下降；把紧凑 finding 换回完整观察没有明确收益，说明独立轮次摘要足以保留可复用信息。去掉可追踪信用后，准确率降低且轮数、轨迹体积上升，再加轮级重要性采样仍会随轨迹增长而训练崩塌。零样本迁移到多目标问答、CodeGym、LoCoBench-Agent、HLE、GAIA、Frames 时，稠密 ECHO 平均百分之四十点二，GRPO 三十三点六、SUPO 三十四点八；MoE 也以三十点五领先二十六点九。</p>
+      <p>ECHO 的出处仍是近似而非完整因果链。最终选择没有递归追踪某条 finding 又依赖哪些更早记忆，特别长且多次重建的任务可能漏奖真正源头；只给正优势避免错误负信用，却也放弃从失败的错误选择中直接学习。压缩由规则触发，尚未验证让代理自主决定何时写、选或折叠；主要训练环境仍是搜索问答，代码任务只做零样本迁移，真实可执行补丁未参与训练。每个工具轮都额外写 finding，边界处还要生成选择，早期有额外成本；效果也依赖选择列表能容纳关键证据。未来需比较全链 provenance、动作触发管理与 SWE-bench 类复杂工作流，才能确认这种来源路由能否扩展到更深依赖。</p>
+    </article>
+    <article class="paper" id="paper-A059" data-paper-id="A059">
+      <header class="paper-header">
+        <p class="paper-kicker">A059 · 约 4 分钟</p>
+        <h2>Task-Focused Memorization for Multimodal Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">memorization-policy</span><span class="paper-tag">multimodal-agent</span><span class="paper-tag">task-focused</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.31075" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多模态代理面对无穷的视频、声音和空间观察，记忆难题不只是如何存取，而是该留下什么。已有系统常用固定提示或模板把每段视频概括成通用叙事，再另做存储、合并和纠错；这能保证基本准确，却不一定服务代理在具体环境中的角色。家务机器人需要房间布局和物品位置，陪伴代理更需要用户习惯与情绪，同一观察的未来价值随任务分布改变。TaskMem 因而把记忆生成定义为策略：它依次接收最近若干十秒视频片段和此前生成的情景记忆，在问题尚未揭示时决定当前片段该保存哪些事实，并通过实际出现的近期任务持续调整关注重点。</p>
+      <p>第一阶段在部署前学习“怎么记”。Qwen3-VL-30B-A3B 对每个输入采样八条候选记忆，用 GSPO 按组归一化序列级奖励。奖励同时检查输出格式、思考长度、事实准确与连贯、非重复性和内容丰富度；仅优化质量会产生“写得极短所以几乎不错”的奖励投机，因此额外让裁判在合格候选中按有根据的新信息丰富度排序。训练先用 Gemini-2.5-Pro 合成的历史记忆做离策略上下文，再切到当前策略自己生成历史的在策略训练；批次中的视频会在至少、至多片段阈值间按概率延续或重采样，滑动窗口最多保留五个片段，缩小训练和部署的历史分布差。</p>
+      <p>第二阶段在环境中学习“记什么”。系统用最近约十个任务或问题代表未来需求，让 GPT-4o 比较同一视频上下文下两条候选记忆谁更符合这些任务，只使用问题、不看正确答案。候选来自第一阶段预先生成的缓存；成对比较交换顺序两次，只保留一致且非平局的偏好，再去掉循环关系，选择任务相关性路径差最大、基本质量不更差的一对做 DPO。为避免少量在线反馈破坏通用记忆能力，主模型全部冻结，只在第二十二层输出加入一个可训练的二千零四十八维向量适配器。十步时方向已接近四十步结果，放大到目标范数可节省约百分之七十五训练时间。</p>
+      <p>作者把 VideoMME、EgoLife、EgoTempo 改成流式任务：按问题类型组成不同环境，代理先看视频并写记忆，问题随后才到，答题模型只能读记忆、不能回看原视频。VideoMME 使用短、中视频共六百段和一千八百问，另外两套各五百问；指标为答案准确率、记忆覆盖率和在信息足够样本上的精确率。相对原 Qwen3-VL，完整 TaskMem 的准确率从百分之六十一点六升到六十七点九、从三十八点四升到四十五点四、从二十二点三升到二十七点六，分别提高六点三、七和五点三；VideoMME 精确率八十五点六，EgoLife 八十点五，均领先通用多模态模型和现有记忆框架。</p>
+      <p>消融把通用质量和任务关注区分开。仅第一阶段已提高准确率与精确率，给基础模型同样的近期任务提示虽有收益，仍低于真正参数更新；第二阶段再显著提高准确率。对象识别迁移试验中，第一阶段准确率六十五点七，换入计数、OCR 或属性适配器约六十五，只有匹配的对象适配器升到六十九点七，证明向量学到的是特定关注方向而非普遍增强。去丰富度奖励时训练总分看似更稳、更高，记忆长度却迅速缩短并缺少实质信息。全参数在线训练与小适配器的相关性胜率相近，却降低准确和非重复率；适配器位置也以浅层和中层优于深层。</p>
+      <p>边界来自评测与在线假设。问题类型被预先分组，近期问题与未来问题同分布，且偏好裁判由 GPT-4o 生成；真实环境若任务突变、反馈更少或问题泄露偏差，适配器可能把记忆焦点调错。答题同样由 GPT-4o 完成，虽然只读记忆，结果仍混合了记忆质量与回答器能力。VideoMME 因记忆过长只取短、中视频，长期示例虽展示五分钟、四千六百二十词元记忆，却没有验证无限累积的检索与遗忘成本。方法只训练文本情景记忆，身份框和语音标签依赖外部检测、Gemini 处理，语义记忆、视觉记忆和交互具身任务未测；论文也将这些列为未来工作。</p>
+    </article>
+    <article class="paper" id="paper-A060" data-paper-id="A060">
+      <header class="paper-header">
+        <p class="paper-kicker">A060 · 约 4 分钟</p>
+        <h2>Agentic Memory: Learning Unified Long-Term and Short-Term Memory Management for Large Language Model Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">long-term-memory</span><span class="paper-tag">short-term-memory</span><span class="paper-tag">memory-management</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2601.01885" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多数代理把长期记忆和短期上下文分成两套松散模块：长期侧按固定时机抽取、更新，或另请一个记忆管理模型；短期侧则每轮检索、定期摘要或简单截断。两边独立设计会让早期存储和后期推理缺乏共同目标，固定规则也可能漏掉少见但关键的信息，或把无关内容不断塞进窗口。AgeMem 将两类记忆都纳入主代理的动作空间，使同一个语言模型根据当前上下文、持久存储和任务，自主决定何时存、改、删、取、总结和过滤。这样记忆不再是推理前的外部管线，而成为可由最终任务结果端到端优化的决策。</p>
+      <p>工具接口为长期记忆提供 Add、Update、Delete，为短期记忆提供 Retrieve、Summary、Filter。前者构建并维护持久知识，后者把相关记录取回当前上下文、压缩指定历史或按语义条件移除干扰消息。每个状态同时包含当前对话、长期存储和任务说明，动作既可以是普通回答，也可以是这些工具调用。总奖励由任务答案、上下文管理和记忆管理三部分等权组成，并对超出轮数、上下文溢出等行为处罚；上下文分评价压缩效率、提前防溢出和关键信息保留，记忆分评价可复用存储、有效维护与检索相关性，避免代理只会多存多取来刷任务分。</p>
+      <p>训练课程连续经历三个阶段。第一阶段把任务所需背景伪装成自然对话，让代理判断哪些内容应写入长期存储；第二阶段清空短期上下文但保留长期记忆，注入与目标无关却像真实对话的干扰消息，迫使代理学习过滤和总结；第三阶段给正式查询，要求检索早期知识、管理当前上下文并作答。每个任务采样八条完整三阶段轨迹，终局复合奖励在组内标准化后广播给该轨迹所有记忆与推理步骤，这个 step-wise GRPO 让第三阶段成败反向监督第一阶段存储和第二阶段过滤。训练只用 HotpotQA，但按这种信息时序构造后零样本评测多个代理域。</p>
+      <p>五个基准覆盖 ALFWorld、SciWorld、PDDL、BabyAI 和 HotpotQA，骨干为 Qwen2.5-7B 与 Qwen3-4B；基线有无记忆、LangMem、A-Mem、Mem0、图版 Mem0g 以及同工具但不做 RL 的 AgeMem-noRL。AgeMem 的五任务平均分分别为百分之四十一点九六和五十四点三一，相对无记忆提高百分之四十九点五九和二十三点五二，并比各自最强外部记忆基线高四点八二、八点五七。与不训练版本相比，RL 分别贡献八点五三和八点七二。HotpotQA 的长期记忆质量达到零点五三三和零点六零五，也高于所有基线。</p>
+      <p>组件和奖励消融说明统一学习并非工具数量的表面收益。七十亿模型从无记忆开始，加入长期记忆后在 ALFWorld、SciWorld、HotpotQA 分别提升十点六、十四点二、七点四，再加入 RL，最后加入短期工具，完整增益达到十三点九、二十一点七、十六点一；短期工具单独在 SciWorld 和 HotpotQA 再带来三点一、二点四。与静态 RAG 版本相比，平均提示词元从二千一百八十六降到二千一百一十七、从二千三百一十降到二千一百九十一。只用答案奖励的裁判分与记忆质量为零点五零九、零点四七九，完整复合奖励升至零点五四四、零点五三三。</p>
+      <p>局限首先是动作集合仍由作者固定，六个工具提供清楚抽象，却无法覆盖层级记忆、时间衰减、冲突合并等更细控制。训练三阶段轨迹只来自 HotpotQA，其他四域虽是零样本迁移，仍是受控模拟或问答环境，不能代表持续数月的真实用户对话；未来还需长期部署验证。step-wise GRPO 把同一终局优势广播给所有步骤，解决了跨阶段断裂，却没有真正区分哪次存储或过滤最关键，仍可能强化成功轨迹中的多余操作。Filter 依赖语义阈值，过低会删掉有用信息、过高会保留噪声；外部 LLM 裁判与干扰生成器也进入训练信号。最后，长期存储规模、隐私、安全和跨会话遗忘都未系统评估。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="05-02.html"><span>上一方向</span>上下文压缩、并行轨迹与长程路由</a>
+      <a class="next" href="06-01.html"><span>下一方向</span>技能创建、技能优化与技能库</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

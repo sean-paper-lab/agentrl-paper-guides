@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Agentic reasoning 模型架构与 MoE 配置：Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning、Slicing and Dicing: Configuring Optimal Mixtures of Experts">
+  <title>8.1 Agentic reasoning 模型架构与 MoE 配置 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>8.1</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 2 篇</p>
+      <h1>Agentic reasoning 模型架构与 MoE 配置</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A086"><span>A086</span>Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning</a>
+<a href="#paper-A087"><span>A087</span>Slicing and Dicing: Configuring Optimal Mixtures of Experts</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A086" data-paper-id="A086">
+      <header class="paper-header">
+        <p class="paper-kicker">A086 · 约 4 分钟</p>
+        <h2>Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">MoE</span><span class="paper-tag">Mamba</span><span class="paper-tag">Transformer</span><span class="paper-tag">agentic-reasoning-model</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.12374" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>Nemotron 3 Super是一份面向代理推理的开放模型技术报告，核心矛盾是长上下文、工具轨迹和高并发生成需要很强容量，但部署成本由每个词元真正激活的参数和内存通信决定。模型总参数120.6B，每词元激活12.7B，若不计嵌入约12.1B；共88层、隐藏维4096，以Mamba-2状态空间层承担大部分序列建模，并周期性插入分组查询注意力作为信息锚点，目标是在一百万词元上下文中兼顾线性效率和精确回看。</p>
+      <p>其LatentMoE先把4096维表示投影到1024维潜空间，再在潜空间内路由和计算专家，最后投回主维度，从而减少专家权重和通信流量，并把节省容量换成512个专家、每词元选22个。专家中间维2688，另有5376维共享专家；非路由层仍在完整维度运算。两层多词元预测头共享权重，同时学习多个未来偏移，推理时可递归提出草稿。SPEED Bench平均接受长度3.45，高于Qwen-Next的3.33和DeepSeek-R1的2.70，原生推测解码因此不需另训草稿模型。</p>
+      <p>预训练共25万亿词元，前20万亿为广覆盖数据，后5万亿提高高质量代码、数学和领域资料比例。上下文先为8192，批量约2517万词元，AdamW峰值学习率4.5乘十的负四次方，最后五万亿按平方根衰减至4.5乘十的负六次方。训练主要用NVFP4混合精度；后期约7%权重梯度变零，切到MXFP8虽改善训练损失却未稳定改善下游，所以保留FP4。长上下文阶段先用340亿词元扩到一百万，再用170亿在一百万与四千长度间交替，以修复数学等短上下文能力。</p>
+      <p>后训练先做大规模监督微调，再在21个环境、37个强化学习数据集上训练通用工具、搜索、代码和计算机使用能力。代理数据包括279116段对话、838个领域以及约150万条通用工具轨迹；异步GRPO每批256个提示、每题16个回答，最大生成由49K扩到64K，用一步策略滞后、掩码重要性采样和在途权重同步维持吞吐。PivotRL把离线专家轨迹中的关键状态当作起点或锚点，缩短稀疏奖励探索。报告还采用两阶段监督损失，先按词元、再按样本归一，避免超长代理回答支配梯度。</p>
+      <p>结果覆盖数学、软件工程、工具和长上下文。无工具AIME 2025为90.21，HMMT为93.67，使用工具后HMMT为94.73；TerminalBench Hard与Core为25.78、31.00，SWE-Bench Verified在OpenHands、OpenCode、Codex脚手架中分别60.47、59.20、53.73。TAU三个领域为56.25、62.83、64.36，平均61.15；BrowseComp 31.28、BIRD 41.8、IFBench 72.56，RULER一百万上下文91.64。B200上8K输入、64K输出吞吐最高为GPT-OSS-120B的2.2倍、Qwen3.5-122B的7.5倍。</p>
+      <p>数据消融中，在最后1000亿词元加入十亿多项选择样本，使AIME从53.3到56.7、MMLU从77.22到77.51、Math Level 5从78.55到79.05、MBPP从74.8到75.2，说明格式化训练也能迁移。各基准并非全面领先所有闭源或更大模型，报告更强调在较低活跃参数和高吞吐下取得可比能力，不能把“Super”理解为无条件最优。论文无独立局限章节，边界仍明显：极大训练规模与复杂异步系统难以复现，NVFP4曾出现梯度下溢，部分内部脚手架尚未完全开放；跨模型比较受推理预算、工具脚手架和采样协议影响。模块众多而完整逐项消融有限，因此报告支持一种高效工程组合，但不能把每项基准增益单独归因于Mamba、潜空间专家、MTP或后训练。</p>
+    </article>
+    <article class="paper" id="paper-A087" data-paper-id="A087">
+      <header class="paper-header">
+        <p class="paper-kicker">A087 · 约 4 分钟</p>
+        <h2>Slicing and Dicing: Configuring Optimal Mixtures of Experts</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">MoE</span><span class="paper-tag">expert-configuration</span><span class="paper-tag">model-architecture</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.11689" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>这篇论文不提出单一新MoE，而是用超过两千次预训练回答配置问题：固定每词元计算量时，专家应切多细、总专家数应多大，异质专家或常驻通用专家是否有益，以及负载均衡和容量溢出怎样影响结果。作者指出以往工作常同时改变粒度、激活数和总参数，结论难互比。本文把专家粒度定义为单个专家中间层相对稠密前馈层的比例，并令激活专家数与其倒数配对，以大致保持活跃计算不变，再独立增加总专家数。</p>
+      <p>实验覆盖每词元活跃参数一千万至三亿、总参数一千万至六十六亿，粒度从1到六十四分之一，总专家数2到1024，非活跃容量倍率约2到128。数据为Dolma风格网页、代码、数学和百科混合，基准训练量约为活跃参数的二十倍词元，并额外测试更长训练。主指标是多领域留出交叉熵，辅以BoolQ、HellaSwag和MMLU；五个随机种子表明五千万活跃参数附近语言建模方差很小，但下游选择题波动更大，因此论文把损失曲线作为更稳定的设计依据。</p>
+      <p>主要规律是规模决定最优粒度。五千万以上时，多数合理MoE已经优于等活跃计算的稠密模型；一千万和两千万模型按Chinchilla式短训练反而吃亏，但把数据增到约二十倍或五倍后能够追回，说明小模型路由更难学而非架构必然无效。固定内存预算时，最优专家尺寸对总参数变化相对稳定，却随活跃规模变细：五千万时约二分之一到四分之一，一亿一千万时约四分之一到八分之一，三亿时可到八分之一以下。作者据实验范围建议实践中从约四分之一粒度起步，并尽量把剩余内存换成更多总专家。</p>
+      <p>收益来自更大的非活跃参数库，而不是把同一前馈层机械切片。把总容量倍率固定为一、只增加粒度会让性能下降；Top-1且粒度为一也通常落后。随着专家数增加，测试范围内没有观察到一个普适的“临界专家数”后完全饱和。两种尺寸专家组成的异质池大多只在对应同质配置之间插值，没有持续超越；加入二分之一、四分之一或八分之一规模的常驻通用专家也相当或略差，说明在这些尺度上，路由专家本身已能学习共享知识，额外结构并非免费增益。</p>
+      <p>容量策略上，无丢词训练通常等于或优于固定容量丢弃；到1024专家时，默认容量方案因过载减少才逐渐追近。作者比较辅助负载均衡系数十的负四次方与十的负二次方，以及无辅助损失的偏置更新强度零和十的负三次方：在总专家数不超过128时，没有一种负载均衡配置明确占优；专家数更高时，过粗偏置会伤害性能，完全不调节又会出现最严重失衡。结论不是均衡机制无关，而是其作用首先在稳定路由和系统利用率，统计收益需按专家数细调，不能照搬单一系数。</p>
+      <p>论文还给出一个容易被误读的结果：持续增加未激活参数在所测范围内一直改善损失，未见统一饱和点，但这不等于专家可无限增加，因为路由通信、并行策略和存储带宽并未计入同一目标。稠密与MoE也按近似活跃计算对齐，真实硬件上的专家调度开销可能改变排序。对小模型延长词元后追回性能，进一步说明比较必须同时注明模型尺度和训练充分程度，不能只看一次Chinchilla预算。外推边界很重要。最大只有三亿活跃、六十六亿总参数，远低于前沿模型，最优四分之一是当前数据、架构、词元预算和内存约束下的经验点；论文主要衡量交叉熵，实际吞吐、通信和显存碎片没有端到端纳入，下游指标又有较大随机方差。学习率并未为每个小配置单独寻优，异质实验也只覆盖有限的双池组合，路由以每词元选专家为主，没有研究按序列或按任务选择。五种子分析集中在代表性尺度，并非两千多个配置都重复五次，微小差距应谨慎解读。数据领域配比改变时，专家专门化和最优粒度也可能随之移动。因此它更像可复现的MoE设计地图，而非适用于所有硬件和万亿参数模型的固定配方，前沿尺度与真实集群充分复验仍不可少。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="07-06.html"><span>上一方向</span>代码驱动图像生成 Agent</a>
+      <a class="next" href="08-02.html"><span>下一方向</span>Agentic 训练生态、框架与分布式系统</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

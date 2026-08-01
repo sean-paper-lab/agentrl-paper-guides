@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="长周期自博弈稳定性：Scaling Self-Play with Self-Guidance">
+  <title>3.5 长周期自博弈稳定性 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>3.5</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>长周期自博弈稳定性</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A041"><span>A041</span>Scaling Self-Play with Self-Guidance</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A041" data-paper-id="A041">
+      <header class="paper-header">
+        <p class="paper-kicker">A041 · 约 4 分钟</p>
+        <h2>Scaling Self-Play with Self-Guidance</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">self-play</span><span class="paper-tag">self-guidance</span><span class="paper-tag">training-collapse</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.20209" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>不对称自博弈让一个“出题者”持续制造当前“解题者”刚好不会的问题，理论上能突破静态数据上限，但长周期训练常出现两种相互放大的崩溃。出题者为了获得难度奖励，会生成形式复杂却无学习价值的题目，甚至用巨大析取式等结构钻奖励空子；解题者若熵快速下降，其成功率会两极分化为全对或全错，出题者也失去可区分的反馈。论文提出 Self-Guided Self-Play（SGS），核心不是增加更多人工题，而是引入冻结 Guide 约束合成题与目标题的相关性、清晰度和数学优雅性，并选择能长期维持探索的解题者目标。</p>
+      <p>SGS 在 Lean4 形式化证明中设置三个同源的 DeepSeek-Prover-V2-7B 角色：Solver 尝试证明目标题和合成题，Conjecturer 针对仍未解决的目标题生成更简单的相关命题，Guide 对命题质量打分。Lean 编译器给出可验证的二元正确性。出题奖励是可解性奖励与 Guide 奖励的乘积：不可解题和最容易的三成题奖励为零，其余按 Solver 失败程度加权；Guide 则抑制冗余前提、无意义复杂结论和偏离原题的内容。这样，Conjecturer 必须在“可解但不太容易”与“确实是目标题垫脚石”之间取得平衡。</p>
+      <p>Solver 每题采样八个整证明，并只用求解率不超过一半的正确轨迹更新。作者比较 REINFORCE1、REINFORCE2、Expert Iteration 和 CISPO，发现前两种简单目标能保持策略熵，而 CISPO 在长训练中熵坍缩，使合成题求解率趋近零或一，反过来饿死 Conjecturer。训练数据来自 Goedel-Pset-V1，先去除过易、可由否定证明或经 GPT-5 mini 判定不合适的题，形成 3323 道 D3k 目标题。SGS 运行两百余轮，累计超过六十亿 token、八百万次生成，并用累计求解率的 sigmoid 曲线估计渐近上限。</p>
+      <p>在相同 7B 模型和算力轴上，最佳纯 RL 的渐近求解率为百分之六十点三，Expert Iteration 为六十点零，CISPO 为五十七点五；SGS 达到百分之六十七点一，高出最佳 RL 约七点。训练到约六百三十万次生成时，7B Solver 的 pass@4 已超过 671B 的 DeepSeek-Prover-V2；相较 STP，SGS 在一百万次生成后即占优。更关键的是，在纯 RL 从未解决的 1346 道题中，SGS 仍解决约一成，说明收益不是反复练习已有能力，而是通过合成中间命题扩展可达问题边界。</p>
+      <p>消融清楚区分了各组件的作用：不给 Conjecturer 目标题条件时，渐近值退回百分之六十点三，与纯 RL 无异；冻结 Conjecturer 为六十二点二；移除 Guide 虽达到六十五点五，却迅速把近百分之百的结论变成析取式，结论长度膨胀约十倍；完整 SGS 为六十七点一。冻结出题者会很快耗尽固定分布的价值，动态出题才持续适应 Solver。不同 Solver 目标的对比又表明，自博弈不是只要“有新题”就会扩展，稳定熵本身是维持出题者可学习奖励面的必要条件。作者还按 rollout 数拟合增长曲线而非只报末轮检查点，避免把短期震荡误判为持续扩展，并据此比较渐近上限。</p>
+      <p>结论的适用范围仍较窄：形式数学拥有几乎完美的编译器验证，Conjecturer 只需生成初始问题；在代码、具身控制或开放语言任务中，它还可能要生成环境、目标乃至奖励函数，错误面更大。Guide 在本文中始终冻结，随着 Solver 进步，什么才是有效垫脚石也会变化，未来可能需要从“某合成题是否促成目标题被解决”学习 Guide。实验只沿计算量扩展固定 7B 模型，尚未检验模型规模轴；整证明生成器也不是复杂交互式证明系统。因此 SGS 证明了长周期自博弈可被稳定扩展，但尚非跨域通用配方。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="03-04.html"><span>上一方向</span>鲁棒恢复与专用推理优化</a>
+      <a class="next" href="03-06.html"><span>下一方向</span>简洁 RL recipe 与小模型扩展</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

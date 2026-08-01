@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="视觉弱到强奖励设计：VCap: Hypergeometric Rewards for Weak-to-Strong Visual Captioning">
+  <title>2.6 视觉弱到强奖励设计 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>2.6</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>视觉弱到强奖励设计</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A025"><span>A025</span>VCap: Hypergeometric Rewards for Weak-to-Strong Visual Captioning</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A025" data-paper-id="A025">
+      <header class="paper-header">
+        <p class="paper-kicker">A025 · 约 5 分钟</p>
+        <h2>VCap: Hypergeometric Rewards for Weak-to-Strong Visual Captioning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">visual-captioning</span><span class="paper-tag">weak-to-strong</span><span class="paper-tag">reward-design</span><span class="paper-tag">multimodal</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.28023" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>高质量视觉描述既要少编造，也要尽量覆盖重要对象、属性、关系和事件，这两个目标并不等同。现有训练通常让模型模仿一条参考描述，或用视觉问答、视觉大模型裁判给整体分数，但任何参考都只是场景事实的一小部分，还可能自己带错；把它当完整答案会限制模型只能复现参考中的信息，追求更丰富描述时又容易被判偏离。VCap 的出发点是重新分配参考文字和图像的职责：参考描述不是必须模仿的教师，而是随机暴露部分事实的见证者；图像或视频也不是能遍历所有事实的全知答案，而只负责裁决见证者与候选描述发生重合或冲突的位置。这样，弱参考可以提供探针，却不规定模型最终能力的上限。</p>
+      <p>奖励模型一次读入视觉内容、参考描述和策略生成的描述，先把文本拆成事实，找出参考提到而候选遗漏的内容，以及候选与参考在同一对象或属性位置上发生的矛盾，再回看视觉证据确认。只有图像确实支持参考事实时，遗漏才扣分；若图像反而否定参考，视觉裁决会覆盖错误参考，避免把它传给策略。模型最终给出正确性、完整性和文字质量三个零到十分的分数，前两项权重分别为零点零五和零点零四，文字质量仅零点零一，用来防止冗长、自我评价和不通顺。视频还随机抽取一个时间片，分别计算全局与局部描述奖励，局部项以零点一权重补充容易被整段视频掩盖的短时事实。</p>
+      <p>论文把场景看成一个不可直接枚举的潜在事实集合，参考是从正确事实中抽出的若干位置，候选则包含正确事实和幻觉事实。候选覆盖的正确事实越多，越可能包含所有见证事实；幻觉越多，越可能撞上见证位置并被视觉信号抓住。这两个概率都呈超几何抽样结构，并在“覆盖全部可描述事实且没有幻觉”处共同达到最好。重要的是，参考事实多少只改变奖励坡度，不改变最好位置，所以参考较弱时仍能把策略推向比参考更完整、更正确的方向。作者据此做两轮自进化：第一轮以原始 Qwen3-VL-8B 生成的描述为参考训练，第二轮重新用第一轮模型生成更强参考，但每轮策略都从同一个原始骨干开始，检验提升是否来自更锐利的见证信号。</p>
+      <p>图像训练约用二点九万张 COCONut 图片，视频训练约用一点三万段长视频，两者都冻结视觉编码器和跨模态连接层，只更新 Qwen3-VL-8B 的语言部分，并以八候选的组相对强化学习训练一轮。第二轮 VCap 在 CapMAS 的平均分达到八十三点五三，在 DecapBench 达到七十三点六七，超过 GPT-5.4 和数十倍规模的开源模型；视频上 VDC 平均三十六点零一为受测模型最高，在 VCapsBench 则仍落后 Seed 2.0 Pro。五百张图片的人评把 VCap 排在第一，奖励与人类逐图成对偏好的一致率平均百分之六十一点一。无需问答微调，模型在四个图像问答集平均提高一点九三，在四个视频问答集平均提高二点八三，支持它学到的是视觉事实提取，而不只是描述句式。</p>
+      <p>消融与蒸馏实验进一步限定了结论。去掉参考文字时两个图像基准平均各下降约三点八，去掉图像也会下降，说明见证与裁决不可互换；去正确性项主要伤害事实性与精确率，去完整性项主要伤害覆盖率与召回率，去文字质量项影响最小。直接把原骨干的八选一结果拿来监督微调反而退步，而强化学习提升后再蒸馏能接近教师，说明策略分布的移动来自奖励优化，不是简单自蒸馏。论文也明确只分别训练图像和视频策略，未验证二者联合学习；人评只有内部标注的五百张图，奖励与人类一致率离完美仍远；只试过组相对强化学习，且同代专用描述基线稀少，因而“弱到强”主要成立于本文的事实抽样假设、模型和基准范围内。</p>
+      <p>视频消融补充了全局与局部信号的分工。去掉随机时间片奖励时，VCapsBench 的完整性相关分数和 VDC 平均分都小幅下降，说明局部窗口确实能追回短暂动作和细节，但幅度远小于去掉参考文字，因为跨片段事件仍主要靠全局描述。完整奖励还会让模型写出更多细节，VCapsBench 统计的绝对错误机会因而可能上升，即使人类判断的逐图事实质量更好。这揭示了视觉奖励的一个实际难点：精确率、召回率和描述长度互相牵制，单一综合分会掩盖取舍。VCap 用三个维度显式分开这些压力，并靠视觉裁决抵抗坏参考，但冻结裁判仍可能漏看小物体、快速事件或歧义关系，潜在事实集合也只是分析工具而非训练时可知的真值。长视频最多均匀取二百帧，极短关键事件仍可能在编码阶段就被漏掉。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="02-05.html"><span>上一方向</span>过程奖励评测、轨迹错误定位与稠密评分基准</a>
+      <a class="next" href="03-01.html"><span>下一方向</span>序列级、轨迹级与开放域相对优化</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

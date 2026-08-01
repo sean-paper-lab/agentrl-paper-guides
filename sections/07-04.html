@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="工业级小模型工具调用与双数据飞轮：AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use">
+  <title>7.4 工业级小模型工具调用与双数据飞轮 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>7.4</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 1 篇</p>
+      <h1>工业级小模型工具调用与双数据飞轮</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A083"><span>A083</span>AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A083" data-paper-id="A083">
+      <header class="paper-header">
+        <p class="paper-kicker">A083 · 约 4 分钟</p>
+        <h2>AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">small-agent-model</span><span class="paper-tag">data-flywheel</span><span class="paper-tag">industrial-tool-use</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.21590" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>AgenticQwen面向工业工具调用中的现实矛盾：超大模型能力强，却有成本、延迟和部署约束，小模型便宜，却在长对话、条件分支和状态一致性上容易出错。作者以Qwen3-8B稠密模型和Qwen3-30B-A3B混合专家模型为底座，用约十万条数据和多轮GRPO训练，并提出推理数据与代理数据相互独立又循环更新的双飞轮。重点不是让模型记住固定API，而是让它学会在用户、工具返回和业务规则不断变化时选择下一步行动。</p>
+      <p>推理飞轮起初汇合Omni、2WikiMultiHopQA、HotpotQA等问答，以及网页搜索和代码解释器任务，以答案是否正确给二元奖励。每轮收集失败样本后，数学题由Qwen3-235B通过改数值、约束、概念和应用人物设定合成更难变体，再独立求解三次，只保留答案一致者。代理飞轮则从SynthAgent的线性工作流出发，由强模型同时模拟用户、工具和评价器，把预期子目标完成比例变为零到一奖励，随后把真实失败重新注入下一轮生成，形成针对薄弱行为的数据增长。</p>
+      <p>代理数据增强的关键是从线性流程升级为行为树。作者先为业务状态写条件分支，再选定一个分支反向构造环境状态、用户请求、标准作业规则和代理指令，保证完成任务必须经过该分支；之后加入会诱导模型走错路的对抗用户。例如用户虽然声称具备资格，但工具状态显示绩点只有2.8且有纪律限制，模型必须拒绝提名请求，同时仍可允许修改个人简介。这样的样本把“听从用户”与“服从可验证业务状态”分开，也比只改变工具名称更接近工业异常处理。</p>
+      <p>主评测采用TAU-2的航空、零售和电信约三百项多轮任务，按四次运行的平均状态一致性计分；BFCL-V4则含约八百项基础调用、缺函数、缺参数和长上下文任务。8B模型七类平均分从23.8升至47.4，30B-A3B从36.2升至50.2。8B在TAU-2三域为40.5、60.3、53.5，在BFCL基础、缺函数、缺参数、长上下文为56.0、47.5、33.5、40.5；30B对应42.0、60.5、52.6和60.0、52.0、29.0、55.5，显示模型大小并非每个错误类型都单调占优。</p>
+      <p>从第零到第三轮飞轮，七类指标总体持续上升并逐渐接近数据生成强模型，但边际收益缩小。工业搜索部署进一步在WebWalker、XBench和GAIA上比较：235B教师为59.5、48.0、48.5，原始30B为45.0、30.0、37.3，AgenticQwen-8B达到50.0、46.0、41.7，30B达到52.5、47.0、41.7；GAIA平均耗时又从教师449.5秒降到8B的355.6秒和30B的344.1秒。额外任务中，30B网页搜索37.5对原始34.5，记忆任务28.0对17.4，递归求和48.4对23.2，说明收益并不限于标准函数调用。</p>
+      <p>论文没有把行为树逆构造、对抗用户、错误回流和推理合成逐项做严格等量消融，因此轮次上升只能支持整套飞轮有效，不能精确归因。搜索部署训练数据还不到一万条，显示定向合成可以高效，但BI场景中的SQL、JSON、PDF与检索案例更多是业务展示，未提供同等完整的公开重复实验。TAU-2采用四次运行平均也揭示代理结果具有随机性，单次成功不等同于稳定遵循业务状态。开放式任务和长上下文仍困难，模型原生上下文约四万词元；生成、模拟和评价大量依赖同一Qwen家族，也可能放大家族偏差，代理奖励并非全部来自确定程序。作者还讨论自动化误用、继承数据偏见和不安全工具操作风险。适用范围因而是有业务规则、可模拟状态和可检查子目标的工业工具链，而不是已经解决任意网站、无限上下文或完全无人监督的开放世界代理。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="07-03.html"><span>上一方向</span>Computer-Use 可验证环境与任务生成</a>
+      <a class="next" href="07-05.html"><span>下一方向</span>任意规模工具集的通用推理 Agent</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

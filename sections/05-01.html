@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="子目标、里程碑、锚点与策略抽象：A Subgoal-driven Framework for Improving Long-Horizon LLM Agents、WebAnchor: Anchoring Agent Planning to Stabilize Long-Horizon Web Reasoning、Milestone-Guided Policy Learning for Long-Horizon Language Agents、Enhancing LLM Planning Capabilities through Intrinsic Self-Critique、StraTA: Incentivizing Agentic Reinforcement Learning with Strategic Trajectory Abstraction">
+  <title>5.1 子目标、里程碑、锚点与策略抽象 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>5.1</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 5 篇</p>
+      <h1>子目标、里程碑、锚点与策略抽象</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A050"><span>A050</span>A Subgoal-driven Framework for Improving Long-Horizon LLM Agents</a>
+<a href="#paper-A051"><span>A051</span>WebAnchor: Anchoring Agent Planning to Stabilize Long-Horizon Web Reasoning</a>
+<a href="#paper-A052"><span>A052</span>Milestone-Guided Policy Learning for Long-Horizon Language Agents</a>
+<a href="#paper-A053"><span>A053</span>Enhancing LLM Planning Capabilities through Intrinsic Self-Critique</a>
+<a href="#paper-A054"><span>A054</span>StraTA: Incentivizing Agentic Reinforcement Learning with Strategic Trajectory Abstraction</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A050" data-paper-id="A050">
+      <header class="paper-header">
+        <p class="paper-kicker">A050 · 约 4 分钟</p>
+        <h2>A Subgoal-driven Framework for Improving Long-Horizon LLM Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">subgoal</span><span class="paper-tag">hierarchical-planning</span><span class="paper-tag">long-horizon</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2603.19685" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>论文先对网页 agent 失败做因果诊断，而不是直接堆更大模型。Gemini-2.5-Flash 按“卡住、检索词错误、动作失败、其他”优先级分析目标、失败轨迹与成功对照，定位第一次分叉或循环入口；四十例人工核验中各类识别为十分之十、十分之十、十分之八、十分之九。WebArena-Lite 上约百分之四十二至四十九的失败属于中途卡住，表明长任务的核心障碍常是忘记进度、重复局部尝试和无法判断何时转向，而不仅是单步动作知识不足。</p>
+      <p>作者让 Gemini-2.5-Pro 根据任务和初始截图生成恰好四个可观察里程碑，并用十二个按网站类别随机打乱的示例规范输出。对子目标完成状态的精确匹配，F1 为零点六八四七、精确率零点七九一七、召回率零点六零三二；将完成比例当作过程分数，对最终成功的 AUROC 为零点八四，与人工渐进判断的 Kendall 相关为零点四五八五且显著。它不是完美标注器，但比只看终局奖励更早、更连续地显示轨迹是否真正向目标推进。</p>
+      <p>在线方案 Gemini-SGO 在每一步都让同一模型回顾已完成、当前和后续里程碑，维护显式二值进度向量，并据此决定继续、回退或重规划。Gemini-2.5-Pro 的成功率由百分之二十三升至三十二点一；卡住失败由四十八点四一降到三十九点八七。动态分配上下文时，成功率三十二点一二、延迟十六点七四秒，接近八千 token 静态配置的三十二点五，却比更长上下文更稳；一万六千 token 反而降至二十六，说明子目标的作用是选择性锚定，不是简单增加回看内容。</p>
+      <p>离线强化学习方案 MiRA 使用两个评论器。价值评论器预测终局成功；势能评论器以正轨迹里程碑完成度为标签，学习平滑进度。相邻状态的势能差按权重零点三加入环境奖励，再用结合时序差分与蒙特卡洛的 doubly robust 优势减小偏差和方差。策略并非普通 AWR，而是回归参考策略对数概率比到正负优势，使离线回放中的好动作能增概率、坏动作也能显式降概率。每轮再收集当前策略数据、标注里程碑，以中等困惑度过滤并从常见失败与稀有任务中补采，形成六轮课程。</p>
+      <p>Gemma3-12B 的 MiRA 在 WebArena-Lite 达百分之四十三，高于同一 SFT 初始的三十点九、DigiRL 的三十三点三和 WebRL 的三十五点一；六轮中无进度塑形的对照约在三十五停滞，而完整方法持续到四十三。阶段二 pass@2 已领先七点九，阶段六 pass@8 仍领先七点五。去掉势能评论器约降至三十五，改成 KL 式目标约三十三，去掉 doubly robust 优势会早期跌到约二十五后才部分恢复。塑形权重从零提高到零点三时成功率三十点九升至三十六点四，继续加到零点八则降至二十五点五；中等困惑度数据三十六点四，也明显优于低困惑度二十七点九、高困惑度二十三点六和全量二十九点一。失败类型上，MiRA 的卡住比例约降到二十一，低于 SFT 约三十三和 WebRL 约二十五，但错误终止升至约三十一，显示进度奖励改善探索后，终局语义判断成为新瓶颈。</p>
+      <p>附录证明若势能定义满足条件，增量塑形不改变最优策略，但实际系统仍使用教师生成子目标和学习评论器，理论保证不能自动覆盖标注误差。固定四个、等权线性进度对任务层级做了强简化，任务开头尚未完成里程碑时还存在冷启动静默；过大塑形权重会诱发代理目标过优化。离线势能评论器只用成功轨迹训练，对罕见失败状态的外推可能不稳；迭代课程又不断改变访问分布，论文未给出评论器校准随轮次变化的完整诊断。评测只在 WebArena-Lite，并依赖专有模型生成子目标和 LLM judge，错误终止比例上升也暴露判定语义有限。未来应学习层级子目标、非线性进度和自适应权重，并逐步退火在线脚手架，以降低额外延迟与依赖。</p>
+    </article>
+    <article class="paper" id="paper-A051" data-paper-id="A051">
+      <header class="paper-header">
+        <p class="paper-kicker">A051 · 约 5 分钟</p>
+        <h2>WebAnchor: Anchoring Agent Planning to Stabilize Long-Horizon Web Reasoning</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">planning-anchor</span><span class="paper-tag">web-agent</span><span class="paper-tag">long-horizon</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2601.03164" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程网页研究并不是工具调用越多就越可靠，早期方向一旦选错，后续搜索会在错误实体、错误约束或低价值来源上不断累积成本。论文把这种不对称影响称为“计划锚点”：用 Tongyi-DeepResearch-A30 固定正确或错误首步后各采样八条续接轨迹，BrowseComp 中文、英文和 GAIA 的平均成绩分别下降二十八点七六、三十点八九和二十三点六三个百分点。普通 GRPO 却把终局成败近乎均匀地传给整条轨迹，无法突出首个计划；只增加上下文、工具预算或压缩历史，也未必修复开局策略。WebAnchor 因而把“先决定怎么查”和“沿计划把证据查完”拆成两个可分别优化、但共享同一模型参数的阶段。</p>
+      <p>第一阶段的关键不是用最终答案给首步一个稀疏零一分，而是从经验中学习什么叫好计划。Plan Rubrics Learner 汇总成功轨迹、失败轨迹和成对对照轨迹，让大模型分别提炼有效启发、故障模式和两类计划的判别边界，再把洞见迭代归纳为任务分解、目标对齐、工具选择等多维准则。每轮都用成功、失败和配对样本的平衡批次更新准则，并以人工判断一致性和区分正确、错误计划的能力做校准；只有曲线下面积至少零点八、Cohen 一致系数至少零点七五才停止。训练时裁判模型按各维度评分并归一化，给首步提供可解释的稠密计划奖励。</p>
+      <p>Anchor-GRPO 的训练采用掩码式信用分配。计划阶段对同一问题采样一组候选首步，只让首步计划的词元接收由准则分数归一化得到的组相对优势，后续动作全部遮蔽，避免执行噪声干扰规划能力。执行阶段再从优化后的策略采样完整 ReAct 轨迹，模型交替产生思考、Search 或 Visit 调用和最终答案，只在答案精确匹配真值时获得终局奖励；这时更新的是整条执行轨迹。规划器与执行器并非两套模型，而是同一参数在两个阶段扮演不同角色，因此推理时先输出锚点计划，再按它连续搜索，不需要额外部署独立规划网络。</p>
+      <p>实验覆盖 BrowseComp、BrowseComp-ZH、GAIA 与 XBench-DeepSearch，骨干从 WebSailor 三十亿、七十亿到 Tongyi-DR 三百亿参数，训练用一千条经过难度筛选的内部维基任务，在虚拟维基环境中以六十四张 GPU、批量三十二、每题八条 rollout 优化。三百亿模型在 BrowseComp 的 Pass@1 为百分之四十六，优于普通 GRPO 的百分之四十四和 First-step GRPO 的百分之四十三点三；GAIA 为百分之七十六点四，超过 WebSailor-32B 的五十三点二和表中 OpenAI-o3 的七十点五；XBench 达到七十五点一。七十亿模型在 BrowseComp、BrowseComp-ZH 和 XBench 也分别达到十一点六、二十三点八和四十五，显示收益随规模扩展。</p>
+      <p>消融把“首步重要”和“具体训练设计有效”分开验证。只训练规划器时目标对齐和工具效率最高，但任务 Pass@1 只有百分之四十二；再训练执行器后升到四十六，说明好计划仍需能适应环境反馈的执行策略。把更新位置移到随机步或末步，Pass@1 只有三十三和三十六点一，首步稀疏奖励版本则为四十三点三。首步奖励若用朴素计划分数得到四十四点二，用多维稠密准则升到四十六，同时覆盖度、对齐度、效率分别达到五十点二、六十七和六十三点四。上下文从三万二扩到六万四词元时表现继续上升，训练曲线也显示工具调用比基线更稳定。</p>
+      <p>这项工作的边界首先是领域与信号来源：实验证据集中于网页信息检索，终局奖励依赖可精确匹配答案，训练任务又来自内部维基环境，不能直接推出开放式报告、软件工程或实体控制也有同样强的首步锚定效应。计划准则由模型从既有轨迹归纳并经人工校准，既有经验覆盖不足、裁判偏差或准则维度遗漏都会进入奖励；论文也明确承认准则仍有改进空间。固定锚点有助于一致性，却可能让执行器在网页变化或新证据推翻假设时不够灵活。最后，30B 模型某些 Pass@3 并非全面领先，首步计划优质也不能替代后续探索，完整两阶段训练的成本与数据依赖都高于单次 GRPO。</p>
+    </article>
+    <article class="paper" id="paper-A052" data-paper-id="A052">
+      <header class="paper-header">
+        <p class="paper-kicker">A052 · 约 4 分钟</p>
+        <h2>Milestone-Guided Policy Learning for Long-Horizon Language Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">milestone</span><span class="paper-tag">policy-learning</span><span class="paper-tag">long-horizon</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.06078" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>长程语言智能体常在几十步之后才获得一个成败奖励，扁平轨迹优化因此同时浪费样本和错分信用。以 ALFWorld 为例，GRPO 从短任务百分之七十六点七跌到长任务五十三点五；训练中完整成功始终不足百分之二十七，另有百分之三十九到四十七的轨迹已经完成至少一个子目标，却与彻底失败一样得到零分。更糟的是，同一状态下的相同行动会因后续随机成败而收到相反梯度，冲突动作比例峰值超过百分之四十，抵消后有效信号低于百分之二十。过程奖励模型要逐步标注，蒙特卡洛价值估计又需大量续跑，依靠重复状态分组的方法则在策略变强、轨迹分化后越来越难找到可比状态。</p>
+      <p>BEACON 利用任务天然的组合结构，把可验证子目标完成看作里程碑。检测器只读环境反馈：ALFWorld 用拾取、加热等对象状态变化，WebShop 用向目标商品推进的页面转换，ScienceWorld 直接使用子目标信号。每当检测到里程碑，就把整条轨迹切成一个完成阶段；一个阶段内，越接近里程碑的动作获得越大的时间衰减奖励，未完成的最后阶段不奖励。于是即使终局失败，已经成功拿到钥匙、找到商品或完成实验步骤的前段仍能成为学习信号，且较短的完成路径得到更强激励。方法不需要人工逐步评分或另训过程奖励模型，但确实需要为每个环境定义可核验的里程碑。</p>
+      <p>信用估计同时保留全局与局部两把尺。轨迹级优势仍按同题多条 rollout 的最终奖励归一化，用来保证策略不忘最终目标；分段优势只比较已经到达同一里程碑的轨迹，并按段内平均回报评价局部动作，隔离更晚阶段的随机失败。两者相加后进入裁剪式策略目标，使早段正确行动不会因后段失误被反向惩罚，同时也防止策略只刷容易的局部进展而不完成全任务。论文将这一性质建立在“到达里程碑后，未来主要由当前里程碑状态和剩余子目标决定”的近似马尔可夫假设上；算法每轮先检测里程碑、分段并塑形，再计算两级优势后更新同一个策略。</p>
+      <p>实验在 ALFWorld、WebShop 和 ScienceWorld 上使用 Qwen2.5-1.5B 与 7B 指令模型，对比直接提示、ReAct、Reflexion、PPO、RLOO、GRPO、GiGPO 以及 GPT-4o、Gemini-2.5-Pro。小模型上，BEACON 的 ALFWorld 平均成功率为百分之九十一点四，超过 GiGPO 的八十六点一和 GRPO 的七十二点八；长任务达到九十二点九，几乎是 GRPO 五十三点五的两倍，且没有随长度单调坍塌。WebShop 成功率七十五点六，对应 GiGPO 六十五和 GRPO 五十六点八；ScienceWorld 成功率四十五点三，对应二十五点八和二十一点一。七十亿模型在 ALFWorld 与 WebShop 又达到九十四点五和七十九点七。</p>
+      <p>分析说明收益不是照抄里程碑示范。训练到第一百五十轮时，GRPO 仍有约百分之五十五样本优势近零，BEACON 降到约百分之十；提供有效梯度的轨迹比例由百分之二十三点七升至八十二，是三点五倍。只在里程碑动作给奖但不做段内时间衰减时，ALFWorld 为百分之八十一；加入衰减升到九十一点四，而用专家轨迹做监督微调只有四十三。随机切段仅七十四点二，随机丢弃一半里程碑为八十二点八；去掉分段优势退回七十二点八，去掉轨迹优势更跌到二十三点四，说明局部隔离与最终目标约束缺一不可。</p>
+      <p>适用边界写在附录中。里程碑目前靠领域规则、页面状态或环境显式信号识别，对没有清晰子目标、观察不可验证或连续控制的任务不易直接使用；多智能体、连续动作和弱组合结构尚未测试。粒度过粗时会退化成终局优化，过细时局部比较噪声增大，阶段划分还可能违背近似马尔可夫假设，使早期细节继续影响后续。实验全是离散动作、文本交互的三个环境，结论不能直接覆盖开放网页和真实机器人。塑形奖励也可能诱导代理偏爱易达里程碑，因此必须保留轨迹级优势；未来关键不是简单增加子目标，而是自动发现语义稳定、难度合适且与终局一致的里程碑。</p>
+    </article>
+    <article class="paper" id="paper-A053" data-paper-id="A053">
+      <header class="paper-header">
+        <p class="paper-kicker">A053 · 约 4 分钟</p>
+        <h2>Enhancing LLM Planning Capabilities through Intrinsic Self-Critique</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">self-critique</span><span class="paper-tag">planning</span><span class="paper-tag">reflection</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2512.24103" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>让大模型生成形式规划并不新鲜，难点在于它能否在没有外部验证器的情况下发现自己的计划违反了哪条前置条件，并把错误真正修掉。早期研究对此很悲观：自我批评会把正确方案改坏，也会把错误方案误判为正确，尤其是假阳性很多；借助 PDDL 验证器或人工反馈虽然能给出上界，却不符合多数测试时场景。本文重新审视“内生自我批评”，认为规划与一般常识推理不同：动作、前置条件、效果和有效状态通常由领域定义明确给出，模型可以沿动作序列逐步模拟状态。关键不是泛泛地问“再检查一下”，而是给足领域规则，并强制逐动作核验前置条件和状态更新。</p>
+      <p>算法从一个含领域定义和少量示例的规划提示开始，让同一个模型生成候选计划；随后把领域定义与该计划交给批评提示，要求依次检查每个动作的前置条件、执行后的状态以及最终目标是否满足。若批评器判定正确就提前停止；若判定错误，则把失败计划及其解释加入上下文，让下一轮生成据此修订，最多执行十轮。批评可做一次，也可并行采样多次后多数投票，平票按错误处理以触发继续修订。作者还从一条手写示例自举出八条批评示例，但多数跨任务实验采用零样本批评，避免每个新领域都要重新制作示例。</p>
+      <p>评测使用形式化 PDDL 表示，涵盖 Blocksworld、混淆谓词和动作名的 Mystery Blocksworld、Logistics、MiniGrid，以及 AutoPlanBench 的多个领域；最后计划仍由外部 VAL 验证器离线判分，但验证器不参与方法推理。主实验以 Gemini 1.5 Pro 为主，并在 GPT-4o、Claude 3.5 Sonnet 和开源 Gemma-2-27B 上检查可迁移性。生成提示通常取十六个规划示例，批评最多十轮；每次修订都保留此前错误和批评，因此模型既能定位第一处非法动作，也能在新计划中避免重复相同错误。不过上下文随轮次增长，超过长度上限时会返回上一轮计划。</p>
+      <p>结果显示，在 Blocksworld 三到五块上，Gemini 从无批评的百分之四十九点八升到八十五点五，五次批评投票后为八十九点三，接近外部验证器反馈的九十一点五；Mystery Blocksworld 从二十二点三升到三十五点二，投票后为三十七点八，甚至略高于对应 Oracle 的三十七点三。更大的三到七块 Blocksworld 从五十七点二升到七十九点五；Logistics 从六十点七升到九十三点二，困难版从十八点九升到三十二点八；MiniGrid 从五十七点七升到七十五点二。GPT-4o 从四十二点八升到六十四点二，Claude 从六十八升到八十九点五，说明强模型普遍受益。</p>
+      <p>消融揭示提示约束比“自我反思”这个名字更重要。Blocksworld 三到七块验证集上，八示例批评加五票从首轮约百分之五十七点一升到第十一轮八十四点六；不投票为七十九点七，零样本批评为七十九点五。去掉领域定义后只有七十四点四，去掉三步核验指令为六十四，去掉“逐动作验证”几乎退回五十七点五。五票只比单次多约五个点，却把调用数从约六千三百增到一万四千；十轮限制也是成本与收益的折中，因为最大调用数随修订轮数和投票次数线性增长，大部分收益发生在首轮，之后仍有较小累积提升。</p>
+      <p>方法仍不是一个可靠的通用验证器。误差分析显示批评器召回较高、假阴性少，但假阳性会随迭代累积：一旦错误计划被判为正确，循环会提前停止，这正是它与 Oracle 的主要差距。Gemma-2-27B 只在 Logistics 略有改善，在 Blocksworld 没有稳定收益，说明自我修正依赖基础模型先具备足够状态跟踪能力。全部任务都有显式、封闭的动作语义，真实规划中的不完全观察、连续动作、随机转移和动态工具并未覆盖；十轮历史还会推高上下文与延迟。论文展示的是无需外部反馈和额外训练的测试时改进，不代表模型获得可迁移的内在世界模型，外部 PDDL 验证器若可用仍更可靠且通常更便宜。</p>
+    </article>
+    <article class="paper" id="paper-A054" data-paper-id="A054">
+      <header class="paper-header">
+        <p class="paper-kicker">A054 · 约 4 分钟</p>
+        <h2>StraTA: Incentivizing Agentic Reinforcement Learning with Strategic Trajectory Abstraction</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">trajectory-abstraction</span><span class="paper-tag">strategy</span><span class="paper-tag">planning-before-action</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2605.06642" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>普通长程 Agentic RL 让模型在每一步仅依据当前状态选择动作，相当于同时临场规划全局路线和眼前操作。终局奖励又稀疏且延迟，策略很容易短视搜索、反复回退或前后矛盾，组相对优化只能告诉一整条轨迹相对好坏，难以区分“计划差”与“计划可行但执行偶然失败”。StraTA 的核心是把整条轨迹先抽象成一段紧凑的自然语言策略：智能体在看到初始任务后先生成全局计划，并在之后每一步把它固定地拼入当前状态，使动作同时受长期方向和局部观察约束。这样训练目标被拆成生成可行策略与忠实执行策略两个层次。</p>
+      <p>为联合训练两层决策，每个任务先采样多种策略，再在每种策略下采样多条执行轨迹，形成层级组。动作级比较只在共享同一策略的轨迹之间进行，减少高层计划差异对局部动作信用的干扰；策略级奖励则取该策略多条 rollout 中表现最好的一部分再求平均，而非直接平均全部结果，避免早期执行策略尚不稳定时把本来可行的计划误判为差计划。策略和动作都加入软长度惩罚与硬格式惩罚，最终在同一模型上按 GRPO 风格目标更新，因此不需要额外规划器；推理时先产生一次策略，之后每步都在该固定策略下行动。</p>
+      <p>层级采样之外还有两项互补设计。模型即使提高温度也常生成语义近似的策略，所以 StraTA 先过采样候选，用预训练嵌入编码后执行最远点采样，从接近中心的代表策略出发，逐个选与已有集合最不相似者，扩大策略空间的有效探索。执行结束后，模型再回顾全轨迹，标记那些既不遵循全局策略、也不推动任务进展的动作，对这些步施加小幅负奖励。这个 Critical Self-Judgment 不依赖独立裁判，判断动作本身不参与奖励；它把粗粒度终局结果补成局部纠偏信号，同时避免仅因某个偏离计划的动作碰巧成功就一律处罚。</p>
+      <p>实验通过 AgentGym 统一运行 ALFWorld、WebShop 和 SciWorld，骨干为 Qwen2.5-1.5B 与 7B，训练一百五十步、批量十六；每题四种策略、每策略八条轨迹，策略过采样倍数八，最佳轨迹聚合比例零点五，自判惩罚权重零点一，使用八张 H100。7B StraTA 在 ALFWorld 成功率百分之九十三点一、WebShop 八十四点二，超过 GiGPO 的九十点八和七十二点八；1.5B 配置也达到九十点七和八十二点五。SciWorld 总分六十三点五，高于 ScalingInter 的五十七和表中闭源模型最好五十七点四，Lifespan 子集达到百分之百。</p>
+      <p>消融在三十亿指令模型、小批量设置上表明，仅有层级策略的 Vanilla 已在 ALFWorld 与 WebShop 得到百分之七十九和六十四；只加多样策略选择把 ALFWorld 升到八十七点九，只加自判把 WebShop 升到六十六点七，两者合用分别为八十八点六和七十三点四。过采样倍数从一增到八总体改善；策略奖励若只看最好的一成轨迹，估计太不稳，若平均全部轨迹又被执行噪声拖累，零点五最好。自判权重零点零一太弱、权重一又过分依赖自评质量，零点一最合适。每步时间只略高于 GRPO，两个附加环节分别约五点八和六点一秒。</p>
+      <p>固定策略既是优点也是主要边界。它能在稳定环境中减少漂移，但当新观察推翻初始假设、工具失败或任务结构突然变化时，持续把旧策略拼入每一步可能变成束缚；论文明确把自适应策略修订列为未来方向。方法效果依赖策略生成质量，嵌入距离只保证表达差异，不保证方案真的有意义；自判由同一策略完成，也会继承其盲点。三个基准都是文本离散环境，尚未覆盖开放网页、真实具身或更广代理领域。层级采样仍需每题四乘八条 rollout，成本虽与相同组规模 GRPO 接近，却没有消除大量并行交互，对资源受限部署并不轻量。不同随机种子和更长训练周期下的方差也没有充分报告。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="04-04.html"><span>上一方向</span>OPD rollout 早停与计算效率</a>
+      <a class="next" href="05-02.html"><span>下一方向</span>上下文压缩、并行轨迹与长程路由</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="过程奖励、隐式步奖励与动态塑形：Information Gain-based Policy Optimization: A Simple and Effective Approach for Multi-Turn LLM Agents、The Past Is Not Past: Memory-Enhanced Dynamic Reward Shaping、Agentic Reinforcement Learning with Implicit Step Rewards、Exploring Reasoning Reward Model for Agents">
+  <title>2.2 过程奖励、隐式步奖励与动态塑形 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>2.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 4 篇</p>
+      <h1>过程奖励、隐式步奖励与动态塑形</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A013"><span>A013</span>Information Gain-based Policy Optimization: A Simple and Effective Approach for Multi-Turn LLM Agents</a>
+<a href="#paper-A014"><span>A014</span>The Past Is Not Past: Memory-Enhanced Dynamic Reward Shaping</a>
+<a href="#paper-A015"><span>A015</span>Agentic Reinforcement Learning with Implicit Step Rewards</a>
+<a href="#paper-A016"><span>A016</span>Exploring Reasoning Reward Model for Agents</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A013" data-paper-id="A013">
+      <header class="paper-header">
+        <p class="paper-kicker">A013 · 约 5 分钟</p>
+        <h2>Information Gain-based Policy Optimization: A Simple and Effective Approach for Multi-Turn LLM Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">information-gain</span><span class="paper-tag">process-reward</span><span class="paper-tag">multi-turn</span><span class="paper-tag">policy-optimization</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2510.14967" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>多轮搜索代理只靠最终答案的 F1 分数训练，会遇到三类相互强化的问题。若同一题的一组轨迹全部答错或全部答对，GRPO 的组相对优势全部变成零，弱模型在困难题上尤其容易长期没有梯度。即使组内有差异，同一个终局分数也看不出哪一轮搜索真正补充了知识、哪一轮被更早的错误拖累。每条长轨迹只产生一个标量，还浪费了中间推理和工具返回中蕴含的大量信息。已有方法要么用人工黄金关键词、外部奖励模型给步骤贴标签，要么通过蒙特卡洛续写估算步骤价值，容易引入标注偏差、较高计算和采样方差。IGPO 因而把每轮交互重新理解为模型关于正确答案的信念更新过程。</p>
+      <p>对每条轨迹，IGPO 在初始问题以及每次搜索交互完成后的前缀上，采用 teacher forcing 计算当前策略生成标准答案的平均对数概率。某轮的即时信息增益，就是加入该轮推理、工具调用和搜索结果以后，标准答案对数概率相对上一轮的增量。概率上升意味着新信息让正确答案更容易产生，下降则说明这一步带来误导。标准答案用与模型回答相同的标签格式包裹，奖励计算停止梯度，因此策略不能通过直接修改打分路径来作弊。为降低多次前向开销，作者把标准答案复制到轨迹尾部多次，再设计注意力遮罩，让每份答案只能看到对应轮次前缀，从而在一次向量化前向中得到所有轮的概率。</p>
+      <p>信息增益只描述局部变化，最终答案奖励仍负责约束真正的任务目标。IGPO 先在同一问题的轨迹组内，分别标准化全部轮级信息增益和各轨迹的终局 F1 奖励，避免二者量纲悬殊；随后从当前轮向后累积折扣奖励，使早期动作能分享到它对后续搜索与作答的影响。每个推理和工具调用 token 使用所属轮的折扣回报，环境返回文本则遮罩掉，最后通过与 GRPO 相同的裁剪策略目标和 KL 约束更新模型。这里没有外部过程模型、额外 rollout 或离线步骤标签，密集信号直接来自模型自身在看到新证据前后的正确答案置信度，所以即使一组轨迹最终全部失败，中间“更接近标准答案”的变化仍能提供梯度。</p>
+      <p>实验采用 Qwen2.5-7B-Instruct，并补充 3B 规模分析；每个训练步骤采样三十二个问题、每题十六条轨迹，最多十轮，通过 Google Search API 获取网页结果。域内数据为 NQ、TriviaQA、HotpotQA、2Wiki，域外为 MuSiQue、Bamboogle、PopQA，统一报告词级 F1。对比包含无需训练的 CoT、RAG 和 Search-o1，结果奖励搜索代理 Search-R1、R1-searcher、DeepResearcher，过程奖励方法 StepSearch、ReasoningRAG、GiGPO，以及同配置下的 PPO、RLOO、GRPO、Reinforce++ 和 GSPO。训练使用八张 A100，信息增益额外计算仅占奖励阶段约百分之零点四、整个训练步骤不到百分之零点零二。</p>
+      <p>IGPO 在七个数据集上的平均 F1 达到六十点二，比最强任务基线 DeepResearcher 高六点三，也比同配置 GRPO 的五十一点九高八点三。3B 模型的提升更大，从三十二点三升至四十八点九，印证弱模型在零优势组中更需要密集信号。只用信息增益时，3B 和 7B 的平均分已不低于只用终局奖励；两者结合则显著最好，说明局部进展与最终正确性是互补而非替代关系。消融还表明，对数概率增量优于普通概率增量，分开标准化优于混合标准化。IGPO 训练曲线更快更稳、单位更新 token 带来的性能更高，且用强模型从去掉答案的推理轨迹反推答案时，IGPO 轨迹的信息完整度也持续优于 GRPO。</p>
+      <p>方法最大的条件是训练样本必须有可信的标准答案，因此不能直接覆盖开放式写作、对话偏好或没有唯一答案的任务。它还会放大标签噪声：当问题含糊且存在多个事实正确答案时，模型若找到与标注不同的有效答案，信息增益会把这条正确搜索路径判为负向。作者在失败分析中发现约百分之三点六测试样本上 IGPO 低于 GRPO，并用“Childhood 的作者”这类多义问题展示了误惩罚。信息增益是当前策略对答案的置信变化，不等价于外部事实的新信息量，模型固有偏见也会进入奖励。因而 IGPO 适合答案明确、可 teacher forcing 的多轮检索，应用前需要清洗歧义标注，并保留终局验证以防局部置信度成为错误目标。</p>
+    </article>
+    <article class="paper" id="paper-A014" data-paper-id="A014">
+      <header class="paper-header">
+        <p class="paper-kicker">A014 · 约 5 分钟</p>
+        <h2>The Past Is Not Past: Memory-Enhanced Dynamic Reward Shaping</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">reward-shaping</span><span class="paper-tag">memory</span><span class="paper-tag">non-stationary-reward</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2604.11297" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>在可验证奖励强化学习中，模型随着训练推进常会陷进一个稳定的错误盆地：表面措辞略有变化，背后的解题误区却反复出现。普通熵正则只让当前策略分布更随机，并不知道哪些错误在过去已经重复很多次；只比较当前批次内的解法多样性，也看不到跨训练步骤逐渐固化的失败模式。结果是大量 on-policy 样本被浪费在同一种错误上，策略越训练越窄。MEDS 借鉴人类对重复犯错会加强惩罚的直觉，把历史轨迹直接引入奖励设计：一次错误出现得越频繁，后续再遇到相同思维模式时惩罚越大，从而迫使模型把概率质量转移到尚未探索的解法。</p>
+      <p>难点在于判定两段长推理是不是同一种错误，同时不能为每条轨迹调用昂贵的外部评审。MEDS 利用模型前向传播本来就产生的中间表示。它找到最终答案的第一个 token，提取该 token 在 Transformer 后半层上的逐层 logit，并把这些标量拼接、归一化成一条紧凑的“逻辑特征”。作者的假设是，最终答案 token 的形成依赖沿层传播的推理电路，因此即使两条轨迹答案不同，只要共享相同错误结构，后半层 logit 形状也会相似；反过来，相同错误答案若来自不同思路，也应被分开。这样既不需要保存整段文本嵌入，也几乎不增加计算。</p>
+      <p>系统为每个训练问题维护一个只包含错误响应特征的历史记忆。每轮采样后，HDBSCAN 在该问题的累积特征上自动发现簇和噪声点，无需预先规定错误类型数量。新错误若落入某个簇，其原始任务奖励会减去随簇大小对数增长、并有上限的惩罚；常见错误簇因此受到更强打压，孤立或新颖错误只受较轻影响。修正后的奖励直接接入 DAPO 或其他组式策略更新。论文还从 KL 正则化策略更新出发证明，在重复计数随错误出现次数单调增长的条件下，对高概率重复错误增加惩罚不会降低原任务期望回报。这个保证依赖错误识别正确，也解释了为什么聚类质量是方法成败的关键。</p>
+      <p>实验在 DAPO-Math-17K 与 MATH 中高难度题合并的数据上训练 Qwen3-1.7B、Qwen3-8B 和 Qwen2.5-Math-7B，每题生成十六条轨迹，并在 AIME24、AMC23、MATH500、Minerva、OlympiadBench 上以一百二十八次采样评估 pass@1 与 pass@128。基线包括未微调模型、GRPO、DAPO，以及在 GRPO 优势中加入 token 熵奖励的方法。默认用最后十四层 logit、欧氏距离聚类，最小簇大小为二；不同模型设置小幅惩罚系数和上限。为验证探索性，作者还用 Claude-Haiku 对同一步和跨步骤轨迹做语义多样性评估，并计算记忆特征协方差最大特征值占总方差的比例。</p>
+      <p>MEDS 在三个模型的五项平均上都取得最佳总体结果。Qwen3-1.7B 的平均 pass@1 从 DAPO 的四十六点六升至五十二点四九，Qwen2.5-Math-7B 从五十五点六一升至五十六点四七，Qwen3-8B 从六十三点一一升至六十六点七二；后者 OlympiadBench 的 pass@128 从七十点八一升至八十二点六七。相对 DAPO 的训练时间增加较小。多样性评审和更低的主特征方向占比都显示错误分布没有那么集中。消融比较单一大簇、全部层、后十四层及层间差分，后十四层直接 logit 与 Claude 错误类别的一致率最高，为百分之六十一点二，并带来最佳下游平均分；把所有错误视作一簇反而略差于 DAPO，直接说明只有辨认出真正共享的失败模式，历史惩罚才有价值。</p>
+      <p>这项工作目前只在数学推理和可程序判错的设置中验证，尚未展示复杂工具代理、开放式答案或跨问题共享错误记忆。每题单独保存历史特征会随数据和训练轮数增长，论文没有系统讨论大规模内存管理、旧记忆淘汰或提示只出现一次时怎么办。logit 表示与 LLM 语义标注的一致率只有约六成，错误聚类仍可能把不同策略混在一起，错误惩罚也可能因此打击有希望的探索。理论结论假设重复错误指示函数可靠，不能覆盖聚类误差。作者明确指出当前聚合方式很简单，是否需要更复杂的跨 token、跨层表示仍未知。因此 MEDS 更适合作为有明确正确性验证、问题会重复采样的轻量历史塑形机制，而非通用语义错误分类器。</p>
+    </article>
+    <article class="paper" id="paper-A015" data-paper-id="A015">
+      <header class="paper-header">
+        <p class="paper-kicker">A015 · 约 5 分钟</p>
+        <h2>Agentic Reinforcement Learning with Implicit Step Rewards</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">implicit-step-reward</span><span class="paper-tag">sparse-reward</span><span class="paper-tag">process-supervision</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2509.19199" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>智能体强化学习比单轮回答更难做信用分配：奖励往往稀疏而延迟，一步动作同时包含长推理和可执行指令，环境或对手还可能变化，甚至不存在可程序验证的分数。人工过程标签成本高且容易被策略利用，LLM 评审的逐步分数跨领域不稳定，token 级隐式奖励在长轨迹上又过细、方差很大；依赖相同状态分组的方法则不适合自然语言环境，因为两个轨迹很少精确回到同一状态。iStar 的目标是在不增加额外 rollout 和逐步标注的情况下，从在线轨迹偏好中学出动作级奖励，并让这个奖励随策略一起更新。</p>
+      <p>每一轮，当前策略先对同一个任务生成一组多步轨迹，环境验证器或奖励模型按最终表现排序，组成正负轨迹对。一个由基础模型初始化的隐式过程奖励模型，以旧策略快照为参照，对这些轨迹对做 DPO 式训练。与普通 DPO 使用固定初始参考、比较单次回答不同，这里参考模型随策略迭代，比较对象是完整交互轨迹。论文证明，轨迹偏好目标可以展开成各动作奖励之和，因此每一步的隐式奖励就是新过程模型相对旧策略对该动作平均概率的对数比。若过程模型在看过优劣轨迹后更偏好某动作，它得到正奖励，反之得到负奖励。</p>
+      <p>策略更新同时计算两种优势。终局奖励在同题多轨迹间标准化，形成 episode 级优势，告诉模型哪条完整轨迹更成功；所有动作的隐式奖励再做组内标准化，形成 step 级优势，区分同一轨迹内部的好坏动作。两者按权重相加，配合步骤级概率比的裁剪目标更新策略。作者强调不能简单把两类原始奖励先相加，因为局部上看似有吸引力的动作可能通向失败结局，分开形成优势再组合可以让终局成功对局部信用起门控作用。策略与过程模型交替优化，且都使用当前策略在线产生的数据，减少离策略偏差，形成“更好策略产生更好偏好数据、更好奖励再指导策略”的自强化循环。</p>
+      <p>实验覆盖三种差异很大的交互环境。WebShop 要在百万商品网站里搜索并购买满足属性的商品；VisualSokoban 是六乘六视觉推箱子，包含不可逆错误和长程规划；SOTOPIA 是没有确定程序奖励的开放式社交对话，用 GPT-4o 评估目标完成度。策略骨干包括 Qwen2.5-7B、Qwen2.5-VL-7B、Llama3.1-8B，并另测 1.5B；基线有 GPT-5、Gemini、DeepSeek-R1、Claude 等提示模型，以及 PPO、GRPO、RLOO、REINFORCE++、token 级 PRIME 和依赖同状态分组的 GiGPO。iStar 可插入多种无 critic 算法，主要结果采用 RLOO 或 GRPO，并以三随机种子报告。</p>
+      <p>iStar 在 WebShop 上达到百分之八十六点五成功率和九十三点六得分，VisualSokoban 达到百分之九十一点七成功率，均高于对应 RLOO 和 GiGPO。SOTOPIA 的困难场景中，Llama3.1 自对话目标分从 GRPO 的七点九二升到八点零六，与 GPT-4o 对话则从六点六八升到七点一六；开放奖励也能形成有效轨迹偏好。训练曲线显示它在 WebShop 用约一百零五步达到普通 RLOO 的水平，episode 变短而回报上升。消融中，真实环境步骤奖励仅带来有限改善，直接合并奖励和 token 级奖励都弱于完整方法；VisualSokoban 上 RLOO、真实步骤奖励、合并奖励、token 奖励和完整 iStar 的成功率依次为八十五点九、八十七点五、八十八点三、八十九点一和九十三点零，验证了隐式动作奖励与双层优势组合的必要性。</p>
+      <p>iStar 的成本是同时维护并训练策略与独立过程模型，显存和优化复杂度明显高于只用终局奖励；作者也把未来的统一模型、多目标共享表示列为改进方向。隐式奖励并非直接因果标签，它继承终局验证器或奖励模型的偏好，若排序有偏或被策略利用，过程模型会把偏差分解到各步。自强化循环可能同时放大错误，需要持续校准。SOTOPIA 只针对目标完成一个维度训练，未覆盖可信度、社会规范、关系等多目标权衡；数学和代码任务也尚未验证。方法最适合能够为整条轨迹给出相对优劣、但难以逐步标注的长程环境，不能消除对可靠 outcome preference 的根本依赖。</p>
+    </article>
+    <article class="paper" id="paper-A016" data-paper-id="A016">
+      <header class="paper-header">
+        <p class="paper-kicker">A016 · 约 5 分钟</p>
+        <h2>Exploring Reasoning Reward Model for Agents</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">reasoning-reward-model</span><span class="paper-tag">process-supervision</span><span class="paper-tag">agent-evaluation</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2601.22154" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>很多智能体强化学习仍把最终答案是否正确当作唯一奖励，一条轨迹哪怕只在最后一步犯错，也会和从头到尾胡乱操作的轨迹得到相同低分。逐步打分虽然更细，却需要昂贵标注，容易被策略钻空子；只输出一对轨迹谁更好的奖励模型也难表示质量的连续差异，更无法告诉代理具体该改什么。论文认为，奖励模型不应只是吐出一个数字，而应像审阅者一样先推理整条轨迹，再指出工具使用和逻辑上的可操作问题，同时给出总体质量分。基于这一目标，作者提出 Agent-RRM，并系统比较数字奖励、自然语言批评以及二者统一进入训练时各自发挥的作用。</p>
+      <p>Agent-RRM 对一条完整代理轨迹生成三部分结构化反馈。内部分析检查推理是否连贯、是否在该用工具时使用、是否误读或无依据相信工具返回；简短 critique 精确指出遗漏的浏览步骤、重复或无效调用、未经验证的假设等问题；最后给出零到一的整体分数。为让它覆盖数学、知识检索、多模态和复杂工具错误，作者从多种 7B 至 32B 搜索代理及 DeepSeekV3.1 采样轨迹，再由 GPT-OSS-120B 生成评语，构成两万八千条 SFT 数据和九万条 RL 数据。模型先学会输出格式与基本评审能力，再用 GRPO 校准推理说明和分数，因此在没有标准答案输入时也能给出过程判断。</p>
+      <p>论文围绕同一个奖励模型设计三种使用方式。Reagent-C 不更新代理参数，而是让代理先作答，Agent-RRM 给出 critique，再把原回答与批评一起交给代理重做，用来测试文字反馈能否直接纠错。Reagent-R 在常规 GRPO 中把规则式终局正确奖励与 Agent-RRM 的连续分数加权，给部分正确、过程合理的轨迹更多信号。Reagent-U 则每题先采样一组初始轨迹，为每条生成批评后再采样修订轨迹，把两阶段输出放进同一组计算联合优势，并同时使用规则奖励和模型分数。文字批评只在训练时帮助策略内化纠错方式，推理时 Reagent-U 不再调用外部奖励模型。</p>
+      <p>训练代理的数据规模也较完整：Reagent-RL 含七十万九千个问题，覆盖数学推导、多模态理解、网页检索与六种工具，另从正确轨迹筛出五万五千六百条 SFT 冷启动数据。代理和奖励模型都以 Qwen3-8B 初始化，先 SFT 再训练三百步 RL；代理最多十三步，使用搜索、网页浏览、Python、文件读取、图片描述和音频转写工具。十二项评测包括 GAIA、WebWalkerQA、HLE、xbench，HotpotQA、2Wiki、Bamboogle、MuSiQue，以及 AIME24、AIME25、MATH500、GSM8K。基线涵盖 WebThinker、WebDancer、ARPO、Search-o1、AgentFlow、Atom-Searcher、PPR 等开放代理和过程奖励方法。</p>
+      <p>只用批评重做的 Reagent-C 已在多项任务改善基础回答，说明自然语言反馈能定位暂时性执行失误，但它没有稳定胜过训练后的代理。加入连续过程分的 Reagent-R 在 Bamboogle 达到百分之七十二点八、xbench 达到百分之四十一，分别比无 Agent-RRM 的规则奖励版本高十一点二和九点。统一方案 Reagent-U 最强，在 GAIA 文本集达到百分之四十三点七、WebWalkerQA 达到百分之四十六点二，在 Bamboogle 和 AIME24 分别达到七十六点八和六十；GAIA 全模态的 pass@3 为百分之五十三点九。奖励权重消融显示，零点二到零点四形成平台，继续增到零点五反而下降，说明过程评价应补充而不能压倒终局正确性。</p>
+      <p>这项研究的实证几乎都在 8B 模型上，更大模型是否仍从结构化批评中获得同样收益尚未验证。评语训练依赖 GPT-OSS-120B 生成的数据，奖励模型本身还以有限数据和模型偏好界定“好推理”，没有外部真值时可能自信地批评正确但不同的路径。工具端也并非完全自包含：搜索使用 Bing，网页由 Jina 抽取再经 DeepSeek 摘要，图片调用 GPT-4.1，真实部署的延迟、费用和错误传播没有被隔离。十二项标准基准虽广，但距开放科学代理和不断变化的真实环境仍有差距。Reagent-U 训练时需要为每条初稿额外生成批评和修订，成本高于纯数字奖励。它更适合作为富反馈训练范式，而不是可证明正确的通用过程验证器。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="02-01.html"><span>上一方向</span>长程 turn/step 信用分配</a>
+      <a class="next" href="02-03.html"><span>下一方向</span>证据增强、rubric 合成与奖励共演化</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>

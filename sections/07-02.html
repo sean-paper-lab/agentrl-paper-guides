@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="视觉推理与 GUI 操作 Agent：PyVision-RL: Forging Open Agentic Vision Models via RL、TongUI: Building Generalized GUI Agents by Learning from Multimodal Web Tutorials">
+  <title>7.2 视觉推理与 GUI 操作 Agent · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="../assets/styles.css">
+  <script defer src="../assets/app.js"></script>
+</head>
+<body class="">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="section-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <a href="../index.html">AgentRL 全文精读</a>
+      <span>7.2</span>
+    </nav>
+    <div class="hero-copy">
+      <p class="eyebrow">最细子方向 · 2 篇</p>
+      <h1>视觉推理与 GUI 操作 Agent</h1>
+      <p class="section-deck">这一页把同一核心问题下的论文放在一起，便于连续比较它们的动机、方法、证据与适用边界。</p>
+    </div>
+    <nav class="paper-jump" aria-label="本页论文">
+<a href="#paper-A080"><span>A080</span>PyVision-RL: Forging Open Agentic Vision Models via RL</a>
+<a href="#paper-A081"><span>A081</span>TongUI: Building Generalized GUI Agents by Learning from Multimodal Web Tutorials</a>
+    </nav>
+  </header>
+  <main class="reading-column">
+    <article class="paper" id="paper-A080" data-paper-id="A080">
+      <header class="paper-header">
+        <p class="paper-kicker">A080 · 约 4 分钟</p>
+        <h2>PyVision-RL: Forging Open Agentic Vision Models via RL</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">vision-agent</span><span class="paper-tag">multimodal-RL</span><span class="paper-tag">open-model</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2602.20739" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>视觉 agent 做 RL 时常出现 interaction collapse：模型发现直接短答更容易，工具调用和多轮推理逐步减少，于是测试时增加交互预算也无收益。PyVision-RL 把 Python 作为可组合原语，模型交替生成自然语言推理与代码，环境执行后把文字或渲染图送回上下文，直至答案。Image 版把原图同时放进模型和运行时；Video 版只把视频放进 Python 环境，模型按需采帧、绘图再观察，避免均匀抽大量帧造成视觉 token 浪费。</p>
+      <p>奖励只在答案正确时累加工具调用，每次调用加零点一；错误答案无论调用多少都得不到工具分，从而鼓励有生产力的长交互。这里工具奖按轨迹累计而非只看最后一步，因此同为正确答案的样本仍能形成交互深度差异。普通 GRPO 中全对、全错或工具数完全相同的组没有方差，而奖励塑形还可能使“正确但调用少”的样本相对同组变成负优势。系统先超采提示，每题生成八条 rollout，过滤零方差组与超时、运行时死亡、无效图像等坏轨迹，再按组奖励标准差排序，保留中等难度、高信息量组；优势计算只减组均值，不再除标准差以降低震荡，且坏轨迹在排序前移除，避免执行基础设施故障被误当成策略失败。</p>
+      <p>两模型先 SFT 冷启动。Image 从 GPT-4.1 合成数据中筛掉错误答案或少于两轮工具的样本，得七千条，覆盖视觉数学、医学、图表和通用问答；Video 用相同流程收集四万四千条空间与长视频样本，学习按需构造上下文。RL 阶段 Image 用四万四千条视觉搜索和推理题，Video 用一万五千条 SpaceR；二者均基于 Qwen2.5-VL-7B，在八张 H100 上训练七百步，超采批三十二、训练批十六、组大小八、学习率百万分之一。</p>
+      <p>PyVision-Image 在 V*、HRBench-4K/8K、DynaMath、MathVerse、WeMath、TIR-Bench 分别达到八十八点七、七十八点一、七十四点三、六十一点六、五十五点八、四十七点七和十九点八；相对 DeepEyes-v2，DynaMath、MathVerse、WeMath 高四点四、三点一、九点六。PyVision-Video 在 VSI-Bench 达四十四，比 Qwen2.5-VL-7B 的三十六点七高七点三、比 VITAL 高二点二；平均每样本约五千视觉 token，而普通 Qwen 均匀采帧约四万五千且准确率三十八。</p>
+      <p>组件作用随训练阶段显现。最大轮数四在六百步比两轮的 V* 高一点七七、MathVerse 高四点六五；去累计工具奖励初期略快，五百步后反被完整方案超过，在 V*、HRBench-4K 与 HRBench-8K 分别落后一点九一、一点六三和一点零，且调用数明显下降。标准差排序在三百步使 HRBench-4K 高二点二六、WeMath 高一点九；去除优势标准差归一在五百步令 V*、HRBench-4K、WeMath 分别高四点九四、二点七五、三点六二。训练曲线中工具数、响应长度、答案奖和 V* 同步上升，熵与梯度范数平滑下降；这些时点消融说明组件主要防止中后期交互坍缩，而非仅加快冷启动。</p>
+      <p>方法仍依赖 SFT 教师、可自动判分的数据和单一 7B Qwen 骨干，尚未证明更大模型、开放视觉对话或真实 GUI 控制同样稳定。按正确答案奖励更多调用可能从“防少用”转成“鼓励冗余”，当前只测试最多四轮训练，未建立调用成本或最小充分工具原则；标准差排序也可能长期忽略极难样本，并改变原训练分布。Video 只在 VSI-Bench 验证，按需帧会漏掉未被策略察觉的关键瞬间，约九倍视觉 token 节省也未把 Python 执行、绘图和多轮延迟折算进去。Impact Statement 还指出 Python 可访问宿主文件系统并造成破坏，部署必须使用严格沙箱、资源配额和权限隔离；工具返回图像本身也可能成为提示注入或不可信代码的传播通道。</p>
+    </article>
+    <article class="paper" id="paper-A081" data-paper-id="A081">
+      <header class="paper-header">
+        <p class="paper-kicker">A081 · 约 4 分钟</p>
+        <h2>TongUI: Building Generalized GUI Agents by Learning from Multimodal Web Tutorials</h2>
+        <div class="paper-meta">
+          <div class="paper-tags" aria-label="辅助标签"><span class="paper-tag">GUI-agent</span><span class="paper-tag">web-tutorial</span><span class="paper-tag">video-learning</span><span class="paper-tag">imitation</span></div>
+          <a class="source-link" href="https://arxiv.org/abs/2504.12679" target="_blank" rel="noreferrer">阅读原文 <span aria-hidden="true">↗</span></a>
+        </div>
+      </header>
+      <p>TongUI关注通用图形界面智能体长期受制于高质量轨迹不足的问题。人工录制跨应用操作代价高，模拟器生成的数据虽然便宜，却难以覆盖真实软件不断变化的界面、用户意图和操作习惯。作者由此把公开视频教程与图文教程视作天然的示范库：它们本来就是人类为解释“怎样完成某项任务”而制作，能够同时提供目标、界面状态、语音说明和动作顺序。论文的目标并非为某个操作系统做专用代理，而是从开放网络抽取统一格式的任务轨迹，让同一模型在桌面、网页和移动端迁移。</p>
+      <p>数据流水线先让语言模型扩展应用、网站及任务关键词，再从YouTube、哔哩哔哩、WikiHow和百度经验抓取候选教程。视频由Whisper转写，语言模型从字幕中提炼任务问题与粗粒度步骤；带音频的视频按时间戳切段，无音频视频整体处理，并借助MOG2前景变化选择关键帧。随后用GPT-4o-mini筛除并非图形界面的画面，预训练GUI模型UI-TARS根据每一步描述和截图补写思考与点击、输入、滑动等动作。无法解析的动作会被丢弃并切断轨迹，避免一个错误标签污染后续步骤。</p>
+      <p>质量控制包括近重复去除、语言模型内容相关性判断，以及对等待、呼叫用户和无效动作的规则过滤，最后再用Qwen2.5-VL-7B检查轨迹。最终只保留原始候选的33.0%，仍形成约一百万条轨迹，横跨Android、Windows、Linux、macOS和iOS，覆盖二百八十多个应用，网页、桌面与移动场景均有分布；轨迹长度为一至九步，一至三步最常见。作者以Qwen2.5-VL的3B、7B和32B版本为底座做监督微调，把近期观察、步骤指令、推理和动作统一进多轮上下文，而不是另造执行器。</p>
+      <p>训练附录给出了可复现实验条件：上下文长度8192，至多保留两个历史观察，因此单样本最多三张图，每图压到约1350个视觉词元；视觉模块和语言模块都用秩16、缩放32的LoRA，只更新约0.5%参数。每卡批量4、梯度累积8，AdamW学习率为十的负四次方，在八张A100 80GB上训练，3B约四天、7B约七天。评测既含ScreenSpot、ScreenSpot-V2、ScreenSpot-Pro等指向定位，也含AITW、AndroidControl、Mind2Web、UI-Vision等离线动作预测，并用MiniWob检验在线任务完成。</p>
+      <p>结果显示教程规模带来的收益跨任务稳定。TongUI-7B在三个ScreenSpot版本上分别达到86.0、88.7和24.7，32B升至88.5、92.1和33.1；7B在AITW平均73.3，高于ShowUI的70.0和原始Qwen2.5-VL的40.4，在AndroidControl高层与低层任务为76.0和91.9。32B在MiniWob成功率74.3，在百度经验测试上动作准确率88.2、任务成功率56.9。数据递增实验中，7B从未微调的ScreenSpot 56.5，依次加入精选、WikiHow、百度和视频各五万样本后持续上升，全部数据达到83.6；Mind2Web三个划分也由不足2分升到48.8、48.1和49.5。</p>
+      <p>过滤质量的用户评分从3.22提高到4.12，接近ShowUI数据的4.26，Mind2Web三次重复实验的波动也较小，但这些结果主要证明数据流水线整体有效，尚未严格分离转写、关键帧、动作伪标和每级过滤各自的因果贡献。图标类定位仍明显难于文字控件，离线精确匹配也不能完整代表真实执行中的恢复能力。作者明确指出当前做法先一次性收集全部教程、再训练一次，可能忽略软件更新与新任务持续到来的现实，未来应发展持续学习；此外性能仍受公开视频质量、自动转写和教师模型伪标签误差约束，结论适用于教程可公开获得且界面操作能够由截图表达的任务。</p>
+    </article>
+  </main>
+  <footer class="page-footer">
+    <nav class="direction-nav" aria-label="细分方向切换">
+      <a href="07-01.html"><span>上一方向</span>搜索、工具探索与工具调用决策</a>
+      <a class="next" href="07-03.html"><span>下一方向</span>Computer-Use 可验证环境与任务生成</a>
+    </nav>
+    <p><a href="../index.html">返回 35 个细分方向总索引</a></p>
+  </footer>
+  <button class="back-to-top" type="button" aria-label="返回页首">↑</button>
+</body>
+</html>
