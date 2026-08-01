@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="92 篇 AgentRL 论文的 35 个细分方向全文精读导览">
+  <title>总索引 · AgentRL 全文精读</title>
+  <link rel="stylesheet" href="assets/styles.css">
+  <script defer src="assets/app.js"></script>
+</head>
+<body class="index-page">
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+  <header class="index-hero">
+    <nav class="top-nav" aria-label="主导航">
+      <span>AgentRL Paper Guides</span>
+      <span>全文精读版 · 2026</span>
+    </nav>
+    <div class="index-title">
+      <p class="eyebrow">从方向地图到逐篇理解</p>
+      <h1>AgentRL<br><em>全文精读导览</em></h1>
+      <p>92 篇论文只进入一个最核心主类，并保留辅助标签。每篇介绍都基于全文，把动机、完整做法、实验依据与局限压缩成几段可以顺畅读完的中文。</p>
+    </div>
+    <div class="index-stats" aria-label="收录统计">
+      <div><strong>92</strong><span>篇论文</span></div>
+      <div><strong>35</strong><span>个细分方向</span></div>
+      <div><strong>8</strong><span>个主题族</span></div>
+    </div>
+  </header>
+  <main class="index-main">
+    <div class="index-intro">
+      <p>阅读建议</p>
+      <p>先从综述与失效机理建立地图，再依次看奖励、策略优化、在线蒸馏、长程记忆、自进化、专用 Agent 和训练系统。也可以直接进入当前最关心的细分方向，同页对照几篇论文怎样解决同一个核心问题。</p>
+    </div>
+<section class="theme-block">
+        <header>
+          <span>01</span>
+          <div>
+            <h2>全景、理论与失效机理</h2>
+            <p>8 篇论文 · 3 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/01-01.html">
+            <span class="category-code">1.1</span>
+            <span class="category-copy">
+              <strong>领域综述与路线图</strong>
+              <small>The Landscape of Agentic Reinforcement Learning for LLMs: A Survey · Towards Long-Horizon Agents: A Survey</small>
+            </span>
+            <span class="category-count">2 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/01-02.html">
+            <span class="category-code">1.2</span>
+            <span class="category-copy">
+              <strong>On-Policy Distillation 专题综述</strong>
+              <small>A Survey of On-Policy Distillation for Large Language Models</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/01-03.html">
+            <span class="category-code">1.3</span>
+            <span class="category-copy">
+              <strong>训练机理、能力干扰与失效诊断</strong>
+              <small>Rethinking Generalization in Reasoning SFT: A Conditional Analysis on Optimization, Data, and Model Capability · Reasoning and Tool-use Compete in Agentic RL: From Quantifying Interference to Disentangled Tuning · RAGEN-2: Reasoning Collapse in Agentic RL · On the Direction of RLVR Updates for LLM Reasoning: Identification and Exploitation · Demystifying Reinforcement Learning for Long-Horizon Tool-Using Agents: A Comprehensive Recipe</small>
+            </span>
+            <span class="category-count">5 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+<section class="theme-block">
+        <header>
+          <span>02</span>
+          <div>
+            <h2>奖励、信用分配与验证</h2>
+            <p>17 篇论文 · 6 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/02-01.html">
+            <span class="category-code">2.1</span>
+            <span class="category-copy">
+              <strong>长程 turn/step 信用分配</strong>
+              <small>From Reasoning to Agentic: Credit Assignment in Reinforcement Learning for Large Language Models · Group-Graph Policy Optimization for Long-Horizon Agentic Reinforcement Learning · Hindsight Credit Assignment for Long-Horizon LLM Agents · TRACE: Turn-level Reward Assignment via Credit Estimation for Long-Horizon Agents</small>
+            </span>
+            <span class="category-count">4 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/02-02.html">
+            <span class="category-code">2.2</span>
+            <span class="category-copy">
+              <strong>过程奖励、隐式步奖励与动态塑形</strong>
+              <small>Information Gain-based Policy Optimization: A Simple and Effective Approach for Multi-Turn LLM Agents · The Past Is Not Past: Memory-Enhanced Dynamic Reward Shaping · Agentic Reinforcement Learning with Implicit Step Rewards · Exploring Reasoning Reward Model for Agents</small>
+            </span>
+            <span class="category-count">4 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/02-03.html">
+            <span class="category-code">2.3</span>
+            <span class="category-copy">
+              <strong>证据增强、rubric 合成与奖励共演化</strong>
+              <small>Evidence-Augmented Policy Optimization with Reward Co-Evolution for Long-Context Reasoning · ARES: Automated Rubric Synthesis for Scalable LLM Reinforcement Learning · Deep Research as Rubric for Reinforcement Learning</small>
+            </span>
+            <span class="category-count">3 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/02-04.html">
+            <span class="category-code">2.4</span>
+            <span class="category-copy">
+              <strong>Agent verifier 与原则型 PRM</strong>
+              <small>AgentV-RL: Scaling Reward Modeling with Agentic Verifier · WebArbiter: A Principle-Guided Reasoning Process Reward Model for Web Agents</small>
+            </span>
+            <span class="category-count">2 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/02-05.html">
+            <span class="category-code">2.5</span>
+            <span class="category-copy">
+              <strong>过程奖励评测、轨迹错误定位与稠密评分基准</strong>
+              <small>ToolPRMBench: Evaluating and Advancing Process Reward Models for Tool-using Agents · Where Do Deep-Research Agents Go Wrong? Span-Level Error Localization in Agent Trajectories · Long-Horizon-Terminal-Bench: Testing the Limits of Agents on Long-Horizon Terminal Tasks with Dense Reward-Based Grading</small>
+            </span>
+            <span class="category-count">3 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/02-06.html">
+            <span class="category-code">2.6</span>
+            <span class="category-copy">
+              <strong>视觉弱到强奖励设计</strong>
+              <small>VCap: Hypergeometric Rewards for Weak-to-Strong Visual Captioning</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+<section class="theme-block">
+        <header>
+          <span>03</span>
+          <div>
+            <h2>策略优化、探索与训练稳定性</h2>
+            <p>17 篇论文 · 6 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/03-01.html">
+            <span class="category-code">3.1</span>
+            <span class="category-copy">
+              <strong>序列级、轨迹级与开放域相对优化</strong>
+              <small>SeeUPO: Sequence-Level Agentic-RL with Convergence Guarantees · SPPO: Sequence-Level PPO for Long-Horizon Reasoning Tasks · ArenaRL: Scaling RL for Open-Ended Agents via Tournament-based Relative Ranking · STEP: Success-Rate-Aware Trajectory-Efficient Policy Optimization · STAPO: Selective Trajectory-Aware Policy Optimization for LLM Agent Training</small>
+            </span>
+            <span class="category-count">5 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/03-02.html">
+            <span class="category-code">3.2</span>
+            <span class="category-copy">
+              <strong>探索控制、探索坍缩与自主探索</strong>
+              <small>T²PO: Uncertainty-Guided Exploration Control for Stable Multi-Turn Agentic Reinforcement Learning · Agent Explorative Policy Optimization for Multimodal Agentic Reasoning · Look Before You Leap: Autonomous Exploration for LLM Agents · Anchored Policy Optimization: Mitigating Exploration Collapse Via Support-Constrained Rectification</small>
+            </span>
+            <span class="category-count">4 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/03-03.html">
+            <span class="category-code">3.3</span>
+            <span class="category-copy">
+              <strong>经验回放、rollout 利用与梯度信号效率</strong>
+              <small>Freshness-Aware Prioritized Experience Replay for LLM/VLM Reinforcement Learning · Breaking Entropy Bounds: Accelerating RL Training via MTP with Rejection Sampling · EchoRL: Reinforcement Learning via Rollout Echoing · Single-Rollout Asynchronous Optimization for Agentic Reinforcement Learning</small>
+            </span>
+            <span class="category-count">4 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/03-04.html">
+            <span class="category-code">3.4</span>
+            <span class="category-copy">
+              <strong>鲁棒恢复与专用推理优化</strong>
+              <small>DenoiseRL: Bootstrapping Reasoning Models to Recover from Noisy Prefixes · GeometryZero: Improving Geometry Solving for LLM with Group Contrastive Policy Optimization</small>
+            </span>
+            <span class="category-count">2 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/03-05.html">
+            <span class="category-code">3.5</span>
+            <span class="category-copy">
+              <strong>长周期自博弈稳定性</strong>
+              <small>Scaling Self-Play with Self-Guidance</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/03-06.html">
+            <span class="category-code">3.6</span>
+            <span class="category-copy">
+              <strong>简洁 RL recipe 与小模型扩展</strong>
+              <small>JustRL: Scaling a 1.5B LLM with a Simple RL Recipe</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+<section class="theme-block">
+        <header>
+          <span>04</span>
+          <div>
+            <h2>在线蒸馏与混合训练信号</h2>
+            <p>7 篇论文 · 4 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/04-01.html">
+            <span class="category-code">4.1</span>
+            <span class="category-copy">
+              <strong>OPD 基础范式与作用机理</strong>
+              <small>On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes · Rethinking On-Policy Distillation of Large Language Models: Phenomenology, Mechanism, and Recipe</small>
+            </span>
+            <span class="category-count">2 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/04-02.html">
+            <span class="category-code">4.2</span>
+            <span class="category-copy">
+              <strong>面向 Agent 轨迹的 step/trajectory-aware OPD</strong>
+              <small>StepOPSD: Step-Aware Online Preference Distillation for Agent Reinforcement Learning · Self-Distilled Agentic Reinforcement Learning · SEED: Self-Evolving On-Policy Distillation for Agentic Reinforcement Learning</small>
+            </span>
+            <span class="category-count">3 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/04-03.html">
+            <span class="category-code">4.3</span>
+            <span class="category-copy">
+              <strong>单教师/多教师的长程 Agentic distillation</strong>
+              <small>The Physics of Multi-Turn Long-Horizon Planning: From Pre-Training to Post-Training via Single- and Multi-Teacher On-Policy Agentic Distillation</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/04-04.html">
+            <span class="category-code">4.4</span>
+            <span class="category-copy">
+              <strong>OPD rollout 早停与计算效率</strong>
+              <small>Less is More: Early Stopping Rollout for On-Policy Distillation</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+<section class="theme-block">
+        <header>
+          <span>05</span>
+          <div>
+            <h2>长程规划、上下文与记忆</h2>
+            <p>11 篇论文 · 3 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/05-01.html">
+            <span class="category-code">5.1</span>
+            <span class="category-copy">
+              <strong>子目标、里程碑、锚点与策略抽象</strong>
+              <small>A Subgoal-driven Framework for Improving Long-Horizon LLM Agents · WebAnchor: Anchoring Agent Planning to Stabilize Long-Horizon Web Reasoning · Milestone-Guided Policy Learning for Long-Horizon Language Agents · Enhancing LLM Planning Capabilities through Intrinsic Self-Critique · StraTA: Incentivizing Agentic Reinforcement Learning with Strategic Trajectory Abstraction</small>
+            </span>
+            <span class="category-count">5 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/05-02.html">
+            <span class="category-code">5.2</span>
+            <span class="category-copy">
+              <strong>上下文压缩、并行轨迹与长程路由</strong>
+              <small>Agentic Aggregation for Parallel Scaling of Long-Horizon Agentic Tasks · AgentSwing: Adaptive Parallel Context Management Routing for Long-Horizon Web Agents · CompactionRL: Reinforcement Learning with Context Compaction for Long-Horizon Agents</small>
+            </span>
+            <span class="category-count">3 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/05-03.html">
+            <span class="category-code">5.3</span>
+            <span class="category-copy">
+              <strong>长短期记忆选择、写入与管理</strong>
+              <small>ECHO: Prune to Act, Trace to Learn with Selective Turn Memory in Agentic RL · Task-Focused Memorization for Multimodal Agents · Agentic Memory: Learning Unified Long-Term and Short-Term Memory Management for Large Language Model Agents</small>
+            </span>
+            <span class="category-count">3 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+<section class="theme-block">
+        <header>
+          <span>06</span>
+          <div>
+            <h2>技能、自进化与环境共演化</h2>
+            <p>15 篇论文 · 5 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/06-01.html">
+            <span class="category-code">6.1</span>
+            <span class="category-copy">
+              <strong>技能创建、技能优化与技能库</strong>
+              <small>ReSkill: Reconciling Skill Creation with Policy Optimization in Agentic RL · SkillOpt: Executive Strategy for Self-Evolving Agent Skills · SkillRL: Evolving Agents via Recursive Skill-Augmented Reinforcement Learning · Dynamic Dual-Granularity Skill Bank for Agentic RL</small>
+            </span>
+            <span class="category-count">4 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/06-02.html">
+            <span class="category-code">6.2</span>
+            <span class="category-copy">
+              <strong>经验提取—利用的自进化闭环</strong>
+              <small>EvolveR: Self-Evolving LLM Agents through an Experience-Driven Lifecycle · Complementary Reinforcement Learning · Evolving-RL: End-to-End Optimization of Experience-Driven Self-Evolving Capability within Agents</small>
+            </span>
+            <span class="category-count">3 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/06-03.html">
+            <span class="category-code">6.3</span>
+            <span class="category-copy">
+              <strong>策略—数据—奖励—环境闭环共演化</strong>
+              <small>Learning to Build the Environment: Self-Evolving Reasoning RL via Verifiable Environment Synthesis · EnvRL: Learn from Environment Dynamics in Agentic Reinforcement Learning · RLAnything: Forge Environment, Policy, and Reward Model in Completely Dynamic RL System · CoEvolve: Training LLM Agents via Agent-Data Mutual Evolution · Agent-World: Scaling Real-World Environment Synthesis for Evolving General Agent Intelligence</small>
+            </span>
+            <span class="category-count">5 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/06-04.html">
+            <span class="category-code">6.4</span>
+            <span class="category-copy">
+              <strong>合成任务、rubric tree 与全训练链路</strong>
+              <small>QUEST: Training Frontier Deep Research Agents with Fully Synthetic Tasks</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/06-05.html">
+            <span class="category-code">6.5</span>
+            <span class="category-copy">
+              <strong>Multi-Agent 协同学习与共演化</strong>
+              <small>Multi-Agent Evolve: LLM Self-Improve through Co-evolution · STRONGER-MAS: Multi-Agent Reinforcement Learning for Collaborative LLMs</small>
+            </span>
+            <span class="category-count">2 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+<section class="theme-block">
+        <header>
+          <span>07</span>
+          <div>
+            <h2>工具、多模态与专用 Agent</h2>
+            <p>10 篇论文 · 6 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/07-01.html">
+            <span class="category-code">7.1</span>
+            <span class="category-copy">
+              <strong>搜索、工具探索与工具调用决策</strong>
+              <small>Towards Long-horizon Agentic Multimodal Search · Iterative Tool Usage Exploration for Multimodal Agents via Step-wise Preference Tuning · Tool Zero: Training Tool-Augmented LLMs via Pure RL from Scratch · Efficient Agentic Reinforcement Learning with On-Policy Intrinsic Knowledge Boundary Enhancement</small>
+            </span>
+            <span class="category-count">4 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/07-02.html">
+            <span class="category-code">7.2</span>
+            <span class="category-copy">
+              <strong>视觉推理与 GUI 操作 Agent</strong>
+              <small>PyVision-RL: Forging Open Agentic Vision Models via RL · TongUI: Building Generalized GUI Agents by Learning from Multimodal Web Tutorials</small>
+            </span>
+            <span class="category-count">2 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/07-03.html">
+            <span class="category-code">7.3</span>
+            <span class="category-copy">
+              <strong>Computer-Use 可验证环境与任务生成</strong>
+              <small>CUA-Gym: Scaling Verifiable Training Environments and Tasks for Computer-Use Agents</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/07-04.html">
+            <span class="category-code">7.4</span>
+            <span class="category-copy">
+              <strong>工业级小模型工具调用与双数据飞轮</strong>
+              <small>AgenticQwen: Training Small Agentic Language Models with Dual Data Flywheels for Industrial-Scale Tool Use</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/07-05.html">
+            <span class="category-code">7.5</span>
+            <span class="category-copy">
+              <strong>任意规模工具集的通用推理 Agent</strong>
+              <small>DeepAgent: A General Reasoning Agent with Scalable Toolsets</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/07-06.html">
+            <span class="category-code">7.6</span>
+            <span class="category-copy">
+              <strong>代码驱动图像生成 Agent</strong>
+              <small>GenClaw: Code-Driven Agentic Image Generation</small>
+            </span>
+            <span class="category-count">1 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+<section class="theme-block">
+        <header>
+          <span>08</span>
+          <div>
+            <h2>模型、系统与训练基础设施</h2>
+            <p>7 篇论文 · 2 个细分方向</p>
+          </div>
+        </header>
+        <div class="category-list">
+<a class="category-row" href="sections/08-01.html">
+            <span class="category-code">8.1</span>
+            <span class="category-copy">
+              <strong>Agentic reasoning 模型架构与 MoE 配置</strong>
+              <small>Nemotron 3 Super: Open, Efficient Mixture-of-Experts Hybrid Mamba-Transformer Model for Agentic Reasoning · Slicing and Dicing: Configuring Optimal Mixtures of Experts</small>
+            </span>
+            <span class="category-count">2 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+<a class="category-row" href="sections/08-02.html">
+            <span class="category-code">8.2</span>
+            <span class="category-copy">
+              <strong>Agentic 训练生态、框架与分布式系统</strong>
+              <small>Let It Flow: Agentic Crafting on Rock and Roll, Building the ROME Model within an Open Agentic Learning Ecosystem · rStar2-Agent: Agentic Reasoning Technical Report · VerlTool: Towards Holistic Agentic Reinforcement Learning with Tool Use · AgentJet: A Distributed Swarm Training Framework for Agentic Reinforcement Learning · AgentGym-RL: An Open-Source Framework to Train LLM Agents for Long-Horizon Decision Making via Multi-Turn RL</small>
+            </span>
+            <span class="category-count">5 篇</span>
+            <span class="category-arrow" aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+  </main>
+  <footer class="index-footer">
+    <p>AgentRL 全文精读导览</p>
+    <p>按最核心主类单一归档 · 辅助标签保留跨方向联系</p>
+  </footer>
+</body>
+</html>
